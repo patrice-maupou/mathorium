@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--DOCTYPE syntax SYSTEM "syntax.dtd"-->
+
+<!-- the one character string unused is mandatory and must not be used in any expression
+     the regex (®_*) stands for an already found subexpression
+-->
+<syntax xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="syntaxSchema.xsd"
+        name="number_syntax" unused="®">
+</syntax>

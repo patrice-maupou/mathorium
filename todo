@@ -1,0 +1,2 @@
+pour mode auto de propositions, écarter les théorèmes moins généraux que ceux déjà obtenus :
+si (A/<expr>)T est un théorème, on écarte T
