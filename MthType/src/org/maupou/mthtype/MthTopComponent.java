@@ -4,7 +4,14 @@
  */
 package org.maupou.mthtype;
 
+import java.awt.Color;
 import java.util.ArrayList;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.html.HTMLDocument;
 import org.maupou.expressions.ExprNode;
 import org.maupou.expressions.Expression;
 import org.maupou.expressions.Syntax;
@@ -27,7 +34,7 @@ import org.w3c.dom.NodeList;
         autostore = false)
 @TopComponent.Description(
         preferredID = "MthTopComponent",
-        iconBase = "org/maupou/mthtype/loupesn.gif", 
+        iconBase = "org/maupou/mthtype/loupesn.gif",
         persistenceType = TopComponent.PERSISTENCE_NEVER)
 @TopComponent.Registration(mode = "explorer", openAtStartup = false)
 @ActionID(category = "Window", id = "org.maupou.mthtype.MthTopComponent")
@@ -45,6 +52,7 @@ public final class MthTopComponent extends CloneableTopComponent {
     private ArrayList<ExprNode> exprNodes;
     private Syntax syntax;
     private Document document;
+    Style commentStyle, exprStyle;
 
     public MthTopComponent() {
         initComponents();
@@ -55,6 +63,16 @@ public final class MthTopComponent extends CloneableTopComponent {
     public MthTopComponent(Syntax syntax) {
         this();
         this.syntax = syntax;
+        StyledDocument styledDocument = new DefaultStyledDocument();
+        Style def = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
+        commentStyle = styledDocument.addStyle("comment", def);
+        StyleConstants.setItalic(commentStyle, true);
+        StyleConstants.setForeground(commentStyle, Color.gray);
+        StyleConstants.setFontSize(commentStyle, 14);
+        exprStyle = styledDocument.addStyle("expression", def);
+        StyleConstants.setForeground(exprStyle, Color.blue);
+        StyleConstants.setFontSize(exprStyle, 14);
+        textPane.setStyledDocument(styledDocument);
     }
 
     /**
@@ -66,70 +84,78 @@ public final class MthTopComponent extends CloneableTopComponent {
     private void initComponents() {
 
         jScrollPane = new javax.swing.JScrollPane();
-        editorPane = new javax.swing.JEditorPane();
+        textPane = new javax.swing.JTextPane();
 
         setLayout(new java.awt.BorderLayout());
 
-        jScrollPane.setViewportView(editorPane);
+        jScrollPane.setViewportView(textPane);
 
         add(jScrollPane, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JEditorPane editorPane;
     private javax.swing.JScrollPane jScrollPane;
+    private javax.swing.JTextPane textPane;
     // End of variables declaration//GEN-END:variables
 
     @Override
     public void componentOpened() {
-        if(syntax == null) return;
+        if (syntax == null) {
+            return;
+        }
         Element root = document.getDocumentElement();
         exprNodes = new ArrayList<>();
         NodeList nodes = root.getElementsByTagName("expr");
         for (int i = 0; i < nodes.getLength(); i++) {
-      try {
-        Element e = (Element) nodes.item(i);
-        String type = e.getAttribute("type");
-        String etext = e.getFirstChild().getTextContent();
-        Expression expr = new Expression(etext, syntax);
-        expr.setType(type);
-        ArrayList<int[]> parents = new ArrayList<>();
-        NodeList nl = e.getElementsByTagName("parents");
-        if (nl.getLength() == 1) {
-          Element ep = (Element) nl.item(0);
-          String[] s = ep.getFirstChild().getTextContent().split(" ");
-          for (int j = 0; j < s.length; j++) {
-            String[] sp = s[j].split("-");
-            int[] p = new int[sp.length];
-            for (int k = 0; k < sp.length; k++) {
-              p[k] = Integer.parseInt(sp[k]);
+            try {
+                Element e = (Element) nodes.item(i);
+                String type = e.getAttribute("type");
+                String etext = e.getFirstChild().getTextContent();
+                Expression expr = new Expression(etext, syntax);
+                expr.setType(type);
+                // parents
+                ArrayList<int[]> parents = new ArrayList<>();
+                NodeList nl = e.getElementsByTagName("parents");
+                if (nl.getLength() == 1) {
+                    Element ep = (Element) nl.item(0);
+                    String[] s = ep.getFirstChild().getTextContent().split(" ");
+                    for (int j = 0; j < s.length; j++) {
+                        String[] sp = s[j].split("-");
+                        int[] p = new int[sp.length];
+                        for (int k = 0; k < sp.length; k++) {
+                            p[k] = Integer.parseInt(sp[k]);
+                        }
+                        parents.add(p);
+                    }
+                }
+                // enfants
+                ArrayList<Integer> children = new ArrayList<>();
+                nl = e.getElementsByTagName("children");
+                if (nl.getLength() == 1) {
+                    Element ep = (Element) nl.item(0);
+                    String[] s = ep.getFirstChild().getTextContent().split(" ");
+                    for (int j = 0; j < s.length; j++) {
+                        children.add(Integer.parseInt(s[j]));
+                    }
+                }
+                // commentaires
+                String comment = "";
+                nl = e.getElementsByTagName("comment");
+                for (int j = 0; j < nl.getLength(); j++) {
+                    Element c = (Element) nl.item(j);
+                    comment += c.getTextContent();
+                }
+                StyledDocument sd = textPane.getStyledDocument();                
+                //*
+                if(!comment.trim().isEmpty()) {
+                    sd.insertString(sd.getLength(), comment + "\n", commentStyle);
+                }
+                sd.insertString(sd.getLength(), etext + "\n", exprStyle);    
+                ExprNode en = new ExprNode(expr, children, parents, getExprNodes());
+                getExprNodes().add(en);
+            } catch (Exception ex) {
+                Exceptions.printStackTrace(ex);
             }
-            parents.add(p);
-          }
         }
-        ArrayList<Integer> children = new ArrayList<>();
-        nl = e.getElementsByTagName("children");
-        if (nl.getLength() == 1) {
-          Element ep = (Element) nl.item(0);
-          String[] s = ep.getFirstChild().getTextContent().split(" ");
-          for (int j = 0; j < s.length; j++) {
-            children.add(Integer.parseInt(s[j]));
-          }
-        }
-        String comment = ":";
-        nl = e.getElementsByTagName("comments");
-        for (int j = 0; j < nl.getLength(); j++) {
-          Element c = (Element) nl.item(j);
-          comment += c.getTextContent();
-        }
-        comment += "\n";
-        //getjTextArea().append(etext + comment);
-        editorPane.setText(editorPane.getText() + etext + comment);        
-        ExprNode en = new ExprNode(expr, children, parents, getExprNodes());
-        getExprNodes().add(en);
-      } catch (Exception ex) {
-        Exceptions.printStackTrace(ex);
-      }
-    }
     }
 
     @Override
@@ -156,8 +182,8 @@ public final class MthTopComponent extends CloneableTopComponent {
         return exprNodes;
     }
 
-    public javax.swing.JEditorPane getEditorPane() {
-        return editorPane;
+    public javax.swing.JTextPane getTextPane() {
+        return textPane;
     }
 
     /**

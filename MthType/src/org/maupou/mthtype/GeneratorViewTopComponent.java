@@ -485,8 +485,8 @@ public final class GeneratorViewTopComponent extends TopComponent {
               e = exprNodes.get(exprNodes.size() - 1).getE();
           }
           if (e != null) {
-              String txt = tc.getEditorPane().getText();
-              tc.getEditorPane().setText(txt + eText + "\n");
+              String txt = tc.getTextPane().getText();
+              tc.getTextPane().setText(txt + eText + "\n");
           }
       } catch (Exception ex) {
           Exceptions.printStackTrace(ex);
