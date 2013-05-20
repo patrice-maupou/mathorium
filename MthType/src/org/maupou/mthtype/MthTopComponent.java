@@ -4,14 +4,12 @@
  */
 package org.maupou.mthtype;
 
-import java.awt.Color;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
-import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
-import javax.swing.text.StyledDocument;
-import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.StyleSheet;
 import org.maupou.expressions.ExprNode;
 import org.maupou.expressions.Expression;
 import org.maupou.expressions.Syntax;
@@ -24,6 +22,7 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.windows.CloneableTopComponent;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
@@ -63,16 +62,7 @@ public final class MthTopComponent extends CloneableTopComponent {
     public MthTopComponent(Syntax syntax) {
         this();
         this.syntax = syntax;
-        StyledDocument styledDocument = new DefaultStyledDocument();
-        Style def = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
-        commentStyle = styledDocument.addStyle("comment", def);
-        StyleConstants.setItalic(commentStyle, true);
-        StyleConstants.setForeground(commentStyle, Color.gray);
-        StyleConstants.setFontSize(commentStyle, 14);
-        exprStyle = styledDocument.addStyle("expression", def);
-        StyleConstants.setForeground(exprStyle, Color.blue);
-        StyleConstants.setFontSize(exprStyle, 14);
-        textPane.setStyledDocument(styledDocument);
+        
     }
 
     /**
@@ -102,11 +92,28 @@ public final class MthTopComponent extends CloneableTopComponent {
         if (syntax == null) {
             return;
         }
+        StringBuilder output = new StringBuilder();
         Element root = document.getDocumentElement();
+        HTMLEditorKit kit = new HTMLEditorKit();
+        textPane.setEditorKit(kit);
+        StyleSheet styleSheet = kit.getStyleSheet();
+        try {
+            NodeList nl = document.getElementsByTagName("expressions");
+            Element e = (Element) nl.item(0);
+            String syntaxPath = e.getAttribute("syntax");
+            int index = syntaxPath.lastIndexOf('\\');
+            String path = "file:/" + syntaxPath.substring(0, index + 1) + "mth.css";
+            styleSheet.importStyleSheet(new URL(path));
+        } catch (Exception ex) {
+            styleSheet.addRule("var {color:blue; font-size:12; font-style:normal; margin: 4px; }");
+            styleSheet.addRule("div {color:grey; font-size:12; font-style:italic; }");
+            Exceptions.printStackTrace(ex);
+        }
         exprNodes = new ArrayList<>();
         NodeList nodes = root.getElementsByTagName("expr");
         for (int i = 0; i < nodes.getLength(); i++) {
             try {
+                String childString = "";
                 Element e = (Element) nodes.item(i);
                 String type = e.getAttribute("type");
                 String etext = e.getFirstChild().getTextContent();
@@ -132,7 +139,8 @@ public final class MthTopComponent extends CloneableTopComponent {
                 nl = e.getElementsByTagName("children");
                 if (nl.getLength() == 1) {
                     Element ep = (Element) nl.item(0);
-                    String[] s = ep.getFirstChild().getTextContent().split(" ");
+                    childString = ep.getFirstChild().getTextContent();
+                    String[] s = childString.split(" ");
                     for (int j = 0; j < s.length; j++) {
                         children.add(Integer.parseInt(s[j]));
                     }
@@ -144,18 +152,19 @@ public final class MthTopComponent extends CloneableTopComponent {
                     Element c = (Element) nl.item(j);
                     comment += c.getTextContent();
                 }
-                StyledDocument sd = textPane.getStyledDocument();                
-                //*
-                if(!comment.trim().isEmpty()) {
-                    sd.insertString(sd.getLength(), comment + "\n", commentStyle);
+                output.append("<p>");
+                if (!comment.trim().isEmpty()) {
+                    output.append("<div>").append(comment).append("</div><br>");
                 }
-                sd.insertString(sd.getLength(), etext + "\n", exprStyle);    
+                output.append("<var>").append(etext).append("</var>");
+                output.append("</p>");
                 ExprNode en = new ExprNode(expr, children, parents, getExprNodes());
                 getExprNodes().add(en);
             } catch (Exception ex) {
                 Exceptions.printStackTrace(ex);
             }
         }
+        textPane.setText(output.toString());
     }
 
     @Override
