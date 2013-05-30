@@ -4,10 +4,18 @@
  */
 package org.maupou.mthtype;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.ElementIterator;
 import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.html.HTML;
+import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
 import org.maupou.expressions.ExprNode;
@@ -93,17 +101,16 @@ public final class MthTopComponent extends CloneableTopComponent {
             return;
         }
         StringBuilder output = new StringBuilder();
-        Element root = document.getDocumentElement();
+        Element root = getDocument().getDocumentElement();
         HTMLEditorKit kit = new HTMLEditorKit();
         textPane.setEditorKit(kit);
         StyleSheet styleSheet = kit.getStyleSheet();
         try {
-            NodeList nl = document.getElementsByTagName("expressions");
+            NodeList nl = getDocument().getElementsByTagName("expressions");
             Element e = (Element) nl.item(0);
             String syntaxPath = e.getAttribute("syntax");
-            int index = syntaxPath.lastIndexOf('\\');
-            String path = "file:/" + syntaxPath.substring(0, index + 1) + "mth.css";
-            styleSheet.importStyleSheet(new URL(path));
+            String path = (new File(syntaxPath)).getParent() + "/mth.css";
+            styleSheet.importStyleSheet(new URL("file:/" + path));
         } catch (Exception ex) {
             styleSheet.addRule("var {color:blue; font-size:12; font-style:normal; margin: 4px; }");
             styleSheet.addRule("div {color:grey; font-size:12; font-style:italic; }");
@@ -113,7 +120,7 @@ public final class MthTopComponent extends CloneableTopComponent {
         NodeList nodes = root.getElementsByTagName("expr");
         for (int i = 0; i < nodes.getLength(); i++) {
             try {
-                String childString = "";
+                String childString;
                 Element e = (Element) nodes.item(i);
                 String type = e.getAttribute("type");
                 String etext = e.getFirstChild().getTextContent();
@@ -124,14 +131,17 @@ public final class MthTopComponent extends CloneableTopComponent {
                 NodeList nl = e.getElementsByTagName("parents");
                 if (nl.getLength() == 1) {
                     Element ep = (Element) nl.item(0);
-                    String[] s = ep.getFirstChild().getTextContent().split(" ");
-                    for (int j = 0; j < s.length; j++) {
-                        String[] sp = s[j].split("-");
-                        int[] p = new int[sp.length];
-                        for (int k = 0; k < sp.length; k++) {
-                            p[k] = Integer.parseInt(sp[k]);
+                    String ps = ep.getFirstChild().getTextContent();
+                    if (!ps.isEmpty()) {
+                        String[] s = ps.split(" ");
+                        for (int j = 0; j < s.length; j++) {
+                            String[] sp = s[j].split("-");
+                            int[] p = new int[sp.length];
+                            for (int k = 0; k < sp.length; k++) {
+                                p[k] = Integer.parseInt(sp[k]);
+                            }
+                            parents.add(p);
                         }
-                        parents.add(p);
                     }
                 }
                 // enfants
@@ -140,9 +150,11 @@ public final class MthTopComponent extends CloneableTopComponent {
                 if (nl.getLength() == 1) {
                     Element ep = (Element) nl.item(0);
                     childString = ep.getFirstChild().getTextContent();
-                    String[] s = childString.split(" ");
-                    for (int j = 0; j < s.length; j++) {
-                        children.add(Integer.parseInt(s[j]));
+                    if (!childString.isEmpty()) {
+                        String[] s = childString.split(" ");
+                        for (int j = 0; j < s.length; j++) {
+                            children.add(Integer.parseInt(s[j]));
+                        }
                     }
                 }
                 // commentaires
@@ -165,6 +177,17 @@ public final class MthTopComponent extends CloneableTopComponent {
             }
         }
         textPane.setText(output.toString());
+        /*
+        ElementIterator iterator = new ElementIterator(textPane.getDocument());
+        javax.swing.text.Element element;
+        while ((element = iterator.next()) != null) {
+            AttributeSet attributes = element.getAttributes();
+            Object name = attributes.getAttribute(StyleConstants.NameAttribute);
+            if(name == HTML.Tag.BODY) {
+                break;
+            }
+        }
+        //*/
     }
 
     @Override
@@ -200,5 +223,12 @@ public final class MthTopComponent extends CloneableTopComponent {
      */
     public void setDocument(Document document) {
         this.document = document;
+    }
+
+    /**
+     * @return the document
+     */
+    public Document getDocument() {
+        return document;
     }
 }
