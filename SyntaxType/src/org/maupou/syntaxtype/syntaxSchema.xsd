@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+            targetNamespace="http://xml.netbeans.org/schema/syntaxSchema"
+            xmlns:tns="http://xml.netbeans.org/schema/syntaxSchema"
+            elementFormDefault="qualified"
+-->
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:element name="syntax">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="read" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence maxOccurs="unbounded">
+              <xsd:element name="rule">
+                <xsd:complexType>
+                  <xsd:sequence maxOccurs="unbounded">
+                    <xsd:element name="pattern">
+                      <xsd:complexType mixed="true">
+                        <xsd:sequence minOccurs="1" maxOccurs="unbounded">
+                          <xsd:element name="type">
+                            <xsd:complexType>
+                              <xsd:attribute name="name" type="xsd:string" use="required"></xsd:attribute>
+                              <xsd:attribute name="subtypes" type="xsd:string"></xsd:attribute>
+                              <xsd:attribute name="value" type="xsd:string"></xsd:attribute>
+                              <xsd:attribute name="node" type="xsd:string"/>
+                            </xsd:complexType>
+                          </xsd:element>
+                        </xsd:sequence>
+                        <xsd:attribute name="node" type="xsd:string"></xsd:attribute>
+                      </xsd:complexType>
+                    </xsd:element>
+                  </xsd:sequence>
+                  <xsd:attribute name="key" type="xsd:NMTOKEN"/>
+                  <xsd:attribute name="child" type="xsd:string"/>
+                  <xsd:attribute name="group" type="xsd:string"/>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="generators" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="variable" maxOccurs="unbounded" minOccurs="0">
+                <xsd:complexType>
+                  <xsd:attribute name="type" type="xsd:string"/>
+                  <xsd:attribute name="list" type="xsd:string"/>
+                </xsd:complexType>
+              </xsd:element>
+              <xsd:element name="genrule" maxOccurs="unbounded">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="match" minOccurs="0" maxOccurs="unbounded">
+                      <xsd:complexType>
+                        <xsd:simpleContent>
+                          <xsd:extension base="xsd:string">
+                            <xsd:attribute name="name" type="xsd:string"/>
+                            <xsd:attribute name="search" type="xsd:string"/>
+                            <xsd:attribute name="discard" type="xsd:string"/>
+                          </xsd:extension>
+                        </xsd:simpleContent>
+                      </xsd:complexType>
+                    </xsd:element>
+                    <xsd:element name="result" maxOccurs="unbounded">
+                      <xsd:complexType>
+                        <xsd:simpleContent>
+                          <xsd:extension base="xsd:string">
+                            <xsd:attribute name="name" type="xsd:string"/>
+                            <xsd:attribute name="level" type="xsd:string"/>
+                            <xsd:attribute name="ref" type="xsd:string"/>
+                            <xsd:attribute name="changes" type="xsd:string"/>
+                          </xsd:extension>
+                        </xsd:simpleContent>
+                      </xsd:complexType>
+                    </xsd:element>
+                  </xsd:sequence>
+                  <xsd:attribute name="name" type="xsd:string"/>
+                </xsd:complexType>
+              </xsd:element>
+              <xsd:element name="discard" minOccurs="0" maxOccurs="unbounded">
+                <xsd:complexType>
+                  <xsd:simpleContent>
+                    <xsd:extension base="xsd:string">
+                      <xsd:attribute name="name" type="xsd:string"/>
+                      <xsd:attribute name="search" type="xsd:string"/>
+                      <xsd:attribute name="types" type="xsd:string"/>
+                    </xsd:extension>
+                  </xsd:simpleContent>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="name" type="xsd:string" use="optional"/>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="write" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="wrule" maxOccurs="unbounded">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="node" maxOccurs="unbounded">
+                      <xsd:complexType>
+                        <xsd:simpleContent>
+                          <xsd:extension base="xsd:string">
+                            <xsd:attribute name="name" type="xsd:string" />
+                            <xsd:attribute name="var" type="xsd:string"/>
+                          </xsd:extension>
+                        </xsd:simpleContent>
+                      </xsd:complexType>
+                    </xsd:element>
+                    <xsd:element name="child" maxOccurs="unbounded" minOccurs="0">
+                      <xsd:complexType>
+                        <xsd:attribute name="replace" type="xsd:string"/>
+                        <xsd:attribute name="rules" type="xsd:string"/>
+                      </xsd:complexType>
+                    </xsd:element>
+                  </xsd:sequence>
+                  <xsd:attribute name="child" type="xsd:string"/>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:sequence>
+      <xsd:attribute name="name" type="xsd:string"/>
+      <xsd:attribute name="unused" type="xsd:string"/>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>

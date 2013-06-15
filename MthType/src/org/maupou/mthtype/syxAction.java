@@ -36,7 +36,7 @@ import org.w3c.dom.Element;
         id = "org.maupou.mthtype.syxAction")
 @ActionRegistration(
         displayName = "#CTL_syxAction")
-@ActionReference(path = "Loaders/text/x-syx+xml/Actions", position = 0, separatorAfter = 50)
+@ActionReference(path = "Loaders/text/x-syx+xml/Actions", position = 200)
 @Messages("CTL_syxAction=New mth File")
 public final class syxAction implements ActionListener {
 
@@ -77,8 +77,9 @@ public final class syxAction implements ActionListener {
             tc.setDocument(document);
             tc.setDisplayName(syxObj.getName());
             tc.open();
+            tc.requestActive();
             GeneratorViewTopComponent gvtc =  new GeneratorViewTopComponent(syntax);
-            Mode mode = WindowManager.getDefault().findMode("rightSlidingSide");
+            Mode mode = WindowManager.getDefault().findMode("properties"); // non
             mode.dockInto(gvtc);
             gvtc.setName(name);
             gvtc.open();

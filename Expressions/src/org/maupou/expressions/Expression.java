@@ -291,8 +291,8 @@ public class Expression {
    * extension de match l'expression transformée de schema n'est plus forcément égale à this,
    * mais est une transformée de this.
    *
-   * @param schema
-   * @param map autorise le changement d'un type par son image
+   * @param schema modèle
+   * @param map type0 peut être remplacé par son image type1 ex: propvar->prop
    * @param replace table de remplacement des variables de this
    * @param sreplace table de remplacement des variables de schema
    * @param subtypes

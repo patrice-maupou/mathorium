@@ -34,7 +34,7 @@ import org.openide.util.NbBundle.Messages;
             path = "Loaders/text/x-syx+xml/Actions",
             id =
             @ActionID(category = "System", id = "org.openide.actions.OpenAction"),
-            position = 100,
+            position = 0,
             separatorAfter = 200),
     @ActionReference(
             path = "Loaders/text/x-syx+xml/Actions",
@@ -83,7 +83,8 @@ import org.openide.util.NbBundle.Messages;
 })
 public class syxDataObject extends MultiDataObject {
 
-    public syxDataObject(FileObject pf, MultiFileLoader loader) throws DataObjectExistsException, IOException {
+    public syxDataObject(FileObject pf, MultiFileLoader loader) 
+            throws DataObjectExistsException, IOException {
         super(pf, loader);
         CookieSet cookies = getCookieSet();
         registerEditor("text/x-syx+xml", false);

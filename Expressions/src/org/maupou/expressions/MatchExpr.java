@@ -115,7 +115,7 @@ public class MatchExpr {
     }
 
   /**
-   * liste des expressions de la LinkedHashMap exprs qui conviennent
+   * liste des expressions de la liste exprs qui conviennent
    *
    * @param vars
    * @param syntax
@@ -144,7 +144,7 @@ public class MatchExpr {
    * vérifie si expr correspond au schema, et si oui, les nouvelles variables de même nom que celles
    * dans vars doivent aussi correspondre
    *
-   * @param en
+   * @param en l'expr examinée par rapport à schema
    * @param vars table des variables déjà connues, ex: A:=(A->B)->A
    * @param syntax
    * @return vrai si l'expression convient

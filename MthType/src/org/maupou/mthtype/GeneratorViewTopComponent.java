@@ -25,8 +25,6 @@ import java.util.Set;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingWorker;
-import javax.swing.text.html.HTML;
-import javax.swing.text.html.HTMLDocument;
 import org.maupou.expressions.*;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -39,7 +37,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.html.HTMLElement;
 
 /**
  * Top component which displays something.
