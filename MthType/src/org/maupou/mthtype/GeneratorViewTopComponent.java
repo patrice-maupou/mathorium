@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingWorker;
@@ -391,24 +392,19 @@ public final class GeneratorViewTopComponent extends TopComponent {
         ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
         String[] matchNames = new String[matchExprs.size()];
         varnames = new ArrayList<>();
+        for (int i = 0; i < varsTable.getRowCount(); i++) {
+            varsTable.setValueAt("", i, 0);
+            varsTable.setValueAt("", i, 1);
+            varsTable.setValueAt("", i, 2);
+        }
         if (manuelButton.isSelected()) {
             int row = 0;
-            HashMap<String, String> vars = new HashMap<>();
             for (int i = 0; i < matchNames.length; i++) {
                 MatchExpr matchExpr = matchExprs.get(i);
                 matchNames[i] = matchExpr.getRegex();
-                for (Map.Entry<Expression, String> entry : matchExpr.getVars().entrySet()) {
-                    try {
-                        String e = entry.getKey().toString(syntaxWrite);
-                        vars.put(e, entry.getValue());
-                        if (!varnames.contains(e)) {
-                            varnames.add(e);
-                        }
-                    } catch (Exception ex) {
-                        Exceptions.printStackTrace(ex);
-                    }
-                }
             }
+            HashMap<String, String> vars = genItem.getVars();
+            varnames.addAll(vars.keySet());
             for (String var : varnames) {
                 varsTable.setValueAt(var, row, 0);
                 varsTable.setValueAt(vars.get(var), row, 2);
@@ -434,6 +430,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
 
   private void valueFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_valueFieldActionPerformed
       int range = matchesBox.getSelectedIndex();
+      TreeMap<String,String> map = genItem.getMap();
       if (range != -1) {
           try {
               MatchExpr matchExpr = genItem.getMatchExprs().get(range);
@@ -443,16 +440,16 @@ public final class GeneratorViewTopComponent extends TopComponent {
               ArrayList<int[]> parentList = new ArrayList<>();
               ExprNode en = new ExprNode(expr, childList, parentList, exprNodes);
               int i = exprNodes.indexOf(en);
-              if (i != -1) { // expression valide
+              if (i != -1) { // expression dans la liste
                   en = exprNodes.get(i).copy();
-                  if (matchExpr.checkExpr(en, varsToExprs, syntax)) {
+                  if (matchExpr.checkExpr(en, genItem.getMap(), varsToExprs, syntax)) {
                       //en.getParentList().add(i);  à changer
                       if (range + 1 < matchesBox.getItemCount()) {
                           matchesBox.setSelectedIndex(range + 1);
                       } else { // check results
                           int index = (Integer) resultRanges.getValue() - 1;
                           Result result = genItem.getResultExprs().get(index);
-                          ExprNode en1 = result.addExpr(en, varsToExprs, syntax, exprNodes);
+                          ExprNode en1 = result.addExpr(en, varsToExprs, map, syntax, exprNodes, null);
                           resultField.setText(en1.getE().toString(syntaxWrite));
                           resultReady = true;
                       }
@@ -465,7 +462,8 @@ public final class GeneratorViewTopComponent extends TopComponent {
                                   varsTable.setValueAt(val, row, 1);
                               }
                           }
-                      }
+                      }                      
+                      valueField.setText("");
                   }
               }
           } catch (Exception ex) {
@@ -561,9 +559,10 @@ public final class GeneratorViewTopComponent extends TopComponent {
                     boolean once = exprNodes.isEmpty();
                     do {
                         for (GenItem genItem : generator.getGenItems()) {
-                            if (!once && !genItem.isHasVars()) {
+                            if (!once && genItem.getVars().isEmpty()) {
                                 continue;
                             }
+                            genItem.setDiscards(generator.getDiscards());
                             int oldsize = exprNodes.size();
                             int matchsize = genItem.getMatchExprs().size();
                             int[] genpList = new int[matchsize];

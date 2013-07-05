@@ -56,7 +56,7 @@ public class SyntaxRule {
       for (int j = 0; j < childs.length; j++) {
         String child = childs[j];
         int start = 0;
-        while ((start = patternText.indexOf(child, start)+1) != 0) {
+        while ((start = patternText.indexOf(child, start)+1) != 0) { // groupe de child
           cnt += 1;
         }
       }

@@ -7,6 +7,7 @@ package org.maupou.expressions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.TreeMap;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -17,27 +18,32 @@ import org.w3c.dom.NodeList;
 public class GenItem {
 
     private String name;
+    private TreeMap<String, String> map;
     private ArrayList<MatchExpr> matchExprs;
     private ArrayList<Result> resultExprs;
-    private boolean hasVars;
+    private HashMap<String,String> vars;
+    private ArrayList<GenItem> discards;
+    private boolean local;
 
     /**
-     * constructeur non utilisé
+     * constructeur
      *
      * @param e élément de tagname "if"
      * @param syntax
      * @throws Exception
      */
-    public GenItem(Element e, Syntax syntax) throws Exception {
+    public GenItem(Element e, Syntax syntax, TreeMap<String,String> map) throws Exception {
         name = e.getAttribute("name");
-        hasVars = false;
+        local = ("local".equals(e.getAttribute("scope")))? true : false;
+        this.map = map;
         matchExprs = new ArrayList<>();
         NodeList nodelist = e.getElementsByTagName("match");
+        vars = new HashMap<>();
         for (int i = 0; i < nodelist.getLength(); i++) {
-            MatchExpr match = new MatchExpr((Element) nodelist.item(i), syntax);
-            matchExprs.add(match);
-            hasVars = match.getSearches() != null;
-        }
+            MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), syntax);
+            matchExprs.add(matchExpr);
+            matchExpr.getSchema().addVars(vars, map);
+        }  
         resultExprs = new ArrayList<>();
         nodelist = e.getElementsByTagName("result");
         for (int i = 0; i < nodelist.getLength(); i++) {
@@ -51,11 +57,11 @@ public class GenItem {
      *
      * @param n niveau de profondeur des MatchExprs
      * @param limit
-     * @param level
+     * @param level niveau de l'item
      * @param syntax
      * @param en
-     * @param vars
-     * @param exprNodes
+     * @param vars table des variables : variable -> value
+     * @param exprNodes liste courante
      * @throws Exception
      */
     public int[] generate(int n, int limit, int level, Syntax syntax, ExprNode en,
@@ -71,7 +77,7 @@ public class GenItem {
                     Expression e = en1.getE();
                     HashMap<Expression, Expression> nvars = new HashMap<>();
                     nvars.putAll(vars);
-                    if (matchExpr.checkExpr(en1, nvars, syntax)) {
+                    if (matchExpr.checkExpr(en1, map, nvars, syntax)) {
                         ArrayList<int[]> parentList = new ArrayList<>();
                         int[] p = Arrays.copyOf(en.getParentList().get(0), en.getParentList().get(0).length);
                         p[n] = i;
@@ -90,7 +96,7 @@ public class GenItem {
     }
 
     /**
-     *
+     * ajoute les nouveaux résultats à la liste exprNodes
      * @param en
      * @param vars
      * @param syntax
@@ -104,14 +110,14 @@ public class GenItem {
             Result result = resultExprs.get(i);
             if (result.getLevel() <= level) {
                 ExprNode en1 = en.copy();
-                result.addExpr(en1, vars, syntax, exprNodes);
+                result.addExpr(en1, vars, map, syntax, exprNodes, discards);
             }
         }
     }
 
     @Override
     public String toString() {
-        String ret = "";
+        String ret = map.toString() + "\n";
         for (int i = 0; i < matchExprs.size(); i++) {
             String cond = matchExprs.get(i).getRegex();
             ret += "   " + cond;
@@ -135,7 +141,32 @@ public class GenItem {
         return resultExprs;
     }
 
-    public boolean isHasVars() {
-        return hasVars;
+    /**
+     * @return the map
+     */
+    public TreeMap<String, String> getMap() {
+        return map;
+    }
+
+    /**
+     * @return the vars
+     */
+    public HashMap<String,String> getVars() {
+        return vars;
+    }
+
+    /**
+     * @return the local
+     */
+    public boolean isLocal() {
+        return local;
+    }
+
+    public ArrayList<GenItem> getDiscards() {
+        return discards;
+    }
+
+    public void setDiscards(ArrayList<GenItem> discards) {
+        this.discards = discards;
     }
 }

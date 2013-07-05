@@ -47,6 +47,7 @@
                 <xsd:complexType>
                   <xsd:attribute name="type" type="xsd:string"/>
                   <xsd:attribute name="list" type="xsd:string"/>
+                  <xsd:attribute name="name" type="xsd:string"/>
                 </xsd:complexType>
               </xsd:element>
               <xsd:element name="genrule" maxOccurs="unbounded">
