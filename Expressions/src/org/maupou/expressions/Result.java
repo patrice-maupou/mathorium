@@ -47,21 +47,23 @@ public class Result {
     }
 
     /**
-     * alternative à addExpr
+     * ajoute une ExprNode à la liste si elle est nouvelle et non de type discards
+     * TODO: en est-il utile ? (parents, enfants ?)
      *
-     * @param en
-     * @param vars
+     * @param en ExprNode à ajouter
+     * @param vars valeurs des variables à remplacer
      * @param map les variables pouvant être permutées
      * @param syntax
-     * @param exprNodes
-     * @return
+     * @param exprNodes liste déjà établie
+     * @param discards types à simplifier
+     * @return l'exprNode ou null si ne convient pas
      * @throws Exception
      */
     public ExprNode addExpr(ExprNode en, HashMap<Expression, Expression> vars, 
             TreeMap<String, String> map, Syntax syntax, ArrayList<ExprNode> exprNodes, 
             ArrayList<GenItem> discards) throws Exception {
         ExprNode ret = null;
-        Expression e = new Expression(result, syntax);
+        Expression e = new Expression(getResult(), syntax);
         e = e.replace(vars);
         if (!name.isEmpty()) {
             e.setType(name);
@@ -71,16 +73,16 @@ public class Result {
         for (ExprNode exprNode : exprNodes) {
             Expression expr = exprNode.getE();
             HashMap<Expression, Expression> nvars = new HashMap<>();
-            inlist = e.matchRecursively(expr, map, nvars, syntax.getSubtypes());
-            if (inlist) { // déjà dans la liste (aux variables près)
+            if (e.matchRecursively(expr, map, nvars, syntax.getSubtypes(), en)) { 
+                // déjà dans la liste (aux variables près)
                 if (!exprNode.getParentList().containsAll(en.getParentList())) {
                     exprNode.getParentList().addAll(en.getParentList());
                 }
-                break;
+                inlist = true;
             }
         }
-        if (!inlist) { // expressions écartées
-            //* avant modif
+        if (!inlist) { // expressions écartées par la liste discards
+            /* avant modif
             for (int i = 0; i < syntax.getDiscards().size(); i++) {
                 MatchExpr discard = syntax.getDiscards().get(i);
                 if (discard.checkExpr(en, map, vars, syntax)) {
@@ -89,18 +91,9 @@ public class Result {
             }
             //*/
             //* modif
-            if(discards != null) {
-                for (GenItem discard : discards) {
-                    boolean match = true;
-                    ArrayList<MatchExpr> matchExprs = discard.getMatchExprs();
-                    for (MatchExpr matchExpr : matchExprs) {
-                        match = matchExpr.checkExpr(en, map, vars, syntax);
-                        if(!match) break;
-                    }
-                    if(match) {
-                        Result res = discard.getResultExprs().get(0);
-                    }
-                }
+            e = e.simplify(map, syntax, discards);
+            if(en.getExprs().indexOf(e) != -1) {
+                return null;
             }
             //*/
             exprNodes.add(en);
@@ -126,7 +119,7 @@ public class Result {
                 ret += "(" + change.getValue() + "/" + change.getKey() + ")";
             }
         }
-        ret += result;
+        ret += getResult();
         return ret;
     }
 

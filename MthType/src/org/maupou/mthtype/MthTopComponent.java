@@ -67,10 +67,59 @@ public final class MthTopComponent extends CloneableTopComponent {
         //setToolTipText(Bundle.HINT_MthTopComponent());
     }
 
-    public MthTopComponent(Syntax syntax) {
+    public MthTopComponent(Syntax syntax, Document document) {
         this();
         this.syntax = syntax;
-        
+        this.document = document;
+        exprNodes = new ArrayList<>();
+        /*  liste des expressions du document
+        NodeList nodes = document.getElementsByTagName("expr");
+        for (int i = 0; i < nodes.getLength(); i++) {
+            try {
+                Element e = (Element) nodes.item(i);
+                String type = e.getAttribute("type");
+                String etext = e.getFirstChild().getTextContent();
+                Expression expr = new Expression(etext, syntax);
+                expr.setType(type);
+                // parents
+                ArrayList<int[]> parents = new ArrayList<>();
+                NodeList nl = e.getElementsByTagName("parents");
+                if (nl.getLength() == 1) {
+                    Element ep = (Element) nl.item(0);
+                    String ps = ep.getFirstChild().getTextContent();
+                    if (!ps.isEmpty()) {
+                        String[] s = ps.split(" ");
+                        for (int j = 0; j < s.length; j++) {
+                            String[] sp = s[j].split("-");
+                            int[] p = new int[sp.length];
+                            for (int k = 0; k < sp.length; k++) {
+                                p[k] = Integer.parseInt(sp[k]);
+                            }
+                            parents.add(p);
+                        }
+                    }
+                }
+
+                // enfants
+                ArrayList<Integer> children = new ArrayList<>();
+                nl = e.getElementsByTagName("children");
+                if (nl.getLength() == 1) {
+                    Element ep = (Element) nl.item(0);
+                    String childString = ep.getFirstChild().getTextContent();
+                    if (!childString.isEmpty()) {
+                        String[] s = childString.split(" ");
+                        for (int j = 0; j < s.length; j++) {
+                            children.add(Integer.parseInt(s[j]));
+                        }
+                    }
+                }
+                ExprNode en = new ExprNode(expr, children, parents, null);
+                exprNodes.add(en);
+            } catch (Exception ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }        
+        //*/
     }
 
     /**
@@ -170,24 +219,24 @@ public final class MthTopComponent extends CloneableTopComponent {
                 }
                 output.append("<var>").append(etext).append("</var>");
                 output.append("</p>");
-                ExprNode en = new ExprNode(expr, children, parents, getExprNodes());
-                getExprNodes().add(en);
+                ExprNode en = new ExprNode(expr, children, parents);
+                exprNodes.add(en);
             } catch (Exception ex) {
                 Exceptions.printStackTrace(ex);
             }
         }
         textPane.setText(output.toString());
         /*
-        ElementIterator iterator = new ElementIterator(textPane.getDocument());
-        javax.swing.text.Element element;
-        while ((element = iterator.next()) != null) {
-            AttributeSet attributes = element.getAttributes();
-            Object name = attributes.getAttribute(StyleConstants.NameAttribute);
-            if(name == HTML.Tag.BODY) {
-                break;
-            }
-        }
-        //*/
+         ElementIterator iterator = new ElementIterator(textPane.getDocument());
+         javax.swing.text.Element element;
+         while ((element = iterator.next()) != null) {
+         AttributeSet attributes = element.getAttributes();
+         Object name = attributes.getAttribute(StyleConstants.NameAttribute);
+         if(name == HTML.Tag.BODY) {
+         break;
+         }
+         }
+         //*/
     }
 
     @Override
@@ -216,13 +265,6 @@ public final class MthTopComponent extends CloneableTopComponent {
 
     public javax.swing.JTextPane getTextPane() {
         return textPane;
-    }
-
-    /**
-     * @param document the document to set
-     */
-    public void setDocument(Document document) {
-        this.document = document;
     }
 
     /**

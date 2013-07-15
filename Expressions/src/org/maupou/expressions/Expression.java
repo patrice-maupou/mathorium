@@ -247,10 +247,11 @@ public class Expression {
             }
         }
     }
-    
+
     /**
-     * examine les sous-expressions qui correspondent à schema et leur donne le type
-     * de schema
+     * examine les sous-expressions qui correspondent à schema et leur donne le
+     * type de schema et les met dans la liste des Expr de en
+     *
      * @param schema le modèle
      * @param map les variables
      * @param vars la table des valeurs
@@ -258,28 +259,60 @@ public class Expression {
      * @return true si l'expression entière convient
      */
     public boolean matchRecursively(Expression schema, TreeMap<String, String> map,
-            HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes) {
+            HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes,
+            ExprNode en) {
         boolean fit = match(schema, map, vars, subtypes);
-        if(!fit) {
+        if (!fit) {
             if (children != null) {
                 for (Expression child : children) {
                     HashMap<Expression, Expression> nvars = new HashMap<>();
-                    child.matchRecursively(schema, map, nvars, subtypes);
+                    child.matchRecursively(schema, map, nvars, subtypes, en);
+                }
+            }
+        } else {
+            setType(schema.getType());
+            en.getExprs().add(this);
+        }
+        return fit;
+    }
+
+    /**
+     * simplification d'une expression avec la liste discard
+     *
+     * @param vars
+     * @param map
+     * @param syntax
+     * @param discards
+     * @return
+     * @throws Exception
+     */
+    public Expression simplify(TreeMap<String, String> map, Syntax syntax, ArrayList<GenItem> discards)
+            throws Exception {
+        Expression ret = this;
+        HashMap<Expression, Expression> vars = new HashMap<>();
+        if (discards != null) {
+            for (GenItem discard : discards) {
+                ArrayList<MatchExpr> matchExprs = discard.getMatchExprs();
+                for (MatchExpr matchExpr : matchExprs) {
+                    if (match(matchExpr.getSchema(), map, vars, syntax.getSubtypes())) {
+                        Result result = discard.getResultExprs().get(0);
+                        ret = (new Expression(result.getResult(), syntax)).replace(vars);
+                        break;
+                    }
                 }
             }
         }
-        else setType(schema.getType());
-        return fit;
+        return ret;
     }
 
     /**
      * vérifie si cette expression correspond à l'expression schema en
      * remplaçant les clés de map par des expressions de etype value ex:
      * A->(B->(A->B)) avec A->(B->C) avec C=A->B
-     * 
+     *
      * @param schema
-     * @param map table directe nom de la variable->etype de remplacement, 
-     * ex: A=prop,B=prop,...
+     * @param map table directe nom de la variable->etype de remplacement, ex:
+     * A=prop,B=prop,...
      * @param vars
      * @param subtypes
      * @return true si c'est possible
@@ -364,8 +397,9 @@ public class Expression {
 
     /**
      * pas d'égalité de types requis
+     *
      * @param obj
-     * @return 
+     * @return
      */
     @Override
     public boolean equals(Object obj) {
@@ -463,27 +497,27 @@ public class Expression {
         }
         return sb.toString();
     }
-    
+
     /**
      * ajoute dans la table vars les variables de l'expression figurant dans map
+     *
      * @param vars table à remplir
      * @param map table de référence
      */
-    public void addVars(HashMap<String,String> vars, TreeMap<String,String> map) {        
-        if(children == null) {
+    public void addVars(HashMap<String, String> vars, TreeMap<String, String> map) {
+        if (children == null) {
             String etype = map.get(name);
-            if(etype != null && vars.get(name) == null) {
+            if (etype != null && vars.get(name) == null) {
                 vars.put(name, etype);
             }
-        }
-        else {
+        } else {
             for (Expression child : children) {
                 child.addVars(vars, map);
             }
         }
     }
 
-    /** 
+    /**
      * le etype de l'expression
      *
      * @return le etype

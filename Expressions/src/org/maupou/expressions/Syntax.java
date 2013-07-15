@@ -69,13 +69,6 @@ public class Syntax {
       String name = genElement.getAttribute("name");
       generators.add(new Generator(name, genElement, this));
     }
-    NodeList nl = document.getElementsByTagName("discard");
-    discards = new ArrayList<>();
-    for (int i = 0; i < nl.getLength(); i++) {
-      Element e = (Element) nl.item(i);
-      MatchExpr me = new MatchExpr(e, this);
-      discards.add(me);
-    }
   }
 
   public ArrayList<Generator> getGenerators() {

@@ -6,6 +6,8 @@
 package org.maupou.expressions;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.TreeMap;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -32,7 +34,15 @@ public class Generator {
     NodeList nrl = elem.getElementsByTagName("variable");
     for (int i = 0; i < nrl.getLength(); i++) {
         Element lv = (Element) nrl.item(i);
-        String type = lv.getAttribute("type");
+        String vname = lv.getAttribute("name"); // type de la variable
+        String type = lv.getAttribute("type"); // le type représenté
+        Set<String> subtypes = syntax.getSubtypes().get(type);
+        if(subtypes == null) {
+            subtypes = new HashSet<>();
+            subtypes.add(type);
+            syntax.getSubtypes().put(type, subtypes);
+        }
+        subtypes.add(vname);
         String list = lv.getAttribute("list");
         if(!list.isEmpty() && !type.isEmpty()) {
             String[] vars = list.trim().split("\\s");

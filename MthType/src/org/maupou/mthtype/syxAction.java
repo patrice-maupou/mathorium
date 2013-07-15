@@ -73,8 +73,7 @@ public final class syxAction implements ActionListener {
             xformer.setOutputProperty(OutputKeys.INDENT, "yes");
             xformer.transform(source, result);
             
-            MthTopComponent tc = new MthTopComponent(syntax);
-            tc.setDocument(document);
+            MthTopComponent tc = new MthTopComponent(syntax, document);
             tc.setDisplayName(syxObj.getName());
             tc.open();
             tc.requestActive();

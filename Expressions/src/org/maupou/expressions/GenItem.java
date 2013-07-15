@@ -82,7 +82,7 @@ public class GenItem {
                         int[] p = Arrays.copyOf(en.getParentList().get(0), en.getParentList().get(0).length);
                         p[n] = i;
                         parentList.add(p);
-                        en1 = new ExprNode(e, en.getChildList(), parentList, exprNodes);
+                        en1 = new ExprNode(e, en.getChildList(), parentList);
                         int[] sb = generate(n + 1, limit, level, syntax, en1, nvars, exprNodes);
                         System.arraycopy(sb, 0, bounds, 1, matchExprs.size() - n);
                         bounds[0] = (i < bounds[0])? i : bounds[0];

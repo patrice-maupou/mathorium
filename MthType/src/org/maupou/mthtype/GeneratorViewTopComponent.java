@@ -438,7 +438,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
               Expression expr = new Expression(e, syntax);
               ArrayList<Integer> childList = new ArrayList<>(); // TODO : replacer plus haut
               ArrayList<int[]> parentList = new ArrayList<>();
-              ExprNode en = new ExprNode(expr, childList, parentList, exprNodes);
+              ExprNode en = new ExprNode(expr, childList, parentList);
               int i = exprNodes.indexOf(en);
               if (i != -1) { // expression dans la liste
                   en = exprNodes.get(i).copy();
@@ -483,7 +483,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
               e.setType(result.getName());
               ArrayList<Integer> childList = new ArrayList<>();
               ArrayList<int[]> parentList = new ArrayList<>();
-              exprNodes.add(new ExprNode(e, childList, parentList, exprNodes));
+              exprNodes.add(new ExprNode(e, childList, parentList));
           } else if (resultReady) {
               e = exprNodes.get(exprNodes.size() - 1).getE();
           }
@@ -497,6 +497,11 @@ public final class GeneratorViewTopComponent extends TopComponent {
       resultField.setText("");
   }//GEN-LAST:event_okButtonActionPerformed
 
+  /**
+   * met à jour le document de tc en ajoutant les nouvelles expressions et l'ouvre à nouveau
+   * @param newExprs expressions à ajouter
+   * @throws Exception 
+   */
     private void addToDocument(List<ExprNode> newExprs) throws Exception {        
         Document document = tc.getDocument();
         NodeList nl = document.getElementsByTagName("expressions");
@@ -570,7 +575,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
                             ArrayList<Integer> childList = new ArrayList<>();
                             ArrayList<int[]> parentList = new ArrayList<>();
                             parentList.add(genpList);
-                            ExprNode en = new ExprNode(null, childList, parentList, exprNodes);
+                            ExprNode en = new ExprNode(null, childList, parentList);
                             genItem.generate(0, limit, level, syntax, en, evars, exprNodes);
                             List<ExprNode> newExprs = exprNodes.subList(oldsize, exprNodes.size());
                             addToDocument(newExprs);
@@ -632,14 +637,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
     @Override
     public void componentOpened() {
         varsToExprs = new HashMap<>();
-        Set<TopComponent> tcs = TopComponent.getRegistry().getOpened();
-          for (TopComponent topComponent : tcs) {
-              if (topComponent instanceof MthTopComponent) {
-                  tc = (MthTopComponent) topComponent;
-                  exprNodes = tc.getExprNodes();
-                  break;
-              }
-          }
+        exprNodes = tc.getExprNodes();
     }
 
     @Override
@@ -657,5 +655,13 @@ public final class GeneratorViewTopComponent extends TopComponent {
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
+    }
+
+    public void setExprNodes(ArrayList<ExprNode> exprNodes) {
+        this.exprNodes = exprNodes;
+    }
+
+    public void setTc(MthTopComponent tc) {
+        this.tc = tc;
     }
 }

@@ -19,6 +19,7 @@ import org.openide.windows.WindowManager;
 public class MthOpenSupport extends OpenSupport implements OpenCookie, CloseCookie {
 
     GeneratorViewTopComponent gvtc;
+    MthTopComponent tc;
     Syntax syntax;
     String name;
 
@@ -34,10 +35,10 @@ public class MthOpenSupport extends OpenSupport implements OpenCookie, CloseCook
     @Override
     protected CloneableTopComponent createCloneableTopComponent() {
         MthDataObject mdo = (MthDataObject) entry.getDataObject();
-        MthTopComponent tc = new MthTopComponent(syntax);
-        tc.setDocument(mdo.getDocument()); 
+        tc = new MthTopComponent(syntax, mdo.getDocument());
         name = mdo.getName();
         tc.setDisplayName(name);
+        gvtc.setTc(tc);
         return tc;
     }
 
