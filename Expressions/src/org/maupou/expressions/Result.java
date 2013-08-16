@@ -47,8 +47,8 @@ public class Result {
     }
 
     /**
-     * ajoute une ExprNode à la liste si elle est nouvelle et non de type discards
-     * TODO: en est-il utile ? (parents, enfants ?)
+     * ajoute une ExprNode à la liste si elle est nouvelle et non de type
+     * discards TODO: en est-il utile ? (parents, enfants ?)
      *
      * @param en ExprNode à ajouter
      * @param vars valeurs des variables à remplacer
@@ -59,8 +59,8 @@ public class Result {
      * @return l'exprNode ou null si ne convient pas
      * @throws Exception
      */
-    public ExprNode addExpr(ExprNode en, HashMap<Expression, Expression> vars, 
-            TreeMap<String, String> map, Syntax syntax, ArrayList<ExprNode> exprNodes, 
+    public ExprNode addExpr(ExprNode en, HashMap<Expression, Expression> vars,
+            TreeMap<String, String> map, Syntax syntax, ArrayList<ExprNode> exprNodes,
             ArrayList<GenItem> discards) throws Exception {
         ExprNode ret = null;
         Expression e = new Expression(getResult(), syntax);
@@ -73,7 +73,7 @@ public class Result {
         for (ExprNode exprNode : exprNodes) {
             Expression expr = exprNode.getE();
             HashMap<Expression, Expression> nvars = new HashMap<>();
-            if (e.matchRecursively(expr, map, nvars, syntax.getSubtypes(), en)) { 
+            if (e.matchRecursively(expr, map, nvars, syntax.getSubtypes(), en)) {
                 // déjà dans la liste (aux variables près)
                 if (!exprNode.getParentList().containsAll(en.getParentList())) {
                     exprNode.getParentList().addAll(en.getParentList());
@@ -81,21 +81,17 @@ public class Result {
                 inlist = true;
             }
         }
-        if (!inlist) { // expressions écartées par la liste discards
-            /* avant modif
-            for (int i = 0; i < syntax.getDiscards().size(); i++) {
-                MatchExpr discard = syntax.getDiscards().get(i);
-                if (discard.checkExpr(en, map, vars, syntax)) {
+        if (!inlist) { 
+            // expressions écartées par la liste discards
+            for (GenItem discard : discards) {
+                //*
+                e = e.simplify(map, syntax, discard);
+                if (en.getExprs().indexOf(e) != -1) {
                     return null;
                 }
-            }
-            //*/
-            //* modif
-            e = e.simplify(map, syntax, discards);
-            if(en.getExprs().indexOf(e) != -1) {
-                return null;
-            }
-            //*/
+                //*/
+                // ajouter éventuellement à une liste nodisplay les expressions à écarter
+            }            
             exprNodes.add(en);
             ret = en;
             if (!en.getParentList().isEmpty()) {

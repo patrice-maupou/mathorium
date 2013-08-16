@@ -5,17 +5,9 @@
 package org.maupou.mthtype;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.ElementIterator;
 import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.html.HTML;
-import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
 import org.maupou.expressions.ExprNode;
@@ -30,7 +22,6 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.windows.CloneableTopComponent;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**

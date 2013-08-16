@@ -8,10 +8,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  *
@@ -22,7 +21,7 @@ public class MatchExpr {
     private String regex;
     private String node; // à utiliser pour une sous-expression
     private String type;
-    private Expression schema;
+    private Expression schema, check;
     private HashMap<String, String> conds;  // donnée par une égalité (semble non utilisé)
 
     /**
@@ -40,6 +39,10 @@ public class MatchExpr {
         if (txtNode != null) {
             regex = txtNode.getTextContent();
             schema = new Expression(regex, syntax);
+            txtNode = txtNode.getNextSibling();
+            if(txtNode != null) {
+                check = new Expression(txtNode.getTextContent(), syntax);
+            }
         } else {
             String[] listconds = match.getAttribute("conds").split(",");
             for (int i = 0; i < listconds.length; i++) {
@@ -83,7 +86,7 @@ public class MatchExpr {
             for (Map.Entry<Expression, Expression> entry : vars.entrySet()) {
                 nvars.put(entry.getKey().copy(), entry.getValue().copy());
             }
-            if (checkExpr(en, map, nvars, syntax)) {
+            if (checkExprNode(en, map, nvars, syntax)) {
                 nexprs.add(en.getE().toString(syntax.getSyntaxWrite()));
             }
         }
@@ -102,14 +105,33 @@ public class MatchExpr {
      * @return true si l'expression convient
      * @throws Exception
      */
-    public boolean checkExpr(ExprNode en, TreeMap<String, String> map,
+    public boolean checkExprNode(ExprNode en, TreeMap<String, String> map,
             HashMap<Expression, Expression> vars, Syntax syntax)
             throws Exception {
-        boolean ret = false;
+        boolean ret;
         Expression expr = en.getE().copy();
         if (getSchema() == null) {
             ret = checkConditions(en, syntax);
-        } else if (expr != null) { // ex : A->B type: prop
+        } else {
+            ret = checkExpr(expr, map, vars, syntax);
+        }
+        return ret;
+    }
+
+    /**
+     *
+     * @param expr l'expression examinée par rapport à schema
+     * @param map la table ordonnée des variables
+     * @param vars table des variables déjà connues, ex: A:=(A->B)->A
+     * @param syntax
+     * @return true si l'expression convient
+     * @throws Exception
+     */
+    public boolean checkExpr(Expression expr, TreeMap<String, String> map,
+            HashMap<Expression, Expression> vars, Syntax syntax)
+            throws Exception {
+        boolean ret = false;
+        if (expr != null) { // ex : A->B type: prop
             HashMap<Expression, Expression> nvars = new HashMap<>();
             ret = expr.match(getSchema(), map, nvars, syntax.getSubtypes());
             if (vars.isEmpty()) { // ajouter les nouvelles variables
@@ -184,5 +206,12 @@ public class MatchExpr {
 
     public Expression getSchema() {
         return schema;
+    }
+
+    /**
+     * @return the check
+     */
+    public Expression getCheck() {
+        return check;
     }
 }

@@ -21,9 +21,18 @@ public class GenItem {
     private TreeMap<String, String> map;
     private ArrayList<MatchExpr> matchExprs;
     private ArrayList<Result> resultExprs;
-    private HashMap<String,String> vars;
+    private HashMap<String, String> vars;
     private ArrayList<GenItem> discards;
     private boolean local;
+    private Scope scope;
+
+    
+    
+
+    public enum Scope {
+
+        root, all, left, right
+    };
 
     /**
      * constructeur
@@ -32,9 +41,27 @@ public class GenItem {
      * @param syntax
      * @throws Exception
      */
-    public GenItem(Element e, Syntax syntax, TreeMap<String,String> map) throws Exception {
+    public GenItem(Element e, Syntax syntax, TreeMap<String, String> map) throws Exception {
         name = e.getAttribute("name");
-        local = ("local".equals(e.getAttribute("scope")))? true : false;
+        scope = Scope.root;
+        if (e.hasAttribute("scope")) {
+            switch (e.getAttribute("scope")) {
+                case "root":
+                    scope = Scope.root;
+                    break;
+                case "all":
+                    scope = Scope.all;
+                    break;
+                case "left":
+                    scope = Scope.left;
+                    break;
+                case "right":
+                    scope = Scope.right;
+                    break;
+                default:
+                    throw new AssertionError();
+            }
+        }
         this.map = map;
         matchExprs = new ArrayList<>();
         NodeList nodelist = e.getElementsByTagName("match");
@@ -43,7 +70,7 @@ public class GenItem {
             MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), syntax);
             matchExprs.add(matchExpr);
             matchExpr.getSchema().addVars(vars, map);
-        }  
+        }
         resultExprs = new ArrayList<>();
         nodelist = e.getElementsByTagName("result");
         for (int i = 0; i < nodelist.getLength(); i++) {
@@ -77,7 +104,7 @@ public class GenItem {
                     Expression e = en1.getE();
                     HashMap<Expression, Expression> nvars = new HashMap<>();
                     nvars.putAll(vars);
-                    if (matchExpr.checkExpr(en1, map, nvars, syntax)) {
+                    if (matchExpr.checkExprNode(en1, map, nvars, syntax)) {
                         ArrayList<int[]> parentList = new ArrayList<>();
                         int[] p = Arrays.copyOf(en.getParentList().get(0), en.getParentList().get(0).length);
                         p[n] = i;
@@ -85,7 +112,7 @@ public class GenItem {
                         en1 = new ExprNode(e, en.getChildList(), parentList);
                         int[] sb = generate(n + 1, limit, level, syntax, en1, nvars, exprNodes);
                         System.arraycopy(sb, 0, bounds, 1, matchExprs.size() - n);
-                        bounds[0] = (i < bounds[0])? i : bounds[0];
+                        bounds[0] = (i < bounds[0]) ? i : bounds[0];
                     }
                 }
             } else {
@@ -97,6 +124,7 @@ public class GenItem {
 
     /**
      * ajoute les nouveaux résultats à la liste exprNodes
+     *
      * @param en
      * @param vars
      * @param syntax
@@ -151,8 +179,12 @@ public class GenItem {
     /**
      * @return the vars
      */
-    public HashMap<String,String> getVars() {
+    public HashMap<String, String> getVars() {
         return vars;
+    }
+    
+    public Scope getScope() {
+        return scope;
     }
 
     /**

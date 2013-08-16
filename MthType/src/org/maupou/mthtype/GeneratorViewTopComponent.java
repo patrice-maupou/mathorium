@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.SpinnerNumberModel;
@@ -442,7 +441,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
               int i = exprNodes.indexOf(en);
               if (i != -1) { // expression dans la liste
                   en = exprNodes.get(i).copy();
-                  if (matchExpr.checkExpr(en, genItem.getMap(), varsToExprs, syntax)) {
+                  if (matchExpr.checkExprNode(en, genItem.getMap(), varsToExprs, syntax)) {
                       //en.getParentList().add(i);  à changer
                       if (range + 1 < matchesBox.getItemCount()) {
                           matchesBox.setSelectedIndex(range + 1);

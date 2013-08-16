@@ -262,45 +262,84 @@ public class Expression {
             HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes,
             ExprNode en) {
         boolean fit = match(schema, map, vars, subtypes);
-        if (!fit) {
+        //*
+        if(!fit) {
+            for (Expression e : schema.getChildren()) {
+                if(e.getChildren() != null) {
+                    HashMap<Expression, Expression> nvars = new HashMap<>();
+                    if(match(e, map, nvars, subtypes)) {
+                        en.getExprs().add(schema.replace(nvars));
+                        break;
+                    }
+                }
+            }
+        }
+        //*/
+        if (fit) {
+            setType(schema.getType());
+            en.getExprs().add(this);
+        } else {
             if (children != null) {
                 for (Expression child : children) {
                     HashMap<Expression, Expression> nvars = new HashMap<>();
                     child.matchRecursively(schema, map, nvars, subtypes, en);
                 }
             }
-        } else {
-            setType(schema.getType());
-            en.getExprs().add(this);
         }
         return fit;
     }
 
     /**
-     * simplification d'une expression avec la liste discard
+     * simplification d'une expression avec la liste discards, envisager une
+     * récursivité suivant le paramètre local
      *
      * @param vars
      * @param map
      * @param syntax
      * @param discards
-     * @return
+     * @return l'expression simplifiée
      * @throws Exception
      */
-    public Expression simplify(TreeMap<String, String> map, Syntax syntax, ArrayList<GenItem> discards)
+    public Expression simplify(TreeMap<String, String> map, Syntax syntax, GenItem discard)
             throws Exception {
         Expression ret = this;
         HashMap<Expression, Expression> vars = new HashMap<>();
-        if (discards != null) {
-            for (GenItem discard : discards) {
-                ArrayList<MatchExpr> matchExprs = discard.getMatchExprs();
-                for (MatchExpr matchExpr : matchExprs) {
-                    if (match(matchExpr.getSchema(), map, vars, syntax.getSubtypes())) {
-                        Result result = discard.getResultExprs().get(0);
-                        ret = (new Expression(result.getResult(), syntax)).replace(vars);
-                        break;
+        if (getChildren() != null) {
+            switch (discard.getScope()) {
+                case all:
+                    for (int i = 0; i < getChildren().size(); i++) {
+                        Expression child = getChildren().get(i).simplify(map, syntax, discard);
+                        getChildren().set(i, child);
                     }
-                }
+                    break;
+                case left:
+                    Expression child = getChildren().get(0).simplify(map, syntax, discard);
+                    getChildren().set(0, child);
+                    break;
+                case right:
+                    int n = getChildren().size() - 1;
+                    child = getChildren().get(n).simplify(map, syntax, discard);
+                    getChildren().set(n, child);
+                    break;
+                default:
             }
+        }
+        Iterator<MatchExpr> it = discard.getMatchExprs().iterator();
+        boolean fit = true;
+        while (it.hasNext() && fit) {
+            MatchExpr matchExpr = it.next();
+            Expression e = matchExpr.getCheck();
+            if (e == null) {
+                e = this;
+            }
+            else {
+                e = e.replace(vars);
+            }
+            fit = matchExpr.checkExpr(e, map, vars, syntax); // ne tient pas compte de la liste
+        }
+        if (fit) {
+            Result result = discard.getResultExprs().get(0);
+            ret = (new Expression(result.getResult(), syntax)).replace(vars);
         }
         return ret;
     }
