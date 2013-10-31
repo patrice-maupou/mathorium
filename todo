@@ -1,12 +1,12 @@
 pour mode auto de propositions, écarter les théorèmes moins généraux que ceux déjà obtenus :
 si (A/<expr>)T est un théorème, on écarte T
 
-Dans un théorème de type A->B où A=prop(A,B) et B=prop(A,B,C) on peut remplacer C par une autre
-propvar si A et B sont remplacés par a(A,B,C) et b(A,B,C).
+Dans un théorème de type A->B où A=prop(A,B) et B=prop(A,B,C) on doit remplacer C par une autre
+propvar si A et B sont remplacés par A(A,B,C) et B(A,B,C).
 
 exemple : C dans (A->B)->((B->C)->(A->C)) donne (A->B)->((B->D)->(A->D))
 
-Dans la transformation B->C/B, on obtient (A->(B->C))->(((B->C)->C)->(A->C)) dans le 1er cas.
+Dans la transformation (B->C)/B, on obtient (A->(B->C))->(((B->C)->C)->(A->C)) dans le 1er cas.
                                           (A->(B->C))->(((B->C)->D)->(A->D)) dans le 2è.
 mais match(1,2) est faux.
 
@@ -47,9 +47,12 @@ Ex:
 
 3+1=4 , u:3 v:4 , 12+1=13
 
-<discard name="thm"  scope="local"><![CDATA[A->T]]>
-    <result><![CDATA[T]]></result>
+<discard name="thm"><![CDATA[T]]>
+    <result><![CDATA[A->T]]></result>
 </discard>
 
-exemple:  (A->B)->(A->((B->C)->((A->B)->(A->C)))) donne (A->B)->T avec T=(B->C)->((A->B)->(A->C)) puis T
+T=(B->C)->((A->B)->(A->C)) 
+devrait donner D->((B->C)->((A->B)->(A->C))) et non A->.. car A est libre (non utilisé) dans A->T
+
+
 

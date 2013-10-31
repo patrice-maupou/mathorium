@@ -12,10 +12,10 @@ import org.w3c.dom.Element;
  */
 public class Result {
 
-    private String result;
-    private HashMap<Expression, Expression> changes;
-    private String name;
-    private String ref;
+    private final String result;
+    private final HashMap<Expression, Expression> changes;
+    private final String name;
+    private final String ref;
     private int level;
 
     /**
@@ -27,11 +27,11 @@ public class Result {
     public Result(Element e, Syntax syntax) throws Exception {
         TypeCheck.addSubTypes(e, syntax.getSubtypes());
         name = e.getAttribute("name");
-        ref = e.getAttribute("ref");
+        ref = e.getAttribute("ref");        
+        level = 0;
         try {
             level = Integer.parseInt(e.getAttribute("level"));
         } catch (NumberFormatException numberFormatException) {
-            level = 0;
         }
         changes = new HashMap<>();
         String replace = e.getAttribute("changes");
@@ -55,13 +55,13 @@ public class Result {
      * @param map les variables pouvant être permutées
      * @param syntax
      * @param exprNodes liste déjà établie
-     * @param discards types à simplifier
+     * @param exprDiscards
      * @return l'exprNode ou null si ne convient pas
      * @throws Exception
      */
     public ExprNode addExpr(ExprNode en, HashMap<Expression, Expression> vars,
-            TreeMap<String, String> map, Syntax syntax, ArrayList<ExprNode> exprNodes,
-            ArrayList<GenItem> discards) throws Exception {
+            TreeMap<String, String> map, Syntax syntax,
+            ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards) throws Exception {
         ExprNode ret = null;
         Expression e = new Expression(getResult(), syntax);
         e = e.replace(vars);
@@ -79,27 +79,30 @@ public class Result {
                     exprNode.getParentList().addAll(en.getParentList());
                 }
                 inlist = true;
+                break;
             }
         }
-        if (!inlist) { 
-            // expressions écartées par la liste discards
-            for (GenItem discard : discards) {
-                //*
-                e = e.simplify(map, syntax, discard);
-                if (en.getExprs().indexOf(e) != -1) {
-                    return null;
+        if (!inlist) {
+            ArrayList<String> strDiscards = new ArrayList<>();
+            String stre = e.toString(syntax.getSyntaxWrite());
+            for (ExprNode exprNode : exprDiscards) {
+                Expression expr = exprNode.getE();
+                strDiscards.add(expr.toString(syntax.getSyntaxWrite()));
+                HashMap<Expression, Expression> nvars = new HashMap<>();
+                if (e.matchRecursively(expr, map, nvars, syntax.getSubtypes(), en)) {
+                    inlist = true;
                 }
-                //*/
-                // ajouter éventuellement à une liste nodisplay les expressions à écarter
-            }            
-            exprNodes.add(en);
-            ret = en;
-            if (!en.getParentList().isEmpty()) {
-                for (int i = 0; i < en.getParentList().get(0).length; i++) {
-                    int j = en.getParentList().get(0)[i];
-                    ExprNode en1 = exprNodes.get(j);
-                    if (!en1.getChildList().contains(exprNodes.size() - 1)) {
-                        en1.getChildList().add(exprNodes.size() - 1);
+            }
+            if (!inlist) {
+                exprNodes.add(en);
+                ret = en;
+                if (!en.getParentList().isEmpty()) {
+                    for (int i = 0; i < en.getParentList().get(0).length; i++) {
+                        int j = en.getParentList().get(0)[i];
+                        ExprNode en1 = exprNodes.get(j);
+                        if (!en1.getChildList().contains(exprNodes.size() - 1)) {
+                            en1.getChildList().add(exprNodes.size() - 1);
+                        }
                     }
                 }
             }

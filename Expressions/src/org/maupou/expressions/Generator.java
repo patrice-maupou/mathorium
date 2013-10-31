@@ -54,12 +54,12 @@ public class Generator {
     nrl = elem.getElementsByTagName("genrule");
     for (int i = 0; i < nrl.getLength(); i++) {
       Element ifElement = (Element) nrl.item(i);
-      genItems.add(new GenItem(ifElement, syntax, map));
+      genItems.add(new GenItem(ifElement, syntax, map, false));
     }
     nrl = elem.getElementsByTagName("discard");
     for (int i = 0; i < nrl.getLength(); i++) {
       Element ifElement = (Element) nrl.item(i);
-      discards.add(new GenItem(ifElement, syntax, map));
+      discards.add(new GenItem(ifElement, syntax, map, true));
     }
   }
 

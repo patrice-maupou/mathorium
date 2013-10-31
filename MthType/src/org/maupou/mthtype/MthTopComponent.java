@@ -162,6 +162,7 @@ public final class MthTopComponent extends CloneableTopComponent {
             try {
                 String childString;
                 Element e = (Element) nodes.item(i);
+                boolean show = ("no".equals(e.getAttribute("show")))? false : true;
                 String type = e.getAttribute("type");
                 String etext = e.getFirstChild().getTextContent();
                 Expression expr = new Expression(etext, syntax);
@@ -204,13 +205,16 @@ public final class MthTopComponent extends CloneableTopComponent {
                     Element c = (Element) nl.item(j);
                     comment += c.getTextContent();
                 }
-                output.append("<p>");
-                if (!comment.trim().isEmpty()) {
-                    output.append("<div>").append(comment).append("</div><br>");
+                if (show) {
+                    output.append("<p>");
+                    if (!comment.trim().isEmpty()) {
+                        output.append("<div>").append(comment).append("</div><br>");
+                    }
+                    output.append("<var>").append(etext).append("</var>");
+                    output.append("</p>");
                 }
-                output.append("<var>").append(etext).append("</var>");
-                output.append("</p>");
                 ExprNode en = new ExprNode(expr, children, parents);
+                en.setVisible(show);
                 exprNodes.add(en);
             } catch (Exception ex) {
                 Exceptions.printStackTrace(ex);

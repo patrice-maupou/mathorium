@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  *
@@ -19,9 +18,10 @@ import org.w3c.dom.NodeList;
 public class MatchExpr {
 
     private String regex;
-    private String node; // à utiliser pour une sous-expression
+    private String node; // à utiliser pour une sous-expression (non utilisé)
     private String type;
     private Expression schema, check;
+    private boolean noExpr;
     private HashMap<String, String> conds;  // donnée par une égalité (semble non utilisé)
 
     /**
@@ -152,6 +152,10 @@ public class MatchExpr {
                 }
             }
         }
+        else { // vérifier si le schéma coorespond au type
+            Expression e = getSchema().replace(vars);
+            ret = type.equals(e.getType());
+        }
         return ret;
     }
 
@@ -213,5 +217,12 @@ public class MatchExpr {
      */
     public Expression getCheck() {
         return check;
+    }
+
+    public boolean isNoExpr() {
+        return noExpr;
+    }
+    public void setNoExpr(boolean noExpr) {
+        this.noExpr = noExpr;
     }
 }

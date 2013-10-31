@@ -6,9 +6,7 @@ package org.maupou.expressions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Objects;
-import java.util.TreeMap;
 
 /**
  *
@@ -20,19 +18,20 @@ public class ExprNode {
     private ArrayList<Integer> childList;
     private ArrayList<int[]> parentList;
     private ArrayList<Expression> exprs;
+    private boolean visible;
 
     /**
      *
      * @param e
      * @param childList
      * @param parentList
-     * @param exprs
      */
     public ExprNode(Expression e, ArrayList<Integer> childList, ArrayList<int[]> parentList) {
         this.e = e;
         this.childList = childList;
         this.parentList = parentList;
         exprs = new ArrayList<>();
+        visible = true;
     }
 
     
@@ -48,6 +47,7 @@ public class ExprNode {
         }
         Expression expr = (e == null) ? e : e.copy();
         ExprNode en = new ExprNode(expr, childs, parents);
+        en.setVisible(visible);
         return en;
     }
 
@@ -99,5 +99,13 @@ public class ExprNode {
 
     public ArrayList<Expression> getExprs() {
         return exprs;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+   
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 }

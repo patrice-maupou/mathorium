@@ -18,7 +18,7 @@ public class Expression {
      * Création directe en connaissant tous les paramètres
      *
      * @param name
-     * @param etype
+     * @param type
      * @param children
      * @param valid
      */
@@ -293,10 +293,9 @@ public class Expression {
      * simplification d'une expression avec la liste discards, envisager une
      * récursivité suivant le paramètre local
      *
-     * @param vars
      * @param map
      * @param syntax
-     * @param discards
+     * @param discard
      * @return l'expression simplifiée
      * @throws Exception
      */

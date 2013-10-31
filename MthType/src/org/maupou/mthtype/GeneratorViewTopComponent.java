@@ -19,6 +19,7 @@ package org.maupou.mthtype;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -72,6 +73,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
     private boolean resultReady;
     private ArrayList<String> varnames;
     private int level, maxsize, limit;
+    private ArrayList<ExprNode> exrpDiscards;
 
     public GeneratorViewTopComponent() {
         initComponents();
@@ -506,6 +508,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
         NodeList nl = document.getElementsByTagName("expressions");
         Node root = nl.item(0);        
         for (ExprNode exprNode : newExprs) {
+            addDiscards(exprNode);
             String parents = "", enfants = "";
             for (int[] is : exprNode.getParentList()) {
                 for (int i = 0; i < is.length; i++) {
@@ -543,6 +546,36 @@ public final class GeneratorViewTopComponent extends TopComponent {
         tc.componentOpened();
     }
 
+    /**
+     * ajoute les expressions cachées à la liste exrpDiscards
+     * @param exprNode
+     * @throws Exception 
+     */
+    private void addDiscards(ExprNode exprNode) throws Exception {
+        Expression e = exprNode.getE();
+        for (GenItem discard : generator.getDiscards()) {
+            HashMap<Expression, Expression> vars = new HashMap<>();            
+            TreeMap<String,String> map = discard.getMap();
+            Iterator<MatchExpr> it = discard.getMatchExprs().iterator();
+            boolean fit = it.next().checkExpr(e, map, vars, syntax);
+            while (fit && it.hasNext()) {
+                MatchExpr matchExpr = it.next();
+                Expression expr = matchExpr.getSchema().replace(vars);
+                fit = matchExpr.checkExpr(expr, map, vars, syntax);
+            }
+            if (!it.hasNext() && fit) {
+                Iterator<Result> itr = discard.getResultExprs().iterator();
+                while (itr.hasNext()) {
+                    Expression expr = new Expression(itr.next().getResult(), syntax);
+                    expr = expr.replace(vars);
+                    ExprNode en = new ExprNode(expr, null, null);
+                    en.setVisible(false);
+                    exrpDiscards.add(en);
+                }
+            }
+        }
+    }
+    
     private void resultRangesStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_resultRangesStateChanged
         int range = (Integer) resultRanges.getValue();
         updateGenItem(genItem, range);
@@ -554,7 +587,9 @@ public final class GeneratorViewTopComponent extends TopComponent {
 
     private void goButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_goButtonActionPerformed
         if (autoButton.isEnabled()) {
+            goButton.setText("stop");
             limit = (Integer) nbResultSpinner.getValue();
+            exrpDiscards = new ArrayList<>(); // TODO : à déplacer 
             SwingWorker worker = new SwingWorker<ArrayList<ExprNode>, String[]>() {
                 @Override
                 protected ArrayList<ExprNode> doInBackground() throws Exception {
@@ -563,7 +598,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
                     boolean once = exprNodes.isEmpty();
                     do {
                         for (GenItem genItem : generator.getGenItems()) {
-                            if (!once && genItem.getVars().isEmpty()) {
+                            if (!once && (genItem.getVars().isEmpty()  || genItem.isHidden())) {
                                 continue;
                             }
                             genItem.setDiscards(generator.getDiscards());
@@ -575,12 +610,13 @@ public final class GeneratorViewTopComponent extends TopComponent {
                             ArrayList<int[]> parentList = new ArrayList<>();
                             parentList.add(genpList);
                             ExprNode en = new ExprNode(null, childList, parentList);
-                            genItem.generate(0, limit, level, syntax, en, evars, exprNodes);
+                            genItem.generate(0, limit, level, syntax, en, evars, exprNodes, exrpDiscards);
                             List<ExprNode> newExprs = exprNodes.subList(oldsize, exprNodes.size());
                             addToDocument(newExprs);
                         }
                         once = false;
                     } while (exprNodes.size() < limit);
+                    goButton.setText("execute");
                     return exprNodes;
                 }
             };
@@ -663,4 +699,5 @@ public final class GeneratorViewTopComponent extends TopComponent {
     public void setTc(MthTopComponent tc) {
         this.tc = tc;
     }
+
 }

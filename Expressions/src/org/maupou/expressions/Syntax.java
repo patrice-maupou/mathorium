@@ -11,13 +11,13 @@ import org.w3c.dom.NodeList;
  */
 public class Syntax {
 
-  private ArrayList<SyntaxRule> rules;
+  private final ArrayList<SyntaxRule> rules;
   private SyntaxWrite syntaxWrite;
   private SyntaxRule atoms;
-  private HashMap<String, Set<String>> subtypes;
+  private final HashMap<String, Set<String>> subtypes;
   private ArrayList<Generator> generators;
   private ArrayList<MatchExpr> discards;
-  private String unused;
+  private final String unused;
 
   public Syntax(Document document) throws Exception {
     rules = new ArrayList<>();
