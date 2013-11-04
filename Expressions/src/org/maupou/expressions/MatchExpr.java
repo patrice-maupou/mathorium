@@ -88,7 +88,7 @@ public class MatchExpr {
         if (getSchema() == null) {
             ret = checkConditions(en, syntax);
         } else {
-            ret = checkExpr(expr, map, freevars, listvars, vars, syntax);
+            ret = checkExpr(expr, freevars, listvars, vars, syntax);
         }
         return ret;
     }
@@ -96,7 +96,6 @@ public class MatchExpr {
     /**
      *
      * @param expr l'expression examinée par rapport à schema
-     * @param map la table ordonnée des variables
      * @param freevars
      * @param listvars
      * @param vars table des variables déjà connues, ex: A:=(A->B)->A
@@ -104,9 +103,8 @@ public class MatchExpr {
      * @return true si l'expression convient
      * @throws Exception
      */
-    public boolean checkExpr(Expression expr, TreeMap<String, String> map, HashMap<String,String> 
-            freevars, ArrayList<Expression> listvars, HashMap<Expression, Expression> vars, 
-            Syntax syntax) throws Exception {
+    public boolean checkExpr(Expression expr, HashMap<String,String> freevars, ArrayList<Expression> listvars, 
+            HashMap<Expression, Expression> vars, Syntax syntax) throws Exception {
         boolean ret;
         if (expr != null) { // ex : A->B type: prop
             HashMap<Expression, Expression> nvars = new HashMap<>();

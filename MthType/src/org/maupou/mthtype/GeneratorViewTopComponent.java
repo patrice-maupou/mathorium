@@ -556,16 +556,15 @@ public final class GeneratorViewTopComponent extends TopComponent {
     private void addDiscards(ExprNode exprNode) throws Exception {
         Expression e = exprNode.getE();
         for (GenItem discard : generator.getDiscards()) {
-            HashMap<Expression, Expression> vars = new HashMap<>();            
-            TreeMap<String,String> map = discard.getMap();
+            HashMap<Expression, Expression> vars = new HashMap<>();     
             HashMap<String,String> freevars = discard.getFreevars();
             ArrayList<Expression> listvars = discard.getListvars();
             Iterator<MatchExpr> it = discard.getMatchExprs().iterator();
-            boolean fit = it.next().checkExpr(e, map, freevars, listvars, vars, syntax);
+            boolean fit = it.next().checkExpr(e, freevars, listvars, vars, syntax);
             while (fit && it.hasNext()) {
                 MatchExpr matchExpr = it.next();
                 Expression expr = matchExpr.getSchema().replace(vars);
-                fit = matchExpr.checkExpr(expr, map, freevars, listvars, vars, syntax);
+                fit = matchExpr.checkExpr(expr, freevars, listvars, vars, syntax);
             }
             if (!it.hasNext() && fit) {
                 Iterator<Result> itr = discard.getResultExprs().iterator();

@@ -55,22 +55,19 @@ public class Generator {
         if(!list.isEmpty() && !type.isEmpty()) {
             String[] vars = list.trim().split("\\s");
             for (String var : vars) {
-                map.put(var, type);
-                //* modif
                 listvars.add(new Expression(var, syntax));
-                //*/
             }
         }
     }
     nodesVariables = elem.getElementsByTagName("genrule");
     for (int i = 0; i < nodesVariables.getLength(); i++) {
       Element genRuleElement = (Element) nodesVariables.item(i);
-      genItems.add(new GenItem(genRuleElement, syntax, map, freevars, listvars));
+      genItems.add(new GenItem(genRuleElement, syntax, freevars, listvars));
     }
     nodesVariables = elem.getElementsByTagName("discard");
     for (int i = 0; i < nodesVariables.getLength(); i++) {
       Element ifElement = (Element) nodesVariables.item(i);
-      discards.add(new GenItem(ifElement, syntax, map, freevars, listvars));
+      discards.add(new GenItem(ifElement, syntax, freevars, listvars));
     }
   }
 

@@ -563,25 +563,6 @@ public class Expression {
     }
 
     /**
-     * ajoute dans la table vars les variables de l'expression figurant dans map
-     *
-     * @param vars table à remplir
-     * @param map table de référence
-     */
-    public void addVars(HashMap<String, String> vars, TreeMap<String, String> map) {
-        if (children == null) {
-            String etype = map.get(name);
-            if (etype != null && vars.get(name) == null) {
-                vars.put(name, etype);
-            }
-        } else {
-            for (Expression child : children) {
-                child.addVars(vars, map);
-            }
-        }
-    }
-
-    /**
      * le etype de l'expression
      *
      * @return le etype

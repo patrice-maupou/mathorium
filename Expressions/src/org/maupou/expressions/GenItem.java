@@ -59,8 +59,7 @@ public class GenItem {
      * @param listvars
      * @throws Exception
      */
-    public GenItem(Element e, Syntax syntax, TreeMap<String, String> map, HashMap<String,String> freevars, 
-            ArrayList<Expression> listvars) 
+    public GenItem(Element e, Syntax syntax, HashMap<String,String> freevars, ArrayList<Expression> listvars) 
             throws Exception {
         name = e.getAttribute("name");
         scope = Scope.root;
@@ -82,7 +81,6 @@ public class GenItem {
                     throw new AssertionError();
             }
         }
-        this.map = map;
         this.freevars = freevars;
         this.listvars = listvars;
         matchExprs = new ArrayList<>();
@@ -91,7 +89,6 @@ public class GenItem {
         for (int i = 0; i < nodelist.getLength(); i++) {
             MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), syntax);
             matchExprs.add(matchExpr);
-            matchExpr.getSchema().addVars(vars, map);
         }
         resultExprs = new ArrayList<>();
         nodelist = e.getElementsByTagName("result");
