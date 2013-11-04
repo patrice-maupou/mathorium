@@ -21,16 +21,24 @@ public class GenItem {
     private TreeMap<String, String> map;
     private ArrayList<MatchExpr> matchExprs;
     private ArrayList<Result> resultExprs;
+    private HashMap<String,String> freevars;
+    private ArrayList<Expression> listvars;
     private HashMap<String, String> vars;
-    private ArrayList<GenItem> discards;
-    private boolean local, hide;
+    private boolean local;
     private Scope scope;
 
     /**
-     * @return the hide
+     * @return the freevars
      */
-    public boolean isHidden() {
-        return hide;
+    public HashMap<String,String> getFreevars() {
+        return freevars;
+    }
+
+    /**
+     * @return the listvars
+     */
+    public ArrayList<Expression> getListvars() {
+        return listvars;
     }
 
     
@@ -44,17 +52,18 @@ public class GenItem {
     /**
      * constructeur
      *
-     * @param e élément de tagname "if"
+     * @param e élément de tagname "genrule" ou "discard"
      * @param syntax
      * @param map
-     * @param hidden
+     * @param freevars
+     * @param listvars
      * @throws Exception
      */
-    public GenItem(Element e, Syntax syntax, TreeMap<String, String> map, boolean hidden) 
+    public GenItem(Element e, Syntax syntax, TreeMap<String, String> map, HashMap<String,String> freevars, 
+            ArrayList<Expression> listvars) 
             throws Exception {
         name = e.getAttribute("name");
         scope = Scope.root;
-        this.hide = hidden;
         if (e.hasAttribute("scope")) {
             switch (e.getAttribute("scope")) {
                 case "root":
@@ -74,6 +83,8 @@ public class GenItem {
             }
         }
         this.map = map;
+        this.freevars = freevars;
+        this.listvars = listvars;
         matchExprs = new ArrayList<>();
         NodeList nodelist = e.getElementsByTagName("match");
         vars = new HashMap<>();
@@ -117,7 +128,7 @@ public class GenItem {
                     Expression e = en1.getE();
                     HashMap<Expression, Expression> nvars = new HashMap<>();
                     nvars.putAll(vars);
-                    if (matchExpr.checkExprNode(en1, map, nvars, syntax)) {
+                    if (matchExpr.checkExprNode(en1, map, freevars, listvars, nvars, syntax)) {
                         ArrayList<int[]> parentList = new ArrayList<>();
                         int[] p = Arrays.copyOf(en.getParentList().get(0), en.getParentList().get(0).length);
                         p[n] = i;
@@ -146,12 +157,13 @@ public class GenItem {
      * @throws Exception
      */
     private void addResults(ExprNode en, HashMap<Expression, Expression> vars, Syntax syntax, int level, 
-            ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards) throws Exception {
+            ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards) 
+            throws Exception {
         for (int i = 0; i < resultExprs.size(); i++) {
             Result result = resultExprs.get(i);
             if (result.getLevel() <= level) {
                 ExprNode en1 = en.copy();
-                result.addExpr(en1, vars, map, syntax, exprNodes, exprDiscards);
+                result.addExpr(en1, vars, map, freevars, listvars, syntax, exprNodes, exprDiscards);
             }
         }
     }
@@ -205,13 +217,5 @@ public class GenItem {
      */
     public boolean isLocal() {
         return local;
-    }
-
-    public ArrayList<GenItem> getDiscards() {
-        return discards;
-    }
-
-    public void setDiscards(ArrayList<GenItem> discards) {
-        this.discards = discards;
     }
 }

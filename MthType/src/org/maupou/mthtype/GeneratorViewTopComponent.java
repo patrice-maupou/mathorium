@@ -443,14 +443,16 @@ public final class GeneratorViewTopComponent extends TopComponent {
               int i = exprNodes.indexOf(en);
               if (i != -1) { // expression dans la liste
                   en = exprNodes.get(i).copy();
-                  if (matchExpr.checkExprNode(en, genItem.getMap(), varsToExprs, syntax)) {
+                  if (matchExpr.checkExprNode(en, genItem.getMap(), genItem.getFreevars(), genItem.getListvars(),
+                          varsToExprs, syntax)) {
                       //en.getParentList().add(i);  à changer
                       if (range + 1 < matchesBox.getItemCount()) {
                           matchesBox.setSelectedIndex(range + 1);
                       } else { // check results
                           int index = (Integer) resultRanges.getValue() - 1;
                           Result result = genItem.getResultExprs().get(index);
-                          ExprNode en1 = result.addExpr(en, varsToExprs, map, syntax, exprNodes, null);
+                          ExprNode en1 = result.addExpr(en, varsToExprs, map, genItem.getFreevars(), genItem.getListvars(),
+                                  syntax, exprNodes, null);
                           resultField.setText(en1.getE().toString(syntaxWrite));
                           resultReady = true;
                       }
@@ -556,17 +558,22 @@ public final class GeneratorViewTopComponent extends TopComponent {
         for (GenItem discard : generator.getDiscards()) {
             HashMap<Expression, Expression> vars = new HashMap<>();            
             TreeMap<String,String> map = discard.getMap();
+            HashMap<String,String> freevars = discard.getFreevars();
+            ArrayList<Expression> listvars = discard.getListvars();
             Iterator<MatchExpr> it = discard.getMatchExprs().iterator();
-            boolean fit = it.next().checkExpr(e, map, vars, syntax);
+            boolean fit = it.next().checkExpr(e, map, freevars, listvars, vars, syntax);
             while (fit && it.hasNext()) {
                 MatchExpr matchExpr = it.next();
                 Expression expr = matchExpr.getSchema().replace(vars);
-                fit = matchExpr.checkExpr(expr, map, vars, syntax);
+                fit = matchExpr.checkExpr(expr, map, freevars, listvars, vars, syntax);
             }
             if (!it.hasNext() && fit) {
                 Iterator<Result> itr = discard.getResultExprs().iterator();
                 while (itr.hasNext()) {
-                    Expression expr = new Expression(itr.next().getResult(), syntax);
+                    Expression expr = new Expression(itr.next().getResult(), syntax);   
+                    /* TODO changer une variable libre
+                    expr.mapExtended(vars, genItem.getMap()); // mais tm <String,String>
+                    //*/
                     expr = expr.replace(vars);
                     ExprNode en = new ExprNode(expr, null, null);
                     en.setVisible(false);
@@ -598,10 +605,9 @@ public final class GeneratorViewTopComponent extends TopComponent {
                     boolean once = exprNodes.isEmpty();
                     do {
                         for (GenItem genItem : generator.getGenItems()) {
-                            if (!once && (genItem.getVars().isEmpty()  || genItem.isHidden())) {
+                            if (!once && (genItem.getVars().isEmpty())) {
                                 continue;
                             }
-                            genItem.setDiscards(generator.getDiscards());
                             int oldsize = exprNodes.size();
                             int matchsize = genItem.getMatchExprs().size();
                             int[] genpList = new int[matchsize];

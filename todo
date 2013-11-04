@@ -51,7 +51,7 @@ Ex:
     <result><![CDATA[A->T]]></result>
 </discard>
 
-T=(B->C)->((A->B)->(A->C)) 
+T=(B->C)->((A->B)->(A->C)) par match, mais A est libre, à changer si dans les autres variables.
 devrait donner D->((B->C)->((A->B)->(A->C))) et non A->.. car A est libre (non utilisé) dans A->T
 
 

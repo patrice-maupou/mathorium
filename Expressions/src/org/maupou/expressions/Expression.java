@@ -9,10 +9,11 @@ import java.util.regex.Matcher;
  */
 public class Expression {
 
-    private String name;
+    private final String name;
     private String type;
     private ArrayList<Expression> children;
-    private boolean valid;
+    private final boolean valid;
+    private Syntax syntax;
 
     /**
      * Création directe en connaissant tous les paramètres
@@ -21,12 +22,14 @@ public class Expression {
      * @param type
      * @param children
      * @param valid
+     * @param syntax responsable de la création de l'expression
      */
-    public Expression(String name, String type, ArrayList<Expression> children, boolean valid) {
+    public Expression(String name, String type, ArrayList<Expression> children, boolean valid, Syntax syntax) {
         this.name = name;
         this.type = type;
         this.children = children;
         this.valid = valid;
+        //this.syntax = syntax; // FIXIT
     }
 
     /**
@@ -37,7 +40,8 @@ public class Expression {
      * @throws Exception si l'écriture est non valide
      */
     public Expression(String text, Syntax syntax) throws Exception {
-        Expression e = splitSimpleExpressions(text, syntax);
+        Expression e = splitSimpleExpressions(text, syntax);        
+        //this.syntax = syntax; // FIXIT
         if (e != null) {
             name = e.getName();
             type = e.getType();
@@ -80,7 +84,7 @@ public class Expression {
                     SyntaxPattern syntaxPattern = simpleRule.getSyntaxPatternGroups().get(i + 1);
                     setType(syntaxPattern.getTypeChecks().get(0).getType());
                     done = text.equals(matcher.group());
-                    e = new Expression(matcher.group(), getType(), getChildren(), true);
+                    e = new Expression(matcher.group(), getType(), getChildren(), true, syntax);
                     tm.put(matcher.start(), e);
                     text = text.substring(0, matcher.start())
                             + tokenvar.substring(0, matcher.end() - matcher.start())
@@ -138,7 +142,7 @@ public class Expression {
                     }
                     ArrayList<Expression> ch = new ArrayList<>();
                     for (int i = grouprange; i < groupnext; i++) {
-                        if ((m.group(i) != null) && !(var && nodeName.equals(m.group(i)))) { // next child
+                        if ((m.group(i) != null) && !(var && nodeName.equals(m.group(i)))) { // last child
                             e = decreasingSearch(m.group(i), tokenvar, tm, listRules, subtypes, offset + m.start(i));
                             if (e == null) {
                                 return e;
@@ -162,7 +166,7 @@ public class Expression {
                         }
                         // élimination des descendants, changement dans text
                         if (found) {
-                            e = new Expression(nodeName, typeCheck.getType(), ch, true);
+                            e = new Expression(nodeName, typeCheck.getType(), ch, true, syntax);
                             int start = m.start() + offset;
                             for (int k = 1; k <= childs.length; k++) {
                                 start = tm.ceilingKey(start);
@@ -199,21 +203,21 @@ public class Expression {
     public Expression copy() {
         Expression e;
         if (children == null) {
-            e = new Expression(name, type, null, valid);
+            e = new Expression(name, type, null, valid, syntax);
         } else {
             ArrayList<Expression> nchildren = new ArrayList<>();
             for (int i = 0; i < children.size(); i++) {
                 Expression child = children.get(i).copy();
                 nchildren.add(child);
             }
-            e = new Expression(name, type, nchildren, valid);
+            e = new Expression(name, type, nchildren, valid, syntax);
         }
         return e;
     }
 
     /**
      *
-     * @param map
+     * @param map associe une expression à une expression de remplacement
      * @return la nouvelle expression
      */
     public Expression replace(HashMap<Expression, Expression> map) {
@@ -224,13 +228,67 @@ public class Expression {
                 for (int i = 0; i < children.size(); i++) {
                     echilds.add(children.get(i).replace(map));
                 }
-                e = new Expression(name, type, echilds, valid);
+                e = new Expression(name, type, echilds, valid, syntax);
             } else {
-                e = new Expression(name, type, null, valid);
+                e = new Expression(name, type, null, valid, syntax);
             }
         }
         return e;
     }
+    
+    // TODO : A->T et map=[T=A->B], changer A en C    
+    /**
+     * Si variable dans tm non dans map, parcourir les valeurs de map et la suivante de tm
+     * @param map table des remplacements des variables
+     * @param tm liste des variables
+     * @return true si map a changé
+     */
+    public boolean mapExtended(HashMap<Expression, Expression> map, 
+            TreeMap<Expression, Expression> tm) {
+        boolean changed = false;
+        Expression e = map.get(this);
+        Expression last = lastVar(map, tm);
+        if (e == null) { // pas d'expression associée
+            if(tm.containsKey(this)) { // variable reconnue de tm
+                if(tm.headMap(last).containsKey(this)) {
+                    last = tm.get(last);
+                    map.put(this, last);
+                    changed = true;
+                }
+            }
+            else if (children != null) {
+                for (Expression child : children) {
+                    child.mapExtended(map, tm);
+                }
+            }
+        }
+        return changed;
+    }
+    
+    /**
+     * dernière variable utilisée figurant dans les valeurs de map
+     * @param map
+     * @param tm
+     * @return 
+     */
+    public Expression lastVar(HashMap<Expression, Expression> map, 
+            TreeMap<Expression, Expression> tm) {
+        Expression last = tm.firstKey();
+        for (Map.Entry<Expression, Expression> entry : map.entrySet()) {
+            Expression expr = entry.getValue();
+            Expression ev = tm.get(expr);
+            if(tm.containsKey(ev) && tm.headMap(ev).containsKey(last)) {
+                last = ev;
+            }
+            else if (ev.children != null) {
+                for (Expression e : ev.children) {
+                    last = e.lastVar(map, tm);
+                }
+            }
+        }
+        return last;        
+    }
+    
 
     /**
      * si e est une sous-expression de l'expression actuelle, le etype est celui
@@ -253,21 +311,24 @@ public class Expression {
      * type de schema et les met dans la liste des Expr de en
      *
      * @param schema le modèle
-     * @param map les variables
+     * @param map les variables  A=prop, B=prop, ...
+     * @param freevars
+     * @param listvars
+     * @param en
      * @param vars la table des valeurs
      * @param subtypes
      * @return true si l'expression entière convient
      */
-    public boolean matchRecursively(Expression schema, TreeMap<String, String> map,
-            HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes,
-            ExprNode en) {
-        boolean fit = match(schema, map, vars, subtypes);
+    public boolean matchRecursively(Expression schema, TreeMap<String, String> map, 
+            HashMap<String,String> freevars, ArrayList<Expression> listvars, 
+            HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes, ExprNode en) {
+        boolean fit = match(schema, freevars, listvars, vars, subtypes);
         //*
         if(!fit) {
             for (Expression e : schema.getChildren()) {
                 if(e.getChildren() != null) {
                     HashMap<Expression, Expression> nvars = new HashMap<>();
-                    if(match(e, map, nvars, subtypes)) {
+                    if(match(e, freevars, listvars, nvars, subtypes)) {
                         en.getExprs().add(schema.replace(nvars));
                         break;
                     }
@@ -282,86 +343,34 @@ public class Expression {
             if (children != null) {
                 for (Expression child : children) {
                     HashMap<Expression, Expression> nvars = new HashMap<>();
-                    child.matchRecursively(schema, map, nvars, subtypes, en);
+                    child.matchRecursively(schema, map, freevars, listvars, nvars, subtypes, en);
                 }
             }
         }
         return fit;
     }
 
-    /**
-     * simplification d'une expression avec la liste discards, envisager une
-     * récursivité suivant le paramètre local
-     *
-     * @param map
-     * @param syntax
-     * @param discard
-     * @return l'expression simplifiée
-     * @throws Exception
-     */
-    public Expression simplify(TreeMap<String, String> map, Syntax syntax, GenItem discard)
-            throws Exception {
-        Expression ret = this;
-        HashMap<Expression, Expression> vars = new HashMap<>();
-        if (getChildren() != null) {
-            switch (discard.getScope()) {
-                case all:
-                    for (int i = 0; i < getChildren().size(); i++) {
-                        Expression child = getChildren().get(i).simplify(map, syntax, discard);
-                        getChildren().set(i, child);
-                    }
-                    break;
-                case left:
-                    Expression child = getChildren().get(0).simplify(map, syntax, discard);
-                    getChildren().set(0, child);
-                    break;
-                case right:
-                    int n = getChildren().size() - 1;
-                    child = getChildren().get(n).simplify(map, syntax, discard);
-                    getChildren().set(n, child);
-                    break;
-                default:
-            }
-        }
-        Iterator<MatchExpr> it = discard.getMatchExprs().iterator();
-        boolean fit = true;
-        while (it.hasNext() && fit) {
-            MatchExpr matchExpr = it.next();
-            Expression e = matchExpr.getCheck();
-            if (e == null) {
-                e = this;
-            }
-            else {
-                e = e.replace(vars);
-            }
-            fit = matchExpr.checkExpr(e, map, vars, syntax); // ne tient pas compte de la liste
-        }
-        if (fit) {
-            Result result = discard.getResultExprs().get(0);
-            ret = (new Expression(result.getResult(), syntax)).replace(vars);
-        }
-        return ret;
-    }
+    
 
     /**
      * vérifie si cette expression correspond à l'expression schema en
      * remplaçant les clés de map par des expressions de etype value ex:
      * A->(B->(A->B)) avec A->(B->C) avec C=A->B
      *
-     * @param schema
-     * @param map table directe nom de la variable->etype de remplacement, ex:
-     * A=prop,B=prop,...
-     * @param vars
+     * @param schema l'expression contenant les variables et servant de modèle
+     * @param freevars table associant à un type de variable un type de remplacement
+     * @param listvars liste des variables susceptibles d'être utilisées
+     * @param vars table des variables à affecter
      * @param subtypes
-     * @return true si c'est possible
+     * @return true l'expression est du modèle indiqué
      */
-    public boolean match(Expression schema, TreeMap<String, String> map,
+    public boolean match(Expression schema, HashMap<String,String> freevars, ArrayList<Expression> listvars, 
             HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes) {
         boolean fit;
         Expression e;
-        String vType = map.get(schema.name);
-        if (vType != null) {
-            if (fit = subtypes.get(vType).contains(type)) { // etype sous-etype de vType
+        String vtype = (listvars.contains(schema))? freevars.get(schema.type) : null;
+        if (vtype != null) {
+            if (fit = subtypes.get(vtype).contains(type)) { // etype sous-etype de vType
                 if ((e = vars.get(schema)) != null) { // déjà dans la table vars
                     fit = e.equals(this);
                 } else { // nouvelle entrée dans vars
@@ -373,7 +382,8 @@ public class Expression {
         } else if (fit = name.equals(schema.name)) { // l'égalité doit être stricte entre e et schema
             if (children != null && (fit = children.size() == schema.getChildren().size())) {
                 for (int i = 0; i < children.size(); i++) {
-                    fit &= children.get(i).match(schema.getChildren().get(i), map, vars, subtypes);
+                    fit &= children.get(i).match(schema.getChildren().get(i), freevars, listvars, 
+                            vars, subtypes);
                 }
             }
         }
@@ -524,16 +534,32 @@ public class Expression {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder(getName());
-        if (getChildren() != null) {
-            sb.insert(0, "(");
-            for (Expression expression : getChildren()) {
-                sb.append(",");
-                sb.append(expression);
-            }
-            sb.append(")");
+        String ret;
+        SyntaxWrite syntaxWrite = null;
+        if (syntax != null) {
+            syntaxWrite = syntax.getSyntaxWrite();
         }
-        return sb.toString();
+        if (syntaxWrite == null) {
+            //*/
+            StringBuilder sb = new StringBuilder(getName());
+            if (getChildren() != null) {
+                sb.insert(0, "(");
+                for (Expression expression : getChildren()) {
+                    sb.append(",");
+                    sb.append(expression);
+                }
+                sb.append(")");
+            }
+            ret = sb.toString();
+            //*
+        } else {
+            try {
+                ret = toString(syntaxWrite);
+            } catch (Exception ex) {
+                ret = "undefined";
+            }
+        }
+        return ret;
     }
 
     /**
@@ -589,5 +615,12 @@ public class Expression {
      */
     public boolean isValid() {
         return valid;
+    }
+
+    /**
+     * @return the syntax
+     */
+    public Syntax getSyntax() {
+        return syntax;
     }
 }

@@ -53,15 +53,18 @@ public class Result {
      * @param en ExprNode à ajouter
      * @param vars valeurs des variables à remplacer
      * @param map les variables pouvant être permutées
+     * @param freevars
+     * @param listvars
      * @param syntax
      * @param exprNodes liste déjà établie
      * @param exprDiscards
      * @return l'exprNode ou null si ne convient pas
      * @throws Exception
      */
-    public ExprNode addExpr(ExprNode en, HashMap<Expression, Expression> vars,
-            TreeMap<String, String> map, Syntax syntax,
-            ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards) throws Exception {
+    public ExprNode addExpr(ExprNode en, HashMap<Expression, Expression> vars, TreeMap<String, String> map, 
+            HashMap<String,String> freevars, ArrayList<Expression> listvars, Syntax syntax, 
+            ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards) 
+            throws Exception {
         ExprNode ret = null;
         Expression e = new Expression(getResult(), syntax);
         e = e.replace(vars);
@@ -73,7 +76,7 @@ public class Result {
         for (ExprNode exprNode : exprNodes) {
             Expression expr = exprNode.getE();
             HashMap<Expression, Expression> nvars = new HashMap<>();
-            if (e.matchRecursively(expr, map, nvars, syntax.getSubtypes(), en)) {
+            if (e.matchRecursively(expr, map, freevars, listvars, nvars, syntax.getSubtypes(), en)) {
                 // déjà dans la liste (aux variables près)
                 if (!exprNode.getParentList().containsAll(en.getParentList())) {
                     exprNode.getParentList().addAll(en.getParentList());
@@ -83,13 +86,10 @@ public class Result {
             }
         }
         if (!inlist) {
-            ArrayList<String> strDiscards = new ArrayList<>();
-            String stre = e.toString(syntax.getSyntaxWrite());
             for (ExprNode exprNode : exprDiscards) {
                 Expression expr = exprNode.getE();
-                strDiscards.add(expr.toString(syntax.getSyntaxWrite()));
                 HashMap<Expression, Expression> nvars = new HashMap<>();
-                if (e.matchRecursively(expr, map, nvars, syntax.getSubtypes(), en)) {
+                if (e.matchRecursively(expr, map, freevars, listvars, nvars, syntax.getSubtypes(), en)) {
                     inlist = true;
                 }
             }
