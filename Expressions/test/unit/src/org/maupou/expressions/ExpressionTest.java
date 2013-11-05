@@ -185,8 +185,7 @@ public class ExpressionTest {
             Expression exp = new Expression(entry, syntaxList);
             String expString = exp.toString();
             String expected = results[i];
-            System.out.println(i + ":  " + entry + "  ->  " + expString + "   type: " + exp.getType()
-                    + "   valid: " + exp.isValid());
+            System.out.println(i + ":  " + entry + "  ->  " + expString + "   type: " + exp.getType());
             assertEquals(expected, expString);
         }
         System.out.println("\n");
@@ -207,8 +206,7 @@ public class ExpressionTest {
                 expString = "";
             }
             String expected = printing[i];
-            System.out.println(i + ":  " + entry + "  ->  " + expString + "   type: " + exp.getType()
-                    + "   valid: " + exp.isValid());
+            System.out.println(i + ":  " + entry + "  ->  " + expString + "   type: " + exp.getType());
             assertEquals(expected, expString);
         }
     }
