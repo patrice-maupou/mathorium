@@ -451,7 +451,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
                       } else { // check results
                           int index = (Integer) resultRanges.getValue() - 1;
                           Result result = genItem.getResultExprs().get(index);
-                          ExprNode en1 = result.addExpr(en, varsToExprs, map, genItem.getFreevars(), genItem.getListvars(),
+                          ExprNode en1 = result.addExpr(en, varsToExprs, genItem.getFreevars(), genItem.getListvars(),
                                   syntax, exprNodes, null);
                           resultField.setText(en1.getE().toString(syntaxWrite));
                           resultReady = true;

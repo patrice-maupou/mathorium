@@ -54,7 +54,6 @@ public class GenItem {
      *
      * @param e élément de tagname "genrule" ou "discard"
      * @param syntax
-     * @param map
      * @param freevars
      * @param listvars
      * @throws Exception
@@ -160,7 +159,7 @@ public class GenItem {
             Result result = resultExprs.get(i);
             if (result.getLevel() <= level) {
                 ExprNode en1 = en.copy();
-                result.addExpr(en1, vars, map, freevars, listvars, syntax, exprNodes, exprDiscards);
+                result.addExpr(en1, vars, freevars, listvars, syntax, exprNodes, exprDiscards);
             }
         }
     }

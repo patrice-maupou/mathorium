@@ -25,8 +25,8 @@ import org.w3c.dom.NodeList;
 public class Generator {
 
   private final String name;
-  private final ArrayList<GenItem> genItems;
-  private final ArrayList<GenItem> discards;
+  private final ArrayList<GenItem> genItems; // pour créer des expressions
+  private final ArrayList<GenItem> discards; // pour écarter des expressions
 
   public Generator(String name, Element elem, Syntax syntax) throws Exception {
     this.name = name;
@@ -35,10 +35,8 @@ public class Generator {
     // remplir la table map
     TreeMap<String,String> map = new TreeMap<>();
     NodeList nodesVariables = elem.getElementsByTagName("variable");
-    //* modif, ajout de variables propvar=prop et d'une liste ordonnée de ces variables
-    HashMap<String, String> freevars = new HashMap<>();
-    ArrayList<Expression> listvars = new ArrayList<>();
-    //*/
+    HashMap<String, String> freevars = new HashMap<>(); // remplacement type de variable = type à remplacer
+    ArrayList<Expression> listvars = new ArrayList<>(); // liste des variables
     for (int i = 0; i < nodesVariables.getLength(); i++) {
         Element lv = (Element) nodesVariables.item(i);
         String vname = lv.getAttribute("name"); // type de la variable
@@ -54,8 +52,8 @@ public class Generator {
         String list = lv.getAttribute("list");
         if(!list.isEmpty() && !type.isEmpty()) {
             String[] vars = list.trim().split("\\s");
-            for (String var : vars) {
-                listvars.add(new Expression(var, syntax));
+            for (String var : vars) { // liste de variables marquées symbol
+                listvars.add(new Expression(var, name, null, true, syntax));
             }
         }
     }

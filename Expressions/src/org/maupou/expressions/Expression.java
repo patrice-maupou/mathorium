@@ -235,58 +235,30 @@ public class Expression {
         return e;
     }
 
-    // TODO : A->T et map=[T=A->B], changer A en C    
-    /**
-     * Si variable dans tm non dans map, parcourir les valeurs de map et la
-     * suivante de tm
-     *
-     * @param map table des remplacements des variables
-     * @param tm liste des variables
-     * @return true si map a changé
-     */
-    public boolean mapExtended(HashMap<Expression, Expression> map,
-            TreeMap<Expression, Expression> tm) {
-        boolean changed = false;
-        Expression e = map.get(this);
-        Expression last = lastVar(map, tm);
-        if (e == null) { // pas d'expression associée
-            if (tm.containsKey(this)) { // variable reconnue de tm
-                if (tm.headMap(last).containsKey(this)) {
-                    last = tm.get(last);
-                    map.put(this, last);
-                    changed = true;
-                }
-            } else if (children != null) {
-                for (Expression child : children) {
-                    child.mapExtended(map, tm);
-                }
-            }
-        }
-        return changed;
-    }
+    
 
     /**
-     * dernière variable utilisée figurant dans les valeurs de map
+     * dernier index des variables utilisées figurant dans les valeurs de map
      *
-     * @param map
-     * @param tm
+     * @param map table variable = expression
+     * @param list
+     * @param max
      * @return
      */
-    public Expression lastVar(HashMap<Expression, Expression> map,
-            TreeMap<Expression, Expression> tm) {
-        Expression last = tm.firstKey();
+    public int lastIndex(HashMap<Expression, Expression> map, List<Expression> list, int max) {
         for (Map.Entry<Expression, Expression> entry : map.entrySet()) {
             Expression expr = entry.getValue();
-            Expression ev = tm.get(expr);
-            if (tm.containsKey(ev) && tm.headMap(ev).containsKey(last)) {
-                last = ev;
-            } else if (ev.children != null) {
-                for (Expression e : ev.children) {
-                    last = e.lastVar(map, tm);
+            int index = list.indexOf(expr);
+            if(max < index) {
+                max = index;
+            }
+            if (expr.children != null) {
+                for (Expression e : expr.children) {
+                    max = e.lastIndex(map, list, max);
                 }
             }
         }
-        return last;
+        return max;
     }
 
     /**
@@ -310,7 +282,6 @@ public class Expression {
      * type de schema et les met dans la liste des Expr de en
      *
      * @param schema le modèle
-     * @param map les variables A=prop, B=prop, ...
      * @param freevars
      * @param listvars
      * @param en
@@ -318,8 +289,8 @@ public class Expression {
      * @param subtypes
      * @return true si l'expression entière convient
      */
-    public boolean matchRecursively(Expression schema, TreeMap<String, String> map,
-            HashMap<String, String> freevars, ArrayList<Expression> listvars,
+    public boolean matchRecursively(Expression schema, 
+            HashMap<String, String> freevars, ArrayList<Expression> listvars, 
             HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes, ExprNode en) {
         boolean fit = match(schema, freevars, listvars, vars, subtypes);
         //*
@@ -342,7 +313,7 @@ public class Expression {
             if (children != null) {
                 for (Expression child : children) {
                     HashMap<Expression, Expression> nvars = new HashMap<>();
-                    child.matchRecursively(schema, map, freevars, listvars, nvars, subtypes, en);
+                    child.matchRecursively(schema, freevars, listvars, nvars, subtypes, en);
                 }
             }
         }
