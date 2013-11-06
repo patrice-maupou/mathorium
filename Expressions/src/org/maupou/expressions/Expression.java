@@ -12,6 +12,7 @@ public class Expression {
     private final String name;
     private String type;
     private ArrayList<Expression> children;
+    private boolean symbol;
     private Syntax syntax;
 
     /**
@@ -20,12 +21,14 @@ public class Expression {
      * @param name
      * @param type
      * @param children
+     * @param symbol
      * @param syntax responsable de la création de l'expression
      */
-    public Expression(String name, String type, ArrayList<Expression> children, Syntax syntax) {
+    public Expression(String name, String type, ArrayList<Expression> children, boolean symbol, Syntax syntax) {
         this.name = name;
         this.type = type;
         this.children = children;
+        this.symbol = symbol;
         //this.syntax = syntax; // FIXIT
     }
 
@@ -38,6 +41,7 @@ public class Expression {
      */
     public Expression(String text, Syntax syntax) throws Exception {
         Expression e = splitSimpleExpressions(text, syntax);
+        symbol = false;
         //this.syntax = syntax; // FIXIT
         if (e != null) {
             name = e.getName();
@@ -79,7 +83,7 @@ public class Expression {
                     SyntaxPattern syntaxPattern = simpleRule.getSyntaxPatternGroups().get(i + 1);
                     setType(syntaxPattern.getTypeChecks().get(0).getType());
                     done = text.equals(matcher.group());
-                    e = new Expression(matcher.group(), getType(), getChildren(), syntax);
+                    e = new Expression(matcher.group(), getType(), getChildren(), false, syntax);
                     tm.put(matcher.start(), e);
                     text = text.substring(0, matcher.start())
                             + tokenvar.substring(0, matcher.end() - matcher.start())
@@ -161,7 +165,7 @@ public class Expression {
                         }
                         // élimination des descendants, changement dans text
                         if (found) {
-                            e = new Expression(nodeName, typeCheck.getType(), ch, syntax);
+                            e = new Expression(nodeName, typeCheck.getType(), ch, false, syntax);
                             int start = m.start() + offset;
                             for (int k = 1; k <= childs.length; k++) {
                                 start = tm.ceilingKey(start);
@@ -198,14 +202,14 @@ public class Expression {
     public Expression copy() {
         Expression e;
         if (children == null) {
-            e = new Expression(name, type, null, syntax);
+            e = new Expression(name, type, null, isSymbol(), syntax);
         } else {
             ArrayList<Expression> nchildren = new ArrayList<>();
             for (int i = 0; i < children.size(); i++) {
                 Expression child = children.get(i).copy();
                 nchildren.add(child);
             }
-            e = new Expression(name, type, nchildren, syntax);
+            e = new Expression(name, type, nchildren, isSymbol(), syntax);
         }
         return e;
     }
@@ -223,9 +227,9 @@ public class Expression {
                 for (int i = 0; i < children.size(); i++) {
                     echilds.add(children.get(i).replace(map));
                 }
-                e = new Expression(name, type, echilds, syntax);
+                e = new Expression(name, type, echilds, isSymbol(), syntax);
             } else {
-                e = new Expression(name, type, null, syntax);
+                e = new Expression(name, type, null, isSymbol(), syntax);
             }
         }
         return e;
@@ -438,7 +442,7 @@ public class Expression {
     }
 
     /**
-     * pas d'égalité de types requis
+     * pas d'égalité de types requis, seulement sur les noeuds de l'arbre
      *
      * @param obj
      * @return
@@ -577,5 +581,19 @@ public class Expression {
      */
     public Syntax getSyntax() {
         return syntax;
+    }
+
+    /**
+     * @return the symbol
+     */
+    public boolean isSymbol() {
+        return symbol;
+    }
+
+    /**
+     * @param symbol the symbol to set
+     */
+    public void setSymbol(boolean symbol) {
+        this.symbol = symbol;
     }
 }

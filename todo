@@ -1,31 +1,14 @@
-pour mode auto de propositions, écarter les théorèmes moins généraux que ceux déjà obtenus :
-si (A/<expr>)T est un théorème, on écarte T
-
 Dans un théorème de type A->B où A=prop(A,B) et B=prop(A,B,C) on doit remplacer C par une autre
 propvar si A et B sont remplacés par A(A,B,C) et B(A,B,C).
 
 exemple : C dans (A->B)->((B->C)->(A->C)) donne (A->B)->((B->D)->(A->D))
 
-Dans la transformation (B->C)/B, on obtient (A->(B->C))->(((B->C)->C)->(A->C)) dans le 1er cas.
+Dans la transformation {A/A*,(B->C)/B*}, on obtient (A->(B->C))->(((B->C)->C*)->(A->C*)) dans le 1er cas.
                                           (A->(B->C))->(((B->C)->D)->(A->D)) dans le 2è.
-mais match(1,2) est faux.
+le second résultat est plus général, donc plus intéressant.
 
 free(A->B,(B->C)->(A->C))={C} doit être vrai dans la transformation, sinon D/C
 
-
-Ex :
-<generators name="theorems">
-    <variable name="prop" list="A B C D E F G H I J K L M N O P Q R S T U V W X Y Z"/>
-    <genrule name="modus ponens">
-        <choice name="thm"><![CDATA[A]]></choice>
-        <choice name="thm"><![CDATA[B->C]]>
-            <match name="thm" freevars="C/B=C/A"><![CDATA[A->D]]></match>
-        </choice>    
-        <result level="1" name="thm" ref="mp"><![CDATA[B]]></result>
-    </genrule>
-</generators>
-
-list fournit la linkedlist A->B->C..
 
 exemple : 
 A   :  A->A
@@ -33,16 +16,7 @@ B->C:  (A->(B->C))->(B->(A->C))
 
 double match : A:B->C donne ((B->C)->(B->C))->(B->((B->C)->C)) et donc B->((B->C)->C)
 
-Ex:
-<generators name="addition and equality">
-    <variable name="digit" list="u v w"/>
-    <variable name="natural" list="a b c d e"/>
-    <genrule name="unit=0-8">
-        <choice name="equality"><![CDATA[a+1=bu]]></choice>
-        <choice name="equality""><![CDATA[u+1=v]]></choice>
-        <result name="equality"><![CDATA[bu+1=bv]]></result>
-    </genrule>
-</generators>
+
 
 
 3+1=4 , u:3 v:4 , 12+1=13
