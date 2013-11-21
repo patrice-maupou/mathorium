@@ -695,7 +695,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
+        tc.close();
     }
 
     void writeProperties(java.util.Properties p) {
