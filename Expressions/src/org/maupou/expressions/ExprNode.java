@@ -17,7 +17,7 @@ public class ExprNode {
     private Expression e;
     private ArrayList<Integer> childList;
     private ArrayList<int[]> parentList;
-    private ArrayList<Expression> exprs;
+    private final ArrayList<Expression> exprs;
     private boolean visible;
 
     /**

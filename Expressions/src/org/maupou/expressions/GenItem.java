@@ -7,7 +7,6 @@ package org.maupou.expressions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.TreeMap;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -18,7 +17,6 @@ import org.w3c.dom.NodeList;
 public class GenItem {
 
     private String name;
-    private TreeMap<String, String> map;
     private ArrayList<MatchExpr> matchExprs;
     private ArrayList<Result> resultExprs;
     private HashMap<String,String> freevars;
@@ -86,7 +84,7 @@ public class GenItem {
         NodeList nodelist = e.getElementsByTagName("match");
         vars = new HashMap<>();
         for (int i = 0; i < nodelist.getLength(); i++) {
-            MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), syntax);
+            MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), syntax, listvars);
             matchExprs.add(matchExpr);
         }
         resultExprs = new ArrayList<>();
@@ -124,7 +122,7 @@ public class GenItem {
                     Expression e = en1.getE();
                     HashMap<Expression, Expression> nvars = new HashMap<>();
                     nvars.putAll(vars);
-                    if (matchExpr.checkExprNode(en1, map, freevars, listvars, nvars, syntax)) {
+                    if (matchExpr.checkExprNode(en1, freevars, listvars, nvars, syntax)) {
                         ArrayList<int[]> parentList = new ArrayList<>();
                         int[] p = Arrays.copyOf(en.getParentList().get(0), en.getParentList().get(0).length);
                         p[n] = i;
@@ -166,7 +164,7 @@ public class GenItem {
 
     @Override
     public String toString() {
-        String ret = map.toString() + "\n";
+        String ret = "";
         for (int i = 0; i < matchExprs.size(); i++) {
             String cond = matchExprs.get(i).getRegex();
             ret += "   " + cond;
@@ -188,13 +186,6 @@ public class GenItem {
 
     public ArrayList<Result> getResultExprs() {
         return resultExprs;
-    }
-
-    /**
-     * @return the map
-     */
-    public TreeMap<String, String> getMap() {
-        return map;
     }
 
     /**

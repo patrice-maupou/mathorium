@@ -88,6 +88,7 @@ public class Result {
                 HashMap<Expression, Expression> nvars = new HashMap<>();
                 if (e.matchRecursively(expr, freevars, listvars, nvars, syntax.getSubtypes(), en)) {
                     inlist = true;
+                    break;
                 }
             }
             if (!inlist) {

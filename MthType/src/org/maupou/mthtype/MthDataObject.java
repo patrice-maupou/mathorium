@@ -5,17 +5,18 @@
 package org.maupou.mthtype;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import org.maupou.expressions.Syntax;
+import org.netbeans.api.actions.Openable;
+import org.openide.NotifyDescriptor;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
+import org.openide.cookies.OpenCookie;
 import org.openide.filesystems.FileObject;
+import org.openide.filesystems.FileUtil;
 import org.openide.filesystems.MIMEResolver;
 import org.openide.loaders.DataObject;
 import org.openide.loaders.DataObjectExistsException;
@@ -26,7 +27,6 @@ import org.openide.util.Exceptions;
 import org.openide.util.NbBundle.Messages;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
 
 @Messages({
     "LBL_mth_LOADER=Files of mth"
@@ -99,7 +99,7 @@ public class MthDataObject extends MultiDataObject {
 
     public MthDataObject(FileObject pf, MultiFileLoader loader) throws DataObjectExistsException {
         super(pf, loader);
-        //registerEditor("text/x-mth+xml", false);
+        registerEditor("text/x-html", false);        
         CookieSet cookies = getCookieSet();
         try {
             DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -111,22 +111,16 @@ public class MthDataObject extends MultiDataObject {
                 String path = root.getAttribute("syntax");
                 if (path.isEmpty()) {
                 } else {
-                    File syntaxFile = new File(path);
+                    File syntaxFile = new File(path);                    
+                    //registerEntry(FileUtil.createData(syntaxFile));
                     Document syxdoc = documentBuilder.parse(syntaxFile);
                     syntax = new Syntax(syxdoc);
                     syntax.addGenerators(syxdoc);
-                    cookies.add(new MthOpenSupport(getPrimaryEntry()));
+                    cookies.assign(OpenCookie.class, new MthOpenSupport(getPrimaryEntry()));
                 }
             }
-        } catch (ParserConfigurationException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (FileNotFoundException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (SAXException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
         } catch (Exception ex) {
+            NotifyDescriptor error = new NotifyDescriptor.Message(ex);
             Exceptions.printStackTrace(ex);
         }
     }

@@ -136,6 +136,13 @@ public class ExpressionTest {
             assertEquals(true, fit);
         }
     }
+    
+    /*
+    @Test
+    public void testmarkUsedVars() throws Exception {
+        
+    }
+    //*/
 
     @Test
     public void testReplace() throws Exception {
@@ -169,6 +176,7 @@ public class ExpressionTest {
         }
     }
 
+    
     /**
      * Test of toString method, of class Expression.
      *

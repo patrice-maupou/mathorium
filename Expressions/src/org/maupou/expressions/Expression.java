@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
  */
 public class Expression {
 
-    private final String name;
+    private String name;
     private String type;
     private ArrayList<Expression> children;
     private boolean symbol;
@@ -235,30 +235,21 @@ public class Expression {
         return e;
     }
 
-    
-
     /**
-     * dernier index des variables utilisées figurant dans les valeurs de map
+     * si l'expression contient un symbole non marqué, on le change en un autre
+     * marqué
      *
-     * @param map table variable = expression
-     * @param list
-     * @param max
-     * @return
+     * @param listvars liste de symboles, ceux déjà utilisés ne sont pas marqués
      */
-    public int lastIndex(HashMap<Expression, Expression> map, List<Expression> list, int max) {
-        for (Map.Entry<Expression, Expression> entry : map.entrySet()) {
-            Expression expr = entry.getValue();
-            int index = list.indexOf(expr);
-            if(max < index) {
-                max = index;
-            }
-            if (expr.children != null) {
-                for (Expression e : expr.children) {
-                    max = e.lastIndex(map, list, max);
-                }
+    public void markUsedVars(ArrayList<Expression> listvars) {
+        int index = listvars.indexOf(this);
+        if (index != -1) { // c'est une variable
+            listvars.get(index).setSymbol(false);
+        } else if (children != null) {
+            for (Expression child : children) {
+                child.markUsedVars(listvars);
             }
         }
-        return max;
     }
 
     /**
@@ -289,8 +280,8 @@ public class Expression {
      * @param subtypes
      * @return true si l'expression entière convient
      */
-    public boolean matchRecursively(Expression schema, 
-            HashMap<String, String> freevars, ArrayList<Expression> listvars, 
+    public boolean matchRecursively(Expression schema,
+            HashMap<String, String> freevars, ArrayList<Expression> listvars,
             HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes, ExprNode en) {
         boolean fit = match(schema, freevars, listvars, vars, subtypes);
         //*

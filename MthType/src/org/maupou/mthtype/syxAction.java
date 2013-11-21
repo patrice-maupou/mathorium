@@ -23,11 +23,10 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 import org.maupou.syntaxtype.syxDataObject;
+import org.openide.NotifyDescriptor;
 import org.openide.filesystems.FileChooserBuilder;
 import org.openide.filesystems.FileObject;
-import org.openide.util.Exceptions;
-import org.openide.windows.Mode;
-import org.openide.windows.WindowManager;
+import org.openide.filesystems.FileUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -52,7 +51,6 @@ public final class syxAction implements ActionListener {
             FileObject fo = syxObj.getPrimaryFile();
             String path = fo.getPath();
             File syntaxFile = new File(path);
-            String name = syntaxFile.getName();
             DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
             Document syxdoc = documentBuilder.parse(syntaxFile);
@@ -72,19 +70,14 @@ public final class syxAction implements ActionListener {
             Transformer xformer = TransformerFactory.newInstance().newTransformer();
             xformer.setOutputProperty(OutputKeys.INDENT, "yes");
             xformer.transform(source, result);
+            FileObject pf = FileUtil.createData(file);
+            MthDataObject mdo = (MthDataObject) MthDataObject.find(pf);
+            MthOpenSupport lookup = mdo.getLookup().lookup(MthOpenSupport.class);
+            lookup.createCloneableTopComponent();
+            lookup.open();
             
-            MthTopComponent tc = new MthTopComponent(syntax, document);
-            tc.setDisplayName(syxObj.getName());
-            tc.open();
-            tc.requestActive();
-            GeneratorViewTopComponent gvtc =  new GeneratorViewTopComponent(syntax);
-            Mode mode = WindowManager.getDefault().findMode("properties"); // non
-            mode.dockInto(gvtc);
-            gvtc.setName(name);
-            gvtc.open();
-            gvtc.requestActive();
         } catch (Exception ex) {
-            Exceptions.printStackTrace(ex);
+            NotifyDescriptor.Message m = new NotifyDescriptor.Message(ex);
         }
 
     }

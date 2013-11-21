@@ -1,5 +1,6 @@
 Manifest-Version: 1.0
 OpenIDE-Module: org.maupou.syntaxtype
+OpenIDE-Module-Layer: org/maupou/syntaxtype/layer.xml
 OpenIDE-Module-Localizing-Bundle: org/maupou/syntaxtype/Bundle.properties
 OpenIDE-Module-Specification-Version: 1.0
 

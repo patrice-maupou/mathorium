@@ -5,20 +5,37 @@
 package org.maupou.mthtype;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import javax.swing.text.Style;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import org.maupou.expressions.ExprNode;
 import org.maupou.expressions.Expression;
 import org.maupou.expressions.Syntax;
 import org.netbeans.api.settings.ConvertAsProperties;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
+import org.netbeans.spi.actions.AbstractSavable;
+import org.openide.NotifyDescriptor;
+import org.openide.filesystems.FileObject;
+import org.openide.filesystems.FileUtil;
+import org.openide.loaders.SaveAsCapable;
 import org.openide.util.Exceptions;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.lookup.AbstractLookup;
+import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.CloneableTopComponent;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -34,9 +51,7 @@ import org.w3c.dom.NodeList;
         preferredID = "MthTopComponent",
         iconBase = "org/maupou/mthtype/loupesn.gif",
         persistenceType = TopComponent.PERSISTENCE_NEVER)
-@TopComponent.Registration(mode = "explorer", openAtStartup = false)
-@ActionID(category = "Window", id = "org.maupou.mthtype.MthTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@TopComponent.Registration(mode = "editor", openAtStartup = false)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_MthAction",
         preferredID = "MthTopComponent")
@@ -47,70 +62,19 @@ import org.w3c.dom.NodeList;
 })
 public final class MthTopComponent extends CloneableTopComponent {
 
-    private ArrayList<ExprNode> exprNodes;
-    private Syntax syntax;
-    private Document document;
-    Style commentStyle, exprStyle;
+    MthDataObject mdo;
+    private final InstanceContent ic = new InstanceContent();
 
     public MthTopComponent() {
         initComponents();
+        associateLookup(new AbstractLookup(ic));
         //setName(Bundle.CTL_MthTopComponent());
         //setToolTipText(Bundle.HINT_MthTopComponent());
     }
 
-    public MthTopComponent(Syntax syntax, Document document) {
+    public MthTopComponent(MthDataObject mdo) {
         this();
-        this.syntax = syntax;
-        this.document = document;
-        exprNodes = new ArrayList<>();
-        /*  liste des expressions du document
-        NodeList nodes = document.getElementsByTagName("expr");
-        for (int i = 0; i < nodes.getLength(); i++) {
-            try {
-                Element e = (Element) nodes.item(i);
-                String type = e.getAttribute("type");
-                String etext = e.getFirstChild().getTextContent();
-                Expression expr = new Expression(etext, syntax);
-                expr.setType(type);
-                // parents
-                ArrayList<int[]> parents = new ArrayList<>();
-                NodeList nl = e.getElementsByTagName("parents");
-                if (nl.getLength() == 1) {
-                    Element ep = (Element) nl.item(0);
-                    String ps = ep.getFirstChild().getTextContent();
-                    if (!ps.isEmpty()) {
-                        String[] s = ps.split(" ");
-                        for (int j = 0; j < s.length; j++) {
-                            String[] sp = s[j].split("-");
-                            int[] p = new int[sp.length];
-                            for (int k = 0; k < sp.length; k++) {
-                                p[k] = Integer.parseInt(sp[k]);
-                            }
-                            parents.add(p);
-                        }
-                    }
-                }
-
-                // enfants
-                ArrayList<Integer> children = new ArrayList<>();
-                nl = e.getElementsByTagName("children");
-                if (nl.getLength() == 1) {
-                    Element ep = (Element) nl.item(0);
-                    String childString = ep.getFirstChild().getTextContent();
-                    if (!childString.isEmpty()) {
-                        String[] s = childString.split(" ");
-                        for (int j = 0; j < s.length; j++) {
-                            children.add(Integer.parseInt(s[j]));
-                        }
-                    }
-                }
-                ExprNode en = new ExprNode(expr, children, parents, null);
-                exprNodes.add(en);
-            } catch (Exception ex) {
-                Exceptions.printStackTrace(ex);
-            }
-        }        
-        //*/
+        this.mdo = mdo;        
     }
 
     /**
@@ -137,106 +101,199 @@ public final class MthTopComponent extends CloneableTopComponent {
 
     @Override
     public void componentOpened() {
-        if (syntax == null) {
-            return;
-        }
-        StringBuilder output = new StringBuilder();
-        Element root = getDocument().getDocumentElement();
-        HTMLEditorKit kit = new HTMLEditorKit();
-        textPane.setEditorKit(kit);
-        StyleSheet styleSheet = kit.getStyleSheet();
-        try {
-            NodeList nl = getDocument().getElementsByTagName("expressions");
-            Element e = (Element) nl.item(0);
-            String syntaxPath = e.getAttribute("syntax");
-            String path = (new File(syntaxPath)).getParent() + "/mth.css";
-            styleSheet.importStyleSheet(new URL("file:/" + path));
-        } catch (Exception ex) {
-            styleSheet.addRule("var {color:blue; font-size:12; font-style:normal; margin: 4px; }");
-            styleSheet.addRule("div {color:grey; font-size:12; font-style:italic; }");
-            Exceptions.printStackTrace(ex);
-        }
-        exprNodes = new ArrayList<>();
-        NodeList nodes = root.getElementsByTagName("expr");
-        for (int i = 0; i < nodes.getLength(); i++) {
+        if (mdo.getSyntax() != null) {
+            HTMLEditorKit kit = new HTMLEditorKit();
+            textPane.setEditorKit(kit);
+            StyleSheet styleSheet = kit.getStyleSheet();
             try {
-                String childString;
-                Element e = (Element) nodes.item(i);
-                boolean show = ("no".equals(e.getAttribute("show")))? false : true;
-                String type = e.getAttribute("type");
-                String etext = e.getFirstChild().getTextContent();
-                Expression expr = new Expression(etext, syntax);
-                expr.setType(type);
-                // parents
-                ArrayList<int[]> parents = new ArrayList<>();
-                NodeList nl = e.getElementsByTagName("parents");
-                if (nl.getLength() == 1) {
-                    Element ep = (Element) nl.item(0);
-                    String ps = ep.getFirstChild().getTextContent();
-                    if (!ps.isEmpty()) {
-                        String[] s = ps.split(" ");
-                        for (int j = 0; j < s.length; j++) {
-                            String[] sp = s[j].split("-");
-                            int[] p = new int[sp.length];
-                            for (int k = 0; k < sp.length; k++) {
-                                p[k] = Integer.parseInt(sp[k]);
+                Element e = getDocument().getDocumentElement();
+                String syntaxPath = e.getAttribute("syntax");
+                String path = (new File(syntaxPath)).getParent() + "/mth.css";
+                styleSheet.importStyleSheet(new URL("file:/" + path));
+                kit.setStyleSheet(styleSheet);
+            } catch (MalformedURLException ex) {
+                styleSheet.addRule("var {color:blue; font-size:12; font-style:normal; margin: 4px; }");
+                styleSheet.addRule("div {color:grey; font-size:12; font-style:italic; }");
+                Exceptions.printStackTrace(ex);
+            }
+            updateText(null);
+        }
+        DocumentListener l = new DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                modify();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                modify();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                modify();
+            }
+        };
+        textPane.getDocument().addDocumentListener(l);
+    }
+
+    public void updateText(ArrayList<ExprNode> exprNodes) {
+        try {
+            StringBuilder output = new StringBuilder();
+            javax.swing.text.Document doc = textPane.getDocument();
+            Element root = getDocument().getDocumentElement();
+            NodeList genNodes = root.getElementsByTagName("generator");
+            for (int j = 0; j < genNodes.getLength(); j++) {
+                Element genNode = (Element) genNodes.item(j);
+                output.append("<h1>").append(genNode.getAttribute("name")).append("</h1>");
+                NodeList nodes = genNode.getElementsByTagName("expr");
+                for (int i = 0; i < nodes.getLength(); i++) {
+                    String childString;
+                    Element e = (Element) nodes.item(i);
+                    String type = e.getAttribute("type");
+                    String etext = e.getFirstChild().getTextContent();
+                    Expression expr = new Expression(etext, mdo.getSyntax());
+                    expr.setType(type);
+                    // parents
+                    ArrayList<int[]> parents = new ArrayList<>();
+                    NodeList nl = e.getElementsByTagName("parents");
+                    if (nl != null && nl.getLength() == 1) {
+                        Element ep = (Element) nl.item(0);
+                        String ps = ep.getFirstChild().getTextContent();
+                        if (!ps.isEmpty()) {
+                            String[] s = ps.split(" ");
+                            for (String item : s) {
+                                String[] sp = item.split("-");
+                                int[] p = new int[sp.length];
+                                for (int k = 0; k < sp.length; k++) {
+                                    p[k] = Integer.parseInt(sp[k]);
+                                }
+                                parents.add(p);
                             }
-                            parents.add(p);
                         }
                     }
-                }
-                // enfants
-                ArrayList<Integer> children = new ArrayList<>();
-                nl = e.getElementsByTagName("children");
-                if (nl.getLength() == 1) {
-                    Element ep = (Element) nl.item(0);
-                    childString = ep.getFirstChild().getTextContent();
-                    if (!childString.isEmpty()) {
-                        String[] s = childString.split(" ");
-                        for (int j = 0; j < s.length; j++) {
-                            children.add(Integer.parseInt(s[j]));
+                    // enfants
+                    ArrayList<Integer> children = new ArrayList<>();
+                    nl = e.getElementsByTagName("children");
+                    if (nl != null && nl.getLength() == 1) {
+                        Element ep = (Element) nl.item(0);
+                        childString = ep.getFirstChild().getTextContent();
+                        if (!childString.isEmpty()) {
+                            String[] s = childString.split(" ");
+                            for (String item : s) {
+                                children.add(Integer.parseInt(item));
+                            }
                         }
                     }
-                }
-                // commentaires
-                String comment = "";
-                nl = e.getElementsByTagName("comment");
-                for (int j = 0; j < nl.getLength(); j++) {
-                    Element c = (Element) nl.item(j);
-                    comment += c.getTextContent();
-                }
-                if (show) {
+                    // commentaires
+                    String comment = "";
+                    nl = e.getElementsByTagName("comment");
+                    for (int k = 0; k < nl.getLength(); k++) {
+                        Element c = (Element) nl.item(k);
+                        comment += c.getTextContent();
+                    }
                     output.append("<p>");
                     if (!comment.trim().isEmpty()) {
                         output.append("<div>").append(comment).append("</div><br>");
                     }
                     output.append("<var>").append(etext).append("</var>");
                     output.append("</p>");
+                    ExprNode en = new ExprNode(expr, children, parents);
+                    if (exprNodes != null) {
+                        exprNodes.add(en);
+                    }
                 }
-                ExprNode en = new ExprNode(expr, children, parents);
-                en.setVisible(show);
-                exprNodes.add(en);
-            } catch (Exception ex) {
-                Exceptions.printStackTrace(ex);
             }
+            
+            doc.remove(0, doc.getLength());
+            textPane.setText(output.toString());
+        } catch (Exception ex) {
+            NotifyDescriptor d = new NotifyDescriptor.Message(ex);
+            Exceptions.printStackTrace(ex);
         }
-        textPane.setText(output.toString());
-        /*
-         ElementIterator iterator = new ElementIterator(textPane.getDocument());
-         javax.swing.text.Element element;
-         while ((element = iterator.next()) != null) {
-         AttributeSet attributes = element.getAttributes();
-         Object name = attributes.getAttribute(StyleConstants.NameAttribute);
-         if(name == HTML.Tag.BODY) {
-         break;
-         }
-         }
-         //*/
     }
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
+    }
+
+    private void modify() {
+        if (getLookup().lookup(Save.class) == null) {
+            ic.add(new Save());
+        }
+    }
+
+    class Save extends AbstractSavable implements SaveAsCapable {
+
+        public Save() {
+            register();
+        }
+
+        @Override
+        protected String findDisplayName() {
+            return getDisplayName();
+        }
+
+        @Override
+        protected void handleSave() throws IOException {
+            try {
+                FileObject pf = mdo.getPrimaryFile();
+                String path = pf.getPath();
+                File file = new File(path);
+                writeFile(file);
+            } catch (TransformerException ex) {
+                NotifyDescriptor d = new NotifyDescriptor.Message(ex);
+                Exceptions.printStackTrace(ex);
+            }
+            tc().ic.remove(this);
+            unregister();
+        }
+
+        @Override
+        public void saveAs(FileObject folder, String name) throws IOException {
+            FileObject fileObj = folder.getFileObject(name);
+            if (fileObj == null) {
+                try {
+                    fileObj = FileUtil.createData(folder, name);
+                    File file = new File(fileObj.getPath());
+                    writeFile(file);
+                } catch (TransformerException ex) {
+                    NotifyDescriptor d = new NotifyDescriptor.Message(ex);
+                    Exceptions.printStackTrace(ex);
+                }
+
+            }
+            tc().ic.remove(this);
+            unregister();
+        }
+
+        public void writeFile(File file) throws TransformerConfigurationException, TransformerException {
+            Result result = new StreamResult(file);
+            Source source = new DOMSource(mdo.getDocument());
+            Transformer xformer = TransformerFactory.newInstance().newTransformer();
+            xformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            xformer.transform(source, result);
+        }
+
+        MthTopComponent tc() {
+            return MthTopComponent.this;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof Save) {
+                Save m = (Save) obj;
+                return tc() == m.tc();
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return tc().hashCode();
+        }
+
     }
 
     void writeProperties(java.util.Properties p) {
@@ -251,13 +308,6 @@ public final class MthTopComponent extends CloneableTopComponent {
         // TODO read your settings according to their version
     }
 
-    /**
-     * @return the exprNodes
-     */
-    public ArrayList<ExprNode> getExprNodes() {
-        return exprNodes;
-    }
-
     public javax.swing.JTextPane getTextPane() {
         return textPane;
     }
@@ -266,6 +316,6 @@ public final class MthTopComponent extends CloneableTopComponent {
      * @return the document
      */
     public Document getDocument() {
-        return document;
+        return mdo.getDocument();
     }
 }

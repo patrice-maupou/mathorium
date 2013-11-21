@@ -10,7 +10,14 @@ le second résultat est plus général, donc plus intéressant.
 free(A->B,(B->C)->(A->C))={C} doit être vrai dans la transformation, sinon D/C
 
 
-exemple : 
+exemple checkExpr : 
+     avec A* :      {A*=((A->B)->C)->(B->C)}
+     avec A*->B* :  {A*=A->B, B*=(B->C)->(A->C)} où C ne figure pas dans A* (donc C*)
+
+     la comparaison des A* donne {A=(A->B)->C, B=B->C}, donc B*=(B->C->C*)->(((A->B)->C)->C*)
+     puis on remplace C* par D
+
+exemple double match : 
 A   :  A->A
 B->C:  (A->(B->C))->(B->(A->C))
 

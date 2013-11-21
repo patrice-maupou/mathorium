@@ -18,7 +18,6 @@ import org.openide.loaders.DataObject;
 import org.openide.loaders.DataObjectExistsException;
 import org.openide.loaders.MultiDataObject;
 import org.openide.loaders.MultiFileLoader;
-import org.openide.nodes.CookieSet;
 import org.openide.util.Exceptions;
 import org.openide.util.NbBundle.Messages;
 import org.xml.sax.SAXException;
@@ -94,7 +93,6 @@ public class syxDataObject extends MultiDataObject {
     public syxDataObject(FileObject pf, MultiFileLoader loader)
             throws DataObjectExistsException, IOException {
         super(pf, loader);
-        //CookieSet cookies = getCookieSet();
         String schemaLang = "http://www.w3.org/2001/XMLSchema";
         SchemaFactory factory = SchemaFactory.newInstance(schemaLang);
         InputStream is = getClass().getResourceAsStream("syntaxSchema.xsd");

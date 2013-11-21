@@ -22,14 +22,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingWorker;
 import org.maupou.expressions.*;
 import org.netbeans.api.settings.ConvertAsProperties;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
 import org.openide.util.Exceptions;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
@@ -47,14 +44,12 @@ import org.w3c.dom.NodeList;
         autostore = false)
 @TopComponent.Description(
         preferredID = "GeneratorViewTopComponent",
-        iconBase = "org/math/ExprFile/arrow.png",
+        iconBase = "org/maupou/mthtype/arrow.png",
         persistenceType = TopComponent.PERSISTENCE_NEVER)
-@TopComponent.Registration(mode = "properties", openAtStartup = false)
-@ActionID(category = "Window", id = "org.maupou.mthFile.GeneratorViewTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_GeneratorViewAction",
         preferredID = "GeneratorViewTopComponent")
+
 @Messages({
     "CTL_GeneratorViewAction=GeneratorView",
     "CTL_GeneratorViewTopComponent=GeneratorView Window",
@@ -69,11 +64,11 @@ public final class GeneratorViewTopComponent extends TopComponent {
     private Generator generator;
     private GenItem genItem;
     private ArrayList<ExprNode> exprNodes;
+    private ArrayList<ExprNode> exrpDiscards;
     private HashMap<Expression, Expression> varsToExprs;
     private boolean resultReady;
     private ArrayList<String> varnames;
-    private int level, maxsize, limit;
-    private ArrayList<ExprNode> exrpDiscards;
+    private int level, limit;
 
     public GeneratorViewTopComponent() {
         initComponents();
@@ -92,7 +87,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
             for (int i = 0; i < generators.size(); i++) {
                 genNnames[i] = generators.get(i).getName();
             }
-            generatorsBox.setModel(new DefaultComboBoxModel(genNnames));
+            generatorsBox.setModel(new DefaultComboBoxModel<>(genNnames));
             generator = generators.get(0);
             updateGenerator(generator);
         }
@@ -234,11 +229,13 @@ public final class GeneratorViewTopComponent extends TopComponent {
         });
         varsTable.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(varsTable);
-        varsTable.getColumnModel().getColumn(0).setPreferredWidth(5);
-        varsTable.getColumnModel().getColumn(0).setHeaderValue(org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.varsTable.columnModel.title0")); // NOI18N
-        varsTable.getColumnModel().getColumn(1).setHeaderValue(org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.varsTable.columnModel.title1")); // NOI18N
-        varsTable.getColumnModel().getColumn(2).setPreferredWidth(20);
-        varsTable.getColumnModel().getColumn(2).setHeaderValue(org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.varsTable.columnModel.title2")); // NOI18N
+        if (varsTable.getColumnModel().getColumnCount() > 0) {
+            varsTable.getColumnModel().getColumn(0).setPreferredWidth(5);
+            varsTable.getColumnModel().getColumn(0).setHeaderValue(org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.varsTable.columnModel.title0")); // NOI18N
+            varsTable.getColumnModel().getColumn(1).setHeaderValue(org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.varsTable.columnModel.title1")); // NOI18N
+            varsTable.getColumnModel().getColumn(2).setPreferredWidth(20);
+            varsTable.getColumnModel().getColumn(2).setHeaderValue(org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.varsTable.columnModel.title2")); // NOI18N
+        }
 
         org.openide.awt.Mnemonics.setLocalizedText(levelLabel, org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.levelLabel.text")); // NOI18N
 
@@ -359,8 +356,8 @@ public final class GeneratorViewTopComponent extends TopComponent {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(varsLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 97, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(commLabel)
@@ -431,7 +428,6 @@ public final class GeneratorViewTopComponent extends TopComponent {
 
   private void valueFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_valueFieldActionPerformed
       int range = matchesBox.getSelectedIndex();
-      TreeMap<String,String> map = genItem.getMap();
       if (range != -1) {
           try {
               MatchExpr matchExpr = genItem.getMatchExprs().get(range);
@@ -443,16 +439,15 @@ public final class GeneratorViewTopComponent extends TopComponent {
               int i = exprNodes.indexOf(en);
               if (i != -1) { // expression dans la liste
                   en = exprNodes.get(i).copy();
-                  if (matchExpr.checkExprNode(en, genItem.getMap(), genItem.getFreevars(), genItem.getListvars(),
+                  if (matchExpr.checkExprNode(en, genItem.getFreevars(), genItem.getListvars(),
                           varsToExprs, syntax)) {
-                      //en.getParentList().add(i);  à changer
-                      if (range + 1 < matchesBox.getItemCount()) {
+                      if (range + 1 < matchesBox.getItemCount()) { // choix suivant
                           matchesBox.setSelectedIndex(range + 1);
                       } else { // check results
                           int index = (Integer) resultRanges.getValue() - 1;
                           Result result = genItem.getResultExprs().get(index);
-                          ExprNode en1 = result.addExpr(en, varsToExprs, genItem.getFreevars(), genItem.getListvars(),
-                                  syntax, exprNodes, null);
+                          ExprNode en1 = result.addExpr(en, varsToExprs, genItem.getFreevars(), 
+                                  genItem.getListvars(), syntax, exprNodes, null);
                           resultField.setText(en1.getE().toString(syntaxWrite));
                           resultReady = true;
                       }
@@ -507,10 +502,24 @@ public final class GeneratorViewTopComponent extends TopComponent {
    */
     private void addToDocument(List<ExprNode> newExprs) throws Exception {        
         Document document = tc.getDocument();
-        NodeList nl = document.getElementsByTagName("expressions");
-        Node root = nl.item(0);        
+        String gname = generator.getName();
+        Element root = document.getDocumentElement();
+        Element gen = document.createElement("generator");
+        gen.setAttribute("name", gname);
+        boolean found = false;
+        NodeList gl = root.getElementsByTagName("generator");
+        for (int i = 0; i < gl.getLength(); i++) {
+            Element ge = (Element) gl.item(i);
+            if(found = gname.equals(ge.getAttribute("name"))) {
+                gen = ge;
+                break;
+            }
+        }
+        if(!found) {
+            root.appendChild(gen);
+        }
         for (ExprNode exprNode : newExprs) {
-            addDiscards(exprNode);
+            //addDiscards(exprNode);
             String parents = "", enfants = "";
             for (int[] is : exprNode.getParentList()) {
                 for (int i = 0; i < is.length; i++) {
@@ -535,17 +544,22 @@ public final class GeneratorViewTopComponent extends TopComponent {
             Element comment = document.createElement("comment");
             txtnode = document.createCDATASection("");
             expr.appendChild(txtnode);
-            Element par = document.createElement("parents");
-            txtnode = document.createCDATASection(parents);
-            par.appendChild(txtnode);
-            expr.appendChild(par);
-            Element children = document.createElement("children");
-            txtnode = document.createCDATASection(enfants);
-            children.appendChild(txtnode);
-            expr.appendChild(children);
-            root.appendChild(expr);
+            if (!parents.isEmpty()) {
+                Element par = document.createElement("parents");
+                txtnode = document.createCDATASection(parents);
+                par.appendChild(txtnode);
+                expr.appendChild(par);
+            }
+            if (!enfants.isEmpty()) {
+                Element children = document.createElement("children");
+                txtnode = document.createCDATASection(enfants);
+                children.appendChild(txtnode);
+                expr.appendChild(children);
+            }
+            //root.appendChild(expr);
+            gen.appendChild(expr);
         }
-        tc.componentOpened();
+        tc.updateText(exprNodes);
     }
 
     /**
@@ -560,19 +574,17 @@ public final class GeneratorViewTopComponent extends TopComponent {
             HashMap<String,String> freevars = discard.getFreevars();
             ArrayList<Expression> listvars = discard.getListvars();
             Iterator<MatchExpr> it = discard.getMatchExprs().iterator();
-            boolean fit = it.next().checkExpr(e, freevars, listvars, vars, syntax);
+            boolean fit = it.next().checkExpr(e, vars, freevars, listvars, syntax);
             while (fit && it.hasNext()) {
                 MatchExpr matchExpr = it.next();
                 Expression expr = matchExpr.getSchema().replace(vars);
-                fit = matchExpr.checkExpr(expr, freevars, listvars, vars, syntax);
+                fit = matchExpr.checkExpr(expr, vars, freevars, listvars, syntax);
             }
-            if (!it.hasNext() && fit) {
+            if (!it.hasNext() && fit) { // vars = {T=A->(B->A)}
                 Iterator<Result> itr = discard.getResultExprs().iterator();
                 while (itr.hasNext()) {
-                    Expression expr = new Expression(itr.next().getResult(), syntax);   
-                    /* TODO changer une variable libre
-                    expr.mapExtended(vars, genItem.getMap()); // mais tm <String,String>
-                    //*/
+                    Expression expr = new Expression(itr.next().getResult(), syntax); // A->T
+                    MatchExpr.extendMap(e, vars, listvars);
                     expr = expr.replace(vars);
                     ExprNode en = new ExprNode(expr, null, null);
                     en.setVisible(false);
@@ -595,12 +607,13 @@ public final class GeneratorViewTopComponent extends TopComponent {
         if (autoButton.isEnabled()) {
             goButton.setText("stop");
             limit = (Integer) nbResultSpinner.getValue();
-            exrpDiscards = new ArrayList<>(); // TODO : à déplacer 
+            //*
+            exrpDiscards = new ArrayList<>(); // FIXME : boucle infinie
+            //*/
             SwingWorker worker = new SwingWorker<ArrayList<ExprNode>, String[]>() {
                 @Override
                 protected ArrayList<ExprNode> doInBackground() throws Exception {
                     level = 1;
-                    maxsize = -1;
                     boolean once = exprNodes.isEmpty();
                     do {
                         for (GenItem genItem : generator.getGenItems()) {
@@ -677,7 +690,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
     @Override
     public void componentOpened() {
         varsToExprs = new HashMap<>();
-        exprNodes = tc.getExprNodes();
+        exprNodes = new ArrayList<>();
     }
 
     @Override

@@ -53,7 +53,7 @@ public class Generator {
         if(!list.isEmpty() && !type.isEmpty()) {
             String[] vars = list.trim().split("\\s");
             for (String var : vars) { // liste de variables marquées symbol
-                listvars.add(new Expression(var, name, null, true, syntax));
+                listvars.add(new Expression(var, vname, null, true, syntax));
             }
         }
     }

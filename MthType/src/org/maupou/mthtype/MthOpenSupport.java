@@ -35,7 +35,7 @@ public class MthOpenSupport extends OpenSupport implements OpenCookie, CloseCook
     @Override
     protected CloneableTopComponent createCloneableTopComponent() {
         MthDataObject mdo = (MthDataObject) entry.getDataObject();
-        tc = new MthTopComponent(syntax, mdo.getDocument());
+        tc = new MthTopComponent(mdo);
         name = mdo.getName();
         tc.setDisplayName(name);
         gvtc.setTc(tc);
@@ -47,7 +47,6 @@ public class MthOpenSupport extends OpenSupport implements OpenCookie, CloseCook
         super.open();
         if (gvtc != null) {
             Mode mode = WindowManager.getDefault().findMode("properties");
-            //WindowManager.getDefault().setTopComponentFloating(gvtc, false);
             mode.dockInto(gvtc);
             gvtc.setName(name);
             gvtc.open();
