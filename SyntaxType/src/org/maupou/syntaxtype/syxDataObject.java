@@ -5,10 +5,9 @@
 package org.maupou.syntaxtype;
 
 import java.io.IOException;
-import java.io.InputStream;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
+import org.netbeans.spi.xml.cookies.CheckXMLSupport;
+import org.netbeans.spi.xml.cookies.DataObjectAdapters;
+import org.netbeans.spi.xml.cookies.ValidateXMLSupport;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -18,9 +17,9 @@ import org.openide.loaders.DataObject;
 import org.openide.loaders.DataObjectExistsException;
 import org.openide.loaders.MultiDataObject;
 import org.openide.loaders.MultiFileLoader;
-import org.openide.util.Exceptions;
+import org.openide.nodes.CookieSet;
 import org.openide.util.NbBundle.Messages;
-import org.xml.sax.SAXException;
+import org.xml.sax.InputSource;
 
 @Messages({
     "LBL_syx_LOADER=Files of syx"
@@ -88,19 +87,14 @@ import org.xml.sax.SAXException;
 })
 public class syxDataObject extends MultiDataObject {
 
-    private Schema schema; // TODO : introduire une vérification avec schema
-
+   
     public syxDataObject(FileObject pf, MultiFileLoader loader)
             throws DataObjectExistsException, IOException {
         super(pf, loader);
-        String schemaLang = "http://www.w3.org/2001/XMLSchema";
-        SchemaFactory factory = SchemaFactory.newInstance(schemaLang);
-        InputStream is = getClass().getResourceAsStream("syntaxSchema.xsd");
-        try {
-            schema = factory.newSchema(new StreamSource(is));
-        } catch (SAXException ex) {
-            Exceptions.printStackTrace(ex);
-        }
+        CookieSet cookies = getCookieSet();
+        InputSource is = DataObjectAdapters.inputSource(this);
+        cookies.add(new CheckXMLSupport(is));
+        cookies.add(new ValidateXMLSupport(is));
         registerEditor("text/x-syx+xml", false);
     }
 

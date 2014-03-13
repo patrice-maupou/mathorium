@@ -36,7 +36,7 @@ import org.w3c.dom.Element;
 @ActionRegistration(
         displayName = "#CTL_syxAction")
 @ActionReference(path = "Loaders/text/x-syx+xml/Actions", position = 200)
-@Messages("CTL_syxAction=New mth File")
+@Messages("CTL_syxAction=New math File")
 public final class syxAction implements ActionListener {
 
     private final syxDataObject syxObj;
@@ -63,7 +63,7 @@ public final class syxAction implements ActionListener {
             root.setAttribute("syntax", path);
             
             FileChooserBuilder fcb = new FileChooserBuilder("user-dir").setTitle("New File");
-            fcb.setFileFilter(new FileNameExtensionFilter("mth files", "mth"));
+            fcb.setFileFilter(new FileNameExtensionFilter("math files", "math"));
             File file = fcb.showSaveDialog();
             Result result = new StreamResult(file);
             Source source = new DOMSource(document);
@@ -71,8 +71,8 @@ public final class syxAction implements ActionListener {
             xformer.setOutputProperty(OutputKeys.INDENT, "yes");
             xformer.transform(source, result);
             FileObject pf = FileUtil.createData(file);
-            MthDataObject mdo = (MthDataObject) MthDataObject.find(pf);
-            MthOpenSupport lookup = mdo.getLookup().lookup(MthOpenSupport.class);
+            mathDataObject mdo = (mathDataObject) mathDataObject.find(pf);
+            MathOpenSupport lookup = mdo.getLookup().lookup(MathOpenSupport.class);
             lookup.createCloneableTopComponent();
             lookup.open();
             

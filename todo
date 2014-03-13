@@ -1,39 +1,38 @@
-Dans un théorème de type A->B où A=prop(A,B) et B=prop(A,B,C) on doit remplacer C par une autre
-propvar si A et B sont remplacés par A(A,B,C) et B(A,B,C).
 
-exemple : C dans (A->B)->((B->C)->(A->C)) donne (A->B)->((B->D)->(A->D))
+matchBoth :         match :
+C->(A->(B->A))      C->(A->(B->A))
+(A->B)->(A->A)      (A->B)->(A->A)
+E->(B->A)           A->A
+A->A
+B->A
+A
 
-Dans la transformation {A/A*,(B->C)/B*}, on obtient (A->(B->C))->(((B->C)->C*)->(A->C*)) dans le 1er cas.
-                                          (A->(B->C))->(((B->C)->D)->(A->D)) dans le 2è.
-le second résultat est plus général, donc plus intéressant.
+matchBoth :
+vars={A=A->(B->A)} expr=(A->B)->C)->(B->C)   svars={A=(A->B)->C, B=B->C}
+comparaison entre A=A->(B->A) et A=(A->B)->C donne nvars={A=A->B} nsvars={C=B->A}
 
-free(A->B,(B->C)->(A->C))={C} doit être vrai dans la transformation, sinon D/C
+nvars corrige vars={A=(A->B)->(B->(A->B))} et nsvars corrige svars={B=B->(B->A)}
 
+but : ((A->B)->(B->(A->B))) -> (B->(B->A))
 
-exemple checkExpr : 
-     avec A* :      {A*=((A->B)->C)->(B->C)}
-     avec A*->B* :  {A*=A->B, B*=(B->C)->(A->C)} où C ne figure pas dans A* (donc C*)
+-------------------------------------------------
+Types relatifs  C f:a->b , D g:a->b
 
-     la comparaison des A* donne {A=(A->B)->C, B=B->C}, donc B*=(B->C->C*)->(((A->B)->C)->C*)
-     puis on remplace C* par D
+<pattern><![CDATA[[C-E]'*]]>
+    <type name="category">
+        <pattern><![CDATA[[A-Z]\d*]]>
+            <type name="obj">
+        </pattern>
+        <pattern child="s,t"><![CDATA[#category\s#[a-r]\d*'*:s->t]>
+            <type name="arrow" value="obj,obj">
+            </type>        
+        </pattern>
+    </type>
+</pattern>
 
-exemple double match : 
-A   :  A->A
-B->C:  (A->(B->C))->(B->(A->C))
-
-double match : A:B->C donne ((B->C)->(B->C))->(B->((B->C)->C)) et donc B->((B->C)->C)
-
-
-
-
-3+1=4 , u:3 v:4 , 12+1=13
-
-<discard name="thm"><![CDATA[T]]>
-    <result><![CDATA[A->T]]></result>
-</discard>
-
-T=(B->C)->((A->B)->(A->C)) par match, mais A est libre, à changer si dans les autres variables.
-devrait donner D->((B->C)->((A->B)->(A->C))) et non A->.. car A est libre (non utilisé) dans A->T
-
-
-
+<rule key="COMPOSE" child="C g:C->B,C f:A->C"" group="(®_*)">
+    <pattern node="COMPOSE"><![CDATA[g∘f:A->B]]>
+        <type name="arrow" value="arrow,arrow"></type>        
+      </pattern>
+</rule>
+    

@@ -7,4 +7,13 @@
             <file name="org-maupou-mthtype-MthTopComponent.shadow_hidden"/>
         </folder>
     </folder>
+    <folder name="Navigator">
+        <folder name="Panels">
+            <folder name="text">
+                <folder name="x-math+xml">
+                    <file name="org-netbeans-modules-xml-text-navigator-XMLNavigatorPanel.instance"/>
+                </folder>
+            </folder>
+        </folder>
+    </folder>
 </filesystem>

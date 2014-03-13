@@ -98,7 +98,7 @@ public class ExpressionTest {
         HashMap<String, Set<String>> subtypes = syntaxList.getSubtypes();
         HashMap<Expression, Expression> replace = new HashMap<>();
         HashMap<String, String> freevars = new HashMap<>();
-        ArrayList<Expression> listvars = new ArrayList<>();        
+        ArrayList<Expression> listvars = new ArrayList<>();
         String[] ms = matches.split("\",\\s+\"");
         String[] ls = ms[1].split("\\s");
         for (String l : ls) {
@@ -120,15 +120,23 @@ public class ExpressionTest {
     public void testMatchBoth() throws Exception {
         System.out.println("matchBoth");
         HashMap<String, Set<String>> subtypes = syntaxList.getSubtypes();
+        HashMap<Expression, Expression> replace = new HashMap<>();
+        HashMap<Expression, Expression> sreplace = new HashMap<>();
+        ArrayList<Expression> listvars = new ArrayList<>();
         String[] ms = matchBoth.split("\",\\s+\"");
-        for (int i = 1; i < ms.length - 1; i += 4) {
+        String[] ls = ms[1].split("\\s");
+        for (String l : ls) {
+            Expression v = new Expression(l, syntaxList);
+            listvars.add(v);
+        }
+        for (int i = 2; i < ms.length - 1; i += 4) {
             Expression e = new Expression(ms[i], syntaxList);
             Expression schema = new Expression(ms[i + 1], syntaxList);
-            HashMap<String, String> map = new HashMap<>();
-            map.put(ms[i + 2], ms[i + 3]);
-            HashMap<Expression, Expression> replace = new HashMap<>();
-            HashMap<Expression, Expression> sreplace = new HashMap<>();
-            boolean fit = e.matchBoth(schema, map, replace, sreplace, subtypes);
+            HashMap<String, String> freevars = new HashMap<>();
+            freevars.put(ms[i + 2], ms[i + 3]);
+            replace.clear();
+            sreplace.clear();
+            boolean fit = e.matchBoth(schema, freevars, listvars, replace, sreplace, subtypes);
             System.out.println("" + replace);
             System.out.println("" + sreplace);
             System.out.println("e : " + e.toString(syntaxWrite)
@@ -136,14 +144,13 @@ public class ExpressionTest {
             assertEquals(true, fit);
         }
     }
-    
-    /*
-    @Test
-    public void testmarkUsedVars() throws Exception {
-        
-    }
-    //*/
 
+    /*
+     @Test
+     public void testmarkUsedVars() throws Exception {
+        
+     }
+     //*/
     @Test
     public void testReplace() throws Exception {
         System.out.println("replace");
@@ -176,7 +183,6 @@ public class ExpressionTest {
         }
     }
 
-    
     /**
      * Test of toString method, of class Expression.
      *

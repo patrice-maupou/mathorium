@@ -17,6 +17,8 @@
  */
 package org.maupou.mthtype;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,15 +27,27 @@ import java.util.Map;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingWorker;
+import javax.swing.text.StyledDocument;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import org.maupou.expressions.*;
 import org.netbeans.api.settings.ConvertAsProperties;
+import org.openide.NotifyDescriptor;
+import org.openide.text.DataEditorSupport;
 import org.openide.util.Exceptions;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.CloneableTopComponent;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
@@ -55,10 +69,9 @@ import org.w3c.dom.NodeList;
     "CTL_GeneratorViewTopComponent=GeneratorView Window",
     "HINT_GeneratorViewTopComponent=This is a GeneratorView window"
 })
-public final class GeneratorViewTopComponent extends TopComponent {
+public final class GeneratorViewTopComponent extends CloneableTopComponent {
 
     private Syntax syntax;
-    private MthTopComponent tc;
     private SyntaxWrite syntaxWrite;
     private ArrayList<Generator> generators;
     private Generator generator;
@@ -69,6 +82,8 @@ public final class GeneratorViewTopComponent extends TopComponent {
     private boolean resultReady;
     private ArrayList<String> varnames;
     private int level, limit;
+    private Document document;
+    private StyledDocument styleDocument;
 
     public GeneratorViewTopComponent() {
         initComponents();
@@ -77,9 +92,18 @@ public final class GeneratorViewTopComponent extends TopComponent {
         //setToolTipText(Bundle.HINT_GeneratorViewTopComponent());
     }
 
-    public GeneratorViewTopComponent(Syntax syntax) {
+    public GeneratorViewTopComponent(mathDataObject mdo) {
         this();
-        this.syntax = syntax;
+        syntax = mdo.getSyntax();
+        String syntaxPath = mdo.getDocument().getDocumentElement().getAttribute("syntax");
+        try {
+            DataEditorSupport dataEditorSupport = mdo.getLookup().lookup(DataEditorSupport.class);
+            styleDocument = dataEditorSupport.openDocument();
+            document = getBaseDocument(syntaxPath);
+        } catch (IOException | ParserConfigurationException ex) {
+            NotifyDescriptor error = new NotifyDescriptor.Message(ex);
+            Exceptions.printStackTrace(ex);
+        }
         if (syntax != null) {
             syntaxWrite = syntax.getSyntaxWrite();
             generators = syntax.getGenerators();
@@ -88,8 +112,10 @@ public final class GeneratorViewTopComponent extends TopComponent {
                 genNnames[i] = generators.get(i).getName();
             }
             generatorsBox.setModel(new DefaultComboBoxModel<>(genNnames));
-            generator = generators.get(0);
-            updateGenerator(generator);
+            if (!generators.isEmpty()) {
+                generator = generators.get(0);
+                updateGenerator(generator);
+            }
         }
     }
 
@@ -102,6 +128,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
     private void initComponents() {
 
         buttonGroup = new javax.swing.ButtonGroup();
+        jLabel1 = new javax.swing.JLabel();
         title = new javax.swing.JLabel();
         generatorsBox = new javax.swing.JComboBox();
         jSeparator = new javax.swing.JSeparator();
@@ -130,11 +157,15 @@ public final class GeneratorViewTopComponent extends TopComponent {
         levelLabel = new javax.swing.JLabel();
         levelSpinner = new javax.swing.JSpinner();
         goButton = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
+        freeTextField = new javax.swing.JTextField();
+        jSeparator1 = new javax.swing.JSeparator();
+
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.jLabel1.text")); // NOI18N
 
         title.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         org.openide.awt.Mnemonics.setLocalizedText(title, org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.title.text")); // NOI18N
 
-        generatorsBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         generatorsBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 generatorsBoxActionPerformed(evt);
@@ -148,7 +179,6 @@ public final class GeneratorViewTopComponent extends TopComponent {
         buttonGroup.add(autoButton);
         org.openide.awt.Mnemonics.setLocalizedText(autoButton, org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.autoButton.text")); // NOI18N
 
-        genItemBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         genItemBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 genItemBoxActionPerformed(evt);
@@ -171,8 +201,6 @@ public final class GeneratorViewTopComponent extends TopComponent {
         resultField.setText(org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.resultField.text")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(matchesLabel, org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.matchesLabel.text")); // NOI18N
-
-        matchesBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
         org.openide.awt.Mnemonics.setLocalizedText(commLabel, org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.commLabel.text")); // NOI18N
 
@@ -253,122 +281,147 @@ public final class GeneratorViewTopComponent extends TopComponent {
             }
         });
 
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel2, org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.jLabel2.text")); // NOI18N
+
+        freeTextField.setText(org.openide.util.NbBundle.getMessage(GeneratorViewTopComponent.class, "GeneratorViewTopComponent.freeTextField.text")); // NOI18N
+        freeTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                freeTextFieldActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(okButton)
-                .addGap(223, 223, 223))
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(title, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jSeparator, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(genItemNameLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(genItemBox, javax.swing.GroupLayout.PREFERRED_SIZE, 199, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(rangesLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(resultRanges, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(matchesLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(matchesBox, javax.swing.GroupLayout.PREFERRED_SIZE, 326, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(105, 124, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(generatorsBox, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(resultLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(18, 18, 18)
-                                .addComponent(resultField, javax.swing.GroupLayout.DEFAULT_SIZE, 406, Short.MAX_VALUE))
+                                .addComponent(resultField))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(valueLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(valueField))
                             .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                 .addComponent(manuelButton)
                                 .addGap(0, 0, Short.MAX_VALUE))
-                            .addGroup(layout.createSequentialGroup()
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                 .addComponent(varsLabel)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(commLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(valueLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(18, 18, 18)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(matchCheckBox)
-                                        .addGap(47, 47, 47)
-                                        .addComponent(refCheckBox)
-                                        .addGap(65, 65, 65)
-                                        .addComponent(typeCheckBox))
-                                    .addComponent(valueField))))
-                        .addGap(44, 44, 44))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jScrollPane1)))
+                        .addGap(10, 10, 10))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(autoButton)
-                        .addGap(37, 37, 37)
+                        .addGap(38, 38, 38)
                         .addComponent(nbResultsLbl)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(nbResultSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(53, 53, 53)
+                        .addGap(50, 50, 50)
                         .addComponent(levelLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(levelSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(62, 62, 62)
+                        .addGap(63, 63, 63)
                         .addComponent(goButton)
-                        .addGap(0, 0, Short.MAX_VALUE))))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                    .addComponent(matchesLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGap(18, 18, 18)
+                                    .addComponent(matchesBox, javax.swing.GroupLayout.PREFERRED_SIZE, 326, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGroup(layout.createSequentialGroup()
+                                    .addComponent(genItemNameLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                    .addComponent(genItemBox, javax.swing.GroupLayout.PREFERRED_SIZE, 199, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGap(18, 18, 18)
+                                    .addComponent(rangesLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGap(18, 18, 18)
+                                    .addComponent(resultRanges, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(commLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(matchCheckBox)
+                                .addGap(34, 34, 34)
+                                .addComponent(refCheckBox)
+                                .addGap(77, 77, 77)
+                                .addComponent(typeCheckBox)))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+            .addGroup(layout.createSequentialGroup()
+                .addGap(258, 258, 258)
+                .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(228, 228, 228))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(okButton)
+                .addGap(223, 223, 223))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jSeparator1)
+                .addContainerGap())
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(freeTextField)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
+                .addComponent(jLabel2)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(freeTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 5, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(title)
-                .addGap(8, 8, 8)
+                .addGap(12, 12, 12)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(goButton)
+                    .addComponent(levelSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(levelLabel)
                     .addComponent(nbResultSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(nbResultsLbl)
-                    .addComponent(autoButton)
-                    .addComponent(levelLabel)
-                    .addComponent(levelSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(goButton))
-                .addGap(3, 3, 3)
-                .addComponent(jSeparator, javax.swing.GroupLayout.PREFERRED_SIZE, 11, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(autoButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jSeparator, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 7, Short.MAX_VALUE)
                 .addComponent(manuelButton)
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(generatorsBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(27, 27, 27)
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(genItemBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(genItemNameLabel)
                     .addComponent(resultRanges, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(rangesLabel))
+                    .addComponent(rangesLabel)
+                    .addComponent(genItemNameLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(matchesLabel)
                     .addComponent(matchesBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(26, 26, 26)
+                .addGap(24, 24, 24)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(varsLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(varsLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(32, 32, 32)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(commLabel)
                     .addComponent(matchCheckBox)
                     .addComponent(refCheckBox)
                     .addComponent(typeCheckBox))
-                .addGap(33, 33, 33)
+                .addGap(22, 22, 22)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(valueField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(valueLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(39, 39, 39)
+                .addGap(27, 27, 27)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(resultField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(resultLabel))
@@ -378,6 +431,24 @@ public final class GeneratorViewTopComponent extends TopComponent {
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    /**
+     * crée et retourne un document vide compatible avec la syntaxe disponible
+     *
+     * @param syntaxPath
+     * @return un document "dom"
+     * @throws ParserConfigurationException
+     */
+    private Document getBaseDocument(String syntaxPath) throws ParserConfigurationException {
+        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+        Document doc = docBuilder.newDocument();
+        Element exprs = doc.createElement("expressions");
+        doc.appendChild(exprs);
+        exprs.setAttribute("syntax", syntaxPath);
+        return doc;
+    }
+
+
   private void genItemBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_genItemBoxActionPerformed
       int index = genItemBox.getSelectedIndex();
       genItem = generator.getGenItems().get(index);
@@ -386,35 +457,37 @@ public final class GeneratorViewTopComponent extends TopComponent {
 
     private void updateGenItem(GenItem genItem, int range) {
         ArrayList<Result> resultExprs = genItem.getResultExprs();
-        resultRanges.setModel(new SpinnerNumberModel(range, 1, resultExprs.size(), 1));
-        ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
-        String[] matchNames = new String[matchExprs.size()];
-        varnames = new ArrayList<>();
-        for (int i = 0; i < varsTable.getRowCount(); i++) {
-            varsTable.setValueAt("", i, 0);
-            varsTable.setValueAt("", i, 1);
-            varsTable.setValueAt("", i, 2);
-        }
-        if (manuelButton.isSelected()) {
-            int row = 0;
-            for (int i = 0; i < matchNames.length; i++) {
-                MatchExpr matchExpr = matchExprs.get(i);
-                matchNames[i] = matchExpr.getRegex();
+        if (!resultExprs.isEmpty()) {
+            resultRanges.setModel(new SpinnerNumberModel(range, 1, resultExprs.size(), 1));
+            ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
+            String[] matchNames = new String[matchExprs.size()];
+            varnames = new ArrayList<>();
+            for (int i = 0; i < varsTable.getRowCount(); i++) {
+                varsTable.setValueAt("", i, 0);
+                varsTable.setValueAt("", i, 1);
+                varsTable.setValueAt("", i, 2);
             }
-            HashMap<String, String> vars = genItem.getVars();
-            varnames.addAll(vars.keySet());
-            for (String var : varnames) {
-                varsTable.setValueAt(var, row, 0);
-                varsTable.setValueAt(vars.get(var), row, 2);
-                row++;
+            if (manuelButton.isSelected()) {
+                int row = 0;
+                for (int i = 0; i < matchNames.length; i++) {
+                    MatchExpr matchExpr = matchExprs.get(i);
+                    matchNames[i] = matchExpr.getRegex();
+                }
+                HashMap<String, String> vars = genItem.getVars();
+                varnames.addAll(vars.keySet());
+                for (String var : varnames) {
+                    varsTable.setValueAt(var, row, 0);
+                    varsTable.setValueAt(vars.get(var), row, 2);
+                    row++;
+                }
             }
+            if (range < resultExprs.size() + 1) {
+                String result = "";
+                result += resultExprs.get(range - 1);
+                resultField.setText(result);
+            }
+            matchesBox.setModel(new DefaultComboBoxModel(matchNames));
         }
-        if (range < resultExprs.size() + 1) {
-            String result = "";
-            result += resultExprs.get(range - 1);
-            resultField.setText(result);
-        }
-        matchesBox.setModel(new DefaultComboBoxModel(matchNames));
         valueField.setText("");
         varsToExprs.clear();
         resultReady = false;
@@ -422,8 +495,10 @@ public final class GeneratorViewTopComponent extends TopComponent {
 
   private void generatorsBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatorsBoxActionPerformed
       int index = generatorsBox.getSelectedIndex();
-      generator = generators.get(index);
-      updateGenerator(generator);
+      if (index != -1) {          
+          generator = generators.get(index);
+          updateGenerator(generator);
+      }
   }//GEN-LAST:event_generatorsBoxActionPerformed
 
   private void valueFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_valueFieldActionPerformed
@@ -446,7 +521,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
                       } else { // check results
                           int index = (Integer) resultRanges.getValue() - 1;
                           Result result = genItem.getResultExprs().get(index);
-                          ExprNode en1 = result.addExpr(en, varsToExprs, genItem.getFreevars(), 
+                          ExprNode en1 = result.addExpr(en, varsToExprs, genItem.getFreevars(),
                                   genItem.getListvars(), syntax, exprNodes, null);
                           resultField.setText(en1.getE().toString(syntaxWrite));
                           resultReady = true;
@@ -460,7 +535,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
                                   varsTable.setValueAt(val, row, 1);
                               }
                           }
-                      }                      
+                      }
                       valueField.setText("");
                   }
               }
@@ -475,8 +550,8 @@ public final class GeneratorViewTopComponent extends TopComponent {
           String eText = resultField.getText().trim();
           Expression e = null;
           if (genItem.getMatchExprs().isEmpty()) { // résultat direct
-              int index = (Integer) resultRanges.getValue() - 1;
               e = new Expression(eText, syntax);
+              int index = (Integer) resultRanges.getValue() - 1;
               Result result = genItem.getResultExprs().get(index);
               e.setType(result.getName());
               ArrayList<Integer> childList = new ArrayList<>();
@@ -485,7 +560,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
           } else if (resultReady) {
               e = exprNodes.get(exprNodes.size() - 1).getE();
           }
-          if (e != null && tc != null) {
+          if (e != null) {
               int n = exprNodes.size();
               addToDocument(exprNodes.subList(n - 1, n));
           }
@@ -495,14 +570,15 @@ public final class GeneratorViewTopComponent extends TopComponent {
       resultField.setText("");
   }//GEN-LAST:event_okButtonActionPerformed
 
-  /**
-   * met à jour le document de tc en ajoutant les nouvelles expressions et l'ouvre à nouveau
-   * @param newExprs expressions à ajouter
-   * @throws Exception 
-   */
-    private void addToDocument(List<ExprNode> newExprs) throws Exception {        
-        Document document = tc.getDocument();
-        String gname = generator.getName();
+    /**
+     * met à jour le document de tc en ajoutant les nouvelles expressions et
+     * l'ouvre à nouveau
+     *
+     * @param newExprs expressions à ajouter
+     * @throws Exception
+     */
+    private void addToDocument(List<ExprNode> newExprs) throws Exception {
+        String gname = (generator == null)? "freelist" : generator.getName();
         Element root = document.getDocumentElement();
         Element gen = document.createElement("generator");
         gen.setAttribute("name", gname);
@@ -510,21 +586,23 @@ public final class GeneratorViewTopComponent extends TopComponent {
         NodeList gl = root.getElementsByTagName("generator");
         for (int i = 0; i < gl.getLength(); i++) {
             Element ge = (Element) gl.item(i);
-            if(found = gname.equals(ge.getAttribute("name"))) {
+            if (found = gname.equals(ge.getAttribute("name"))) {
                 gen = ge;
                 break;
             }
         }
-        if(!found) {
+        if (!found) {
             root.appendChild(gen);
         }
+        int idx = gen.getElementsByTagName("expr").getLength();
+        if(idx == -1) idx = 0;
         for (ExprNode exprNode : newExprs) {
             //addDiscards(exprNode);
             String parents = "", enfants = "";
             for (int[] is : exprNode.getParentList()) {
                 for (int i = 0; i < is.length; i++) {
-                    String last = (i == is.length - 1)? " " : "-";
-                    parents += is[i] + last;                    
+                    String last = (i == is.length - 1) ? " " : "-";
+                    parents += is[i] + last;
                 }
             }
             parents = parents.trim();
@@ -535,9 +613,9 @@ public final class GeneratorViewTopComponent extends TopComponent {
             Expression e = exprNode.getE();
             String etxt = e.toString(syntaxWrite);
             String type = e.getType();
-            int index = exprNodes.indexOf(exprNode);
+            int index = exprNodes.indexOf(exprNode) + idx;
             Element expr = document.createElement("expr");
-            expr.setAttribute("id", ""+index);
+            expr.setAttribute("id", "" + index);
             expr.setAttribute("type", type);
             CDATASection txtnode = document.createCDATASection(etxt);
             expr.appendChild(txtnode);
@@ -556,22 +634,29 @@ public final class GeneratorViewTopComponent extends TopComponent {
                 children.appendChild(txtnode);
                 expr.appendChild(children);
             }
-            //root.appendChild(expr);
             gen.appendChild(expr);
         }
-        tc.updateText(exprNodes);
+        Transformer t = TransformerFactory.newInstance().newTransformer();
+        t.setOutputProperty(OutputKeys.INDENT, "yes");
+        t.setOutputProperty(OutputKeys.METHOD, "xml");
+        Source source = new DOMSource(document);
+        StringWriter result = new StringWriter();
+        t.transform(source, new StreamResult(result));
+        styleDocument.remove(0, styleDocument.getLength());
+        styleDocument.insertString(0, result.toString(), null);
     }
 
     /**
      * ajoute les expressions cachées à la liste exrpDiscards
+     *
      * @param exprNode
-     * @throws Exception 
+     * @throws Exception
      */
     private void addDiscards(ExprNode exprNode) throws Exception {
         Expression e = exprNode.getE();
         for (GenItem discard : generator.getDiscards()) {
-            HashMap<Expression, Expression> vars = new HashMap<>();     
-            HashMap<String,String> freevars = discard.getFreevars();
+            HashMap<Expression, Expression> vars = new HashMap<>();
+            HashMap<String, String> freevars = discard.getFreevars();
             ArrayList<Expression> listvars = discard.getListvars();
             Iterator<MatchExpr> it = discard.getMatchExprs().iterator();
             boolean fit = it.next().checkExpr(e, vars, freevars, listvars, syntax);
@@ -593,7 +678,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
             }
         }
     }
-    
+
     private void resultRangesStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_resultRangesStateChanged
         int range = (Integer) resultRanges.getValue();
         updateGenItem(genItem, range);
@@ -604,7 +689,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
     }//GEN-LAST:event_levelSpinnerStateChanged
 
     private void goButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_goButtonActionPerformed
-        if (autoButton.isEnabled()) {
+        if (autoButton.isEnabled() && generator != null) {
             goButton.setText("stop");
             limit = (Integer) nbResultSpinner.getValue();
             //*
@@ -642,6 +727,18 @@ public final class GeneratorViewTopComponent extends TopComponent {
         }
     }//GEN-LAST:event_goButtonActionPerformed
 
+    private void freeTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_freeTextFieldActionPerformed
+        String text = freeTextField.getText();
+        try {
+            Expression expr = new Expression(text, syntax);
+            ArrayList<ExprNode> one = new ArrayList<>();
+            one.add(new ExprNode(expr, new ArrayList<Integer>(), new ArrayList<int[]>()));
+            addToDocument(one);
+        } catch (Exception ex) {
+            NotifyDescriptor error = new NotifyDescriptor.Message(ex);
+        }
+    }//GEN-LAST:event_freeTextFieldActionPerformed
+
     private void updateGenerator(Generator gen) {
         ArrayList<GenItem> genItems = gen.getGenItems();
         String[] itemStrings = new String[genItems.size()];
@@ -659,12 +756,16 @@ public final class GeneratorViewTopComponent extends TopComponent {
     private javax.swing.JRadioButton autoButton;
     private javax.swing.ButtonGroup buttonGroup;
     private javax.swing.JLabel commLabel;
+    private javax.swing.JTextField freeTextField;
     private javax.swing.JComboBox genItemBox;
     private javax.swing.JLabel genItemNameLabel;
     private javax.swing.JComboBox generatorsBox;
     private javax.swing.JButton goButton;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator;
+    private javax.swing.JSeparator jSeparator1;
     private javax.swing.JLabel levelLabel;
     private javax.swing.JSpinner levelSpinner;
     private javax.swing.JRadioButton manuelButton;
@@ -695,7 +796,7 @@ public final class GeneratorViewTopComponent extends TopComponent {
 
     @Override
     public void componentClosed() {
-        tc.close();
+        //tc.close();
     }
 
     void writeProperties(java.util.Properties p) {
@@ -712,10 +813,6 @@ public final class GeneratorViewTopComponent extends TopComponent {
 
     public void setExprNodes(ArrayList<ExprNode> exprNodes) {
         this.exprNodes = exprNodes;
-    }
-
-    public void setTc(MthTopComponent tc) {
-        this.tc = tc;
     }
 
 }

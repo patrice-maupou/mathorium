@@ -14,7 +14,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -89,7 +88,7 @@ public class MatchExprTest {
      * Test of checkExprNode method, of class MatchExpr.
      * @throws java.lang.Exception
      */
-    //@Test
+    /*@Test
     public void testCheckExprNode() throws Exception {
         System.out.println("checkExprNode");
         ExprNode en = null;
@@ -97,11 +96,11 @@ public class MatchExprTest {
         Syntax syntax = null;
         MatchExpr instance = null;
         boolean expResult = false;
-        boolean result = instance.checkExprNode(en, freevars, listvars, vars, syntax);
+        boolean result = matchExprs.get(0).checkExprNode(en, freevars, listvars, vars, syntax);
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
-    }
+    }//*/
 
     /**
      * Test of checkExpr method, of class MatchExpr.
@@ -124,9 +123,19 @@ public class MatchExprTest {
             }
         } 
         boolean result = matchExprs.get(0).checkExpr(es.get(0), vars, freevars, listvars, syntax);
+        System.out.println(es.get(0).toString(syntax.getSyntaxWrite()));
+        printVars(vars, syntax);
         if(result) {
             matchExprs.get(1).checkExpr(es.get(1), vars, freevars, listvars, syntax);
         }        
+        System.out.println(es.get(1).toString(syntax.getSyntaxWrite()));
+        printVars(vars, syntax);
+        assertEquals(expVars, vars);
+    }
+    
+    
+    private static void printVars(HashMap<Expression, Expression> vars, Syntax syntax) 
+            throws Exception {
         System.out.println("vars = {");
         for (Map.Entry<Expression, Expression> entry : vars.entrySet()) {
             String v = entry.getKey().toString();
@@ -134,12 +143,12 @@ public class MatchExprTest {
             System.out.print(v + " = " + val + "\n");
         }
         System.out.print("}\n");
-        assertEquals(expVars, vars);
     }
 
     /**
      * Test of checkConditions method, of class MatchExpr.
      */
+    /*
     @Test
     public void testCheckConditions() {
         System.out.println("checkConditions");
@@ -151,11 +160,12 @@ public class MatchExprTest {
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
-    }
+    }//*/
 
     /**
      * Test of toString method, of class MatchExpr.
      */
+    /*/
     @Test
     public void testToString() {
         System.out.println("toString");
@@ -165,25 +175,30 @@ public class MatchExprTest {
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
-    }
+    }//*/
 
     /**
      * Test of getRegex method, of class MatchExpr.
      */
+    /*
     @Test
     public void testGetRegex() {
         System.out.println("getRegex");
-        MatchExpr instance = null;
         String expResult = "";
-        String result = instance.getRegex();
-        assertEquals(expResult, result);
+        for (int i = 0; i < matchExprs.size(); i++) {
+            MatchExpr matchExpr = matchExprs.get(i);
+            String result = matchExpr.getRegex();
+            assertEquals(expResult, result);
+        }
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
     }
+    //*/
 
     /**
      * Test of getNode method, of class MatchExpr.
      */
+    /*
     @Test
     public void testGetNode() {
         System.out.println("getNode");
@@ -194,10 +209,12 @@ public class MatchExprTest {
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
     }
+    //*/
 
     /**
      * Test of getType method, of class MatchExpr.
      */
+    /*
     @Test
     public void testGetType() {
         System.out.println("getType");
@@ -208,10 +225,12 @@ public class MatchExprTest {
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
     }
+    //*/
 
     /**
      * Test of getSchema method, of class MatchExpr.
      */
+    /*
     @Test
     public void testGetSchema() {
         System.out.println("getSchema");
@@ -221,11 +240,12 @@ public class MatchExprTest {
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
-    }
+    }//*/
 
     /**
      * Test of getCheck method, of class MatchExpr.
      */
+    /*
     @Test
     public void testGetCheck() {
         System.out.println("getCheck");
@@ -233,6 +253,20 @@ public class MatchExprTest {
         Expression expResult = null;
         Expression result = instance.getCheck();
         assertEquals(expResult, result);
+        // TODO review the generated test code and remove the default call to fail.
+        fail("The test case is a prototype.");
+    }//*/
+
+    /**
+     * Test of extendMap method, of class MatchExpr.
+     */
+    @Test
+    public void testExtendMap() {
+        System.out.println("extendMap");
+        Expression e = null;
+        HashMap<Expression, Expression> aux = null;
+        ArrayList<Expression> listvars = null;
+        MatchExpr.extendMap(e, aux, listvars);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
     }

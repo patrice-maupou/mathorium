@@ -38,6 +38,7 @@ public class MatchExpr {
         if (txtNode != null) {
             regex = txtNode.getTextContent();
             schema = new Expression(regex, syntax);
+            //schema.setType(type);
             txtNode = txtNode.getNextSibling();
             if (txtNode != null) {
                 check = new Expression(txtNode.getTextContent(), syntax);
@@ -48,8 +49,8 @@ public class MatchExpr {
                 if (!listcond.isEmpty()) {
                     String[] cond = listcond.split("=");
                     String key = cond[0];
-                    String value = (cond.length == 2) ? cond[1] : null;
-                    conds.put(key, value);
+                    String eue = (cond.length == 2) ? cond[1] : null;
+                    conds.put(key, eue);
                 }
             }
         }
@@ -67,7 +68,7 @@ public class MatchExpr {
 
     /**
      * vérifie si expr correspond au schema, et si oui, les nouvelles variables
-     * de même nom que celles dans vars doivent aussi correspondre
+ de même nom que celles dans svars doivent aussi correspondre
      *
      * @param en l'expr examinée par rapport à schema
      * @param freevars
@@ -91,13 +92,11 @@ public class MatchExpr {
     }
 
     /**
-     * match l'expression expr, tient compte des variables de vars pour
-     * actualiser vars
+     * match l'expression expr, tient compte des variables de ses pour
+ actualiser ses
      *
-     * @param expr l'expression examinée par rapport à schema, ex :
-     * ((A->B)->C)->(B->C)
-     * @param freevars table de remplacement d'un type par un autre
-     * (propvar->prop)
+     * @param expr l'expression examinée par rapport à schema, ex : ((A->B)->C)->(B->C)
+     * @param freevars table de remplacement d'un type par un autre (propse->prop)
      * @param listvars liste des symboles à remplacer
      * @param vars table des variables déjà connues, ex: {A:=(A->B)->A}
      * @param syntax
@@ -109,31 +108,48 @@ public class MatchExpr {
             throws Exception {
         boolean ret;
         if (expr != null) { // schema : A->B type: prop
-            HashMap<Expression, Expression> nvars = new HashMap<>();
-            ret = expr.match(getSchema(), freevars, listvars, nvars, syntax.getSubtypes());
+            HashMap<Expression, Expression> svars = new HashMap<>();
+            ret = expr.match(getSchema(), freevars, listvars, svars, syntax.getSubtypes());
             if (vars.isEmpty()) { // ajouter les nouvelles variables
-                vars.putAll(nvars);
+                vars.putAll(svars);
                 for (Expression var : listvars) {
                     var.setSymbol(true);
                 }
-            } else { // actualiser nvars = {A:=A->B  B:=(B->C)->(A->C)}
-                //  par rapport à vars = {A:=((A->B)->C}->(B->C)
-                HashMap<Expression, Expression> aux = new HashMap<>();
-                for (Map.Entry<Expression, Expression> entry : vars.entrySet()) {
-                    Expression var = nvars.get(entry.getKey()); // A->B
-                    Expression e = entry.getValue(); // (A->B)->C
-                    if (ret && var != null) { // aux={A=(A->B)->C, B=B->C} mais pas le C de B:=
-                        ret &= e.match(var, freevars, listvars, aux, syntax.getSubtypes());
+            } else { HashMap<Expression, Expression> nsvars = new HashMap<>(), nvars = new HashMap<>();
+                for (Map.Entry<Expression, Expression> var : vars.entrySet()) {
+                    Expression svar = svars.get(var.getKey()); // A->B
+                    Expression e = var.getValue(); // (A->B)->C
+                    if (ret && svar != null) { // nsvars={A=(A->B)->C, B=B->C} mais pas le C de B:=  
+                        ret &= e.match(svar, freevars, listvars, nsvars, syntax.getSubtypes());
+                        /*
+                        ret &= e.matchBoth(svar, freevars, listvars, nvars, nsvars, syntax.getSubtypes());
+                        //*/
                     }                    
                 }
-                if (ret) { // actualisation de vars par nvars et aux (étendre aux)
-                    for (Expression e : nvars.values()) {
-                        extendMap(e, aux, listvars);
+                //* modif pour matchBoth
+                if (ret) {                    
+                    for (Expression e : svars.values()) { // renomme certaines variables
+                        extendMap(e, nsvars, listvars);
                     }
-                    for (Map.Entry<Expression, Expression> entry : nvars.entrySet()) {
-                        vars.put(entry.getKey(), entry.getValue().replace(aux)); // actualisation
+                    for (Expression var : vars.keySet()) { // corrige vars avec svars
+                        vars.put(var, vars.get(var).replace(nvars));
+                    }
+                    for (Expression svar : svars.keySet()) {
+                        svars.put(svar, svars.get(svar).replace(nsvars));
+                    }
+                    vars.putAll(svars);
+                }
+                //*/
+                /* pour match
+                if (ret) { // actualisation de vars par svars et nsvars (étendre nsvars)
+                    for (Expression e : svars.values()) { // renomme certaines variables
+                        extendMap(e, nsvars, listvars);
+                    }
+                    for (Map.Entry<Expression, Expression> svar : svars.entrySet()) {
+                        vars.put(svar.getKey(), svar.getValue().replace(nsvars)); // actualisation
                     }
                 }
+                //*/
             }
             expr.markUsedVars(listvars);
         } else { // vérifier si le schéma correspond au type
@@ -144,22 +160,22 @@ public class MatchExpr {
     }
     
     /**
-     * ajoute à la table aux les variables de e déjà utilisées dans les valeurs de aux
-     * @param e
-     * @param aux
-     * @param listvars 
+     * ajoute à la table vars les variables de e déjà utilisées dans les valeurs de vars
+     * @param e expression
+     * @param vars table variable=valeur
+     * @param listvars liste de référence des variables
      */
     public static void extendMap(Expression e, 
-            HashMap<Expression, Expression> aux, ArrayList<Expression> listvars) {
+            HashMap<Expression, Expression> vars, ArrayList<Expression> listvars) {
         int index = listvars.indexOf(e);
         if(index != -1) {
             Expression evar = listvars.get(index);
-            if(!evar.isSymbol() && !aux.containsKey(e)) { //déjà utilisée, à remplacer
+            if(!evar.isSymbol() && !vars.containsKey(e)) { //déjà utilisée, à remplacer
                 for (int i = 0; i < listvars.size(); i++) {
                     Expression var = listvars.get(i);
                     if(var.isSymbol() && var.getType().equals(e.getType())) {
                         var.setSymbol(false);
-                        aux.put(e, var); 
+                        vars.put(e, var); // changement de variable
                         break;
                     }
                     
@@ -167,7 +183,7 @@ public class MatchExpr {
             }
         } else if(e.getChildren() != null) {
             for (Expression child : e.getChildren()) {
-                extendMap(child, aux, listvars);
+                extendMap(child, vars, listvars);
             }
         }
     }
@@ -183,9 +199,9 @@ public class MatchExpr {
         boolean ret = false;
         for (Map.Entry<String, String> entry : conds.entrySet()) {
             String key = entry.getKey();
-            String value = entry.getValue();
+            String eue = entry.getValue();
             try {
-                int max = Integer.parseInt(value);
+                int max = Integer.parseInt(eue);
                 switch (key) {
                     case "parents":
                         ret |= en.getParentList().size() <= max;

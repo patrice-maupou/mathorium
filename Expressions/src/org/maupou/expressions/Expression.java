@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
  */
 public class Expression {
 
-    private String name;
+    private final String name;
     private String type;
     private ArrayList<Expression> children;
     private boolean symbol;
@@ -324,20 +324,19 @@ public class Expression {
      * @param subtypes
      * @return true l'expression est du modèle indiqué
      */
-    public boolean match(Expression schema, HashMap<String, String> freevars, ArrayList<Expression> listvars,
+    public boolean match(Expression schema,
+            HashMap<String, String> freevars, ArrayList<Expression> listvars,
             HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes) {
         boolean fit;
         Expression e;
         String vtype = (listvars.contains(schema)) ? freevars.get(schema.type) : null;
-        if (vtype != null) {
-            if (fit = subtypes.get(vtype).contains(type)) { // etype sous-etype de vType
+        if (vtype != null) { // le type de remplacement existe
+            if (fit = subtypes.get(vtype).contains(type)) { // type sous-type de vType
                 if ((e = vars.get(schema)) != null) { // déjà dans la table vars
                     fit = e.equals(this);
                 } else { // nouvelle entrée dans vars
                     vars.put(schema.copy(), copy());
                 }
-            } else {
-                fit = false;
             }
         } else if (fit = name.equals(schema.name)) { // l'égalité doit être stricte entre e et schema
             if (children != null && (fit = children.size() == schema.getChildren().size())) {
@@ -355,48 +354,49 @@ public class Expression {
      * forcément égale à this, mais est une transformée de this.
      *
      * @param schema modèle
-     * @param map type0 peut être remplacé par son image type1 ex: propvar->prop
-     * @param replace table de remplacement des variables de this
-     * @param sreplace table de remplacement des variables de schema
+     * @param freevars type0 peut être remplacé par son image type1 ex:
+     * propvar->prop
+     * @param listvars
+     * @param vars table de remplacement des variables de this
+     * @param schvars table de remplacement des variables de schema
      * @param subtypes
      * @return
      */
-    public boolean matchBoth(Expression schema, HashMap<String, String> map,
-            HashMap<Expression, Expression> replace, HashMap<Expression, Expression> sreplace,
+    public boolean matchBoth(Expression schema,
+            HashMap<String, String> freevars, ArrayList<Expression> listvars,
+            HashMap<Expression, Expression> vars, HashMap<Expression, Expression> schvars,
             HashMap<String, Set<String>> subtypes) {
         Expression e;
-        boolean fit = schema.equals(this);
-        if (!fit) {
-            String ntype = map.get(schema.getType());
-            if (ntype != null) {  // remplacement possible car variable de schema
-                if (fit = subtypes.get(ntype).contains(type)) { // le etype correspond
-                    if ((e = sreplace.get(schema)) != null) { // déjà dans la table sreplace
-                        fit = e.equals(this);
-                    } else { // nouvelle entrée dans sreplace
-                        sreplace.put(schema.copy(), copy());
-                        for (Expression value : sreplace.values()) {
-                            value = value.replace(replace);
-                        }
+        boolean fit;
+        String vtype = (listvars.contains(schema)) ? freevars.get(schema.type) : null;
+        if (vtype != null) {
+            if (fit = subtypes.get(vtype).contains(type)) { // le etype correspond
+                if ((e = schvars.get(schema)) != null) { // déjà dans la table schvars
+                    fit = e.equals(this);
+                } else { // nouvelle entrée dans schvars
+                    schvars.put(schema.copy(), copy());
+                    for (Expression value : schvars.values()) {
+                        value = value.replace(vars);
                     }
+                }
+            }
+        } else if (listvars.contains(this)) { // l'expression est une variable
+            vtype = freevars.get(type);
+            if (fit = vtype != null && subtypes.get(vtype).contains(schema.getType())) {
+                if ((e = vars.get(this)) != null) {
+                    fit = e.equals(schema);
                 } else {
-                    fit = false;
+                    vars.put(copy(), schema.copy());
                 }
-            } else if (map.get(type) != null) { // variable de this
-                if (fit = subtypes.get(map.get(type)).contains(schema.getType())) {
-                    if ((e = replace.get(this)) != null) {
-                        fit = e.equals(schema);
-                    } else {
-                        replace.put(copy(), schema.copy());
-                    }
-                    for (Expression value : replace.values()) {
-                        value = value.replace(sreplace);
-                    }
+                for (Expression value : vars.values()) {
+                    value = value.replace(schvars);
                 }
-            } else if (fit = name.equals(schema.name) && subtypes.get(type).contains(schema.getType())) {
-                if (fit = children.size() == schema.getChildren().size()) {
-                    for (int i = 0; i < children.size(); i++) {
-                        fit = children.get(i).matchBoth(schema.getChildren().get(i), map, replace, sreplace, subtypes);
-                    }
+            }
+        } else if (fit = name.equals(schema.name)) {
+            if (fit = children.size() == schema.getChildren().size()) {
+                for (int i = 0; i < children.size(); i++) {
+                    Expression ei = children.get(i), si = schema.getChildren().get(i);
+                    fit = ei.matchBoth(si, freevars, listvars, vars, schvars, subtypes);
                 }
             }
         }
