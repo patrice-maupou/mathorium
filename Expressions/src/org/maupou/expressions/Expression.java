@@ -236,8 +236,9 @@ public class Expression {
     }
 
     /**
-     * si l'expression contient un symbole non marqué, on le change en un autre
-     * marqué
+     * si l'expression contient une variable de listvars, on fixe le boolean
+     * symbol de cette variable à la valeur false. (utilisé dans
+     * MatchExpr.checkExpr)
      *
      * @param listvars liste de symboles, ceux déjà utilisés ne sont pas marqués
      */
@@ -252,6 +253,7 @@ public class Expression {
         }
     }
 
+
     /**
      * si e est une sous-expression de l'expression actuelle, le etype est celui
      * de e
@@ -262,8 +264,8 @@ public class Expression {
         if (this.equals(e)) {
             type = e.getType();
         } else if (children != null) {
-            for (int i = 0; i < children.size(); i++) {
-                children.get(i).updateType(e);
+            for (Expression children1 : children) {
+                children1.updateType(e);
             }
         }
     }
@@ -350,12 +352,42 @@ public class Expression {
     }
 
     /**
+     * Cherche la première sous-expression qui convienne au modèle, mais il faut
+     * un pointeur sur le noeud parent. Exemple : 8(5+7)-2(4+5) et schema: a+b,
+     *
+     * @param schema le modèle
+     * @param change le modèle remplaçant
+     * @param modifs
+     * @param typesMap
+     * @param listvars
+     * @param vars
+     * @param subtypes table des sous-types
+     * @return vrai si une sous-expression est conforme au modèle
+     */
+    public Expression matchsubExpr(Expression schema, Expression change, boolean[] modifs, 
+            HashMap<String, String> typesMap, ArrayList<Expression> listvars, HashMap<Expression,
+            Expression> vars, HashMap<String, Set<String>> subtypes) {
+        Expression e = copy();
+        if (match(schema, typesMap, listvars, vars, subtypes)) {
+            e = change.replace(vars);
+            modifs[0] = true;
+        } else if (e.getChildren() != null) {
+            for (int i = 0; i < e.getChildren().size(); i++) {
+                Expression child = e.getChildren().get(i);
+                vars.clear();
+                e.getChildren().set(i, child.matchsubExpr(schema, change, modifs, typesMap, 
+                        listvars, vars, subtypes));
+            }
+        }
+        return e;
+    }
+
+    /**
      * extension de match l'expression transformée de schema n'est plus
      * forcément égale à this, mais est une transformée de this.
      *
      * @param schema modèle
-     * @param freevars type0 peut être remplacé par son image type1 ex:
-     * propvar->prop
+     * @param typesMap type0 peut être remplacé par son image type1 ex: propvar->prop
      * @param listvars
      * @param vars table de remplacement des variables de this
      * @param schvars table de remplacement des variables de schema
@@ -363,12 +395,12 @@ public class Expression {
      * @return
      */
     public boolean matchBoth(Expression schema,
-            HashMap<String, String> freevars, ArrayList<Expression> listvars,
+            HashMap<String, String> typesMap, ArrayList<Expression> listvars,
             HashMap<Expression, Expression> vars, HashMap<Expression, Expression> schvars,
             HashMap<String, Set<String>> subtypes) {
         Expression e;
         boolean fit;
-        String vtype = (listvars.contains(schema)) ? freevars.get(schema.type) : null;
+        String vtype = (listvars.contains(schema)) ? typesMap.get(schema.type) : null;
         if (vtype != null) {
             if (fit = subtypes.get(vtype).contains(type)) { // le etype correspond
                 if ((e = schvars.get(schema)) != null) { // déjà dans la table schvars
@@ -381,7 +413,7 @@ public class Expression {
                 }
             }
         } else if (listvars.contains(this)) { // l'expression est une variable
-            vtype = freevars.get(type);
+            vtype = typesMap.get(type);
             if (fit = vtype != null && subtypes.get(vtype).contains(schema.getType())) {
                 if ((e = vars.get(this)) != null) {
                     fit = e.equals(schema);
@@ -396,7 +428,7 @@ public class Expression {
             if (fit = children.size() == schema.getChildren().size()) {
                 for (int i = 0; i < children.size(); i++) {
                     Expression ei = children.get(i), si = schema.getChildren().get(i);
-                    fit = ei.matchBoth(si, freevars, listvars, vars, schvars, subtypes);
+                    fit = ei.matchBoth(si, typesMap, listvars, vars, schvars, subtypes);
                 }
             }
         }

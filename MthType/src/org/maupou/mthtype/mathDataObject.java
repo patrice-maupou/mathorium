@@ -123,7 +123,6 @@ public class mathDataObject extends MultiDataObject {
             }
         } catch (Exception ex) {
             NotifyDescriptor error = new NotifyDescriptor.Message(ex);
-            Exceptions.printStackTrace(ex);
         }
     }
 

@@ -39,6 +39,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.maupou.expressions.*;
 import org.netbeans.api.settings.ConvertAsProperties;
+import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.text.DataEditorSupport;
 import org.openide.util.Exceptions;
@@ -77,10 +78,10 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
     private Generator generator;
     private GenItem genItem;
     private ArrayList<ExprNode> exprNodes;
+    private ArrayList<ExprNode> listparents;
     private ArrayList<ExprNode> exrpDiscards;
     private HashMap<Expression, Expression> varsToExprs;
     private boolean resultReady;
-    private ArrayList<String> varnames;
     private int level, limit;
     private Document document;
     private StyledDocument styleDocument;
@@ -88,6 +89,7 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
     public GeneratorViewTopComponent() {
         initComponents();
         varsToExprs = new HashMap<>();
+        listparents = new ArrayList<>();
         //setName("GeneratorView Window");
         //setToolTipText(Bundle.HINT_GeneratorViewTopComponent());
     }
@@ -102,7 +104,6 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
             document = getBaseDocument(syntaxPath);
         } catch (IOException | ParserConfigurationException ex) {
             NotifyDescriptor error = new NotifyDescriptor.Message(ex);
-            Exceptions.printStackTrace(ex);
         }
         if (syntax != null) {
             syntaxWrite = syntax.getSyntaxWrite();
@@ -456,12 +457,16 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
   }//GEN-LAST:event_genItemBoxActionPerformed
 
     private void updateGenItem(GenItem genItem, int range) {
+        resultField.setText("");
         ArrayList<Result> resultExprs = genItem.getResultExprs();
+        resultRanges.setModel(new SpinnerNumberModel(1, 1, 1, 0));
+        String[] matchNames = new String[0];
         if (!resultExprs.isEmpty()) {
             resultRanges.setModel(new SpinnerNumberModel(range, 1, resultExprs.size(), 1));
             ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
-            String[] matchNames = new String[matchExprs.size()];
-            varnames = new ArrayList<>();
+            int n = matchExprs.size();
+            matchNames = new String[n];
+            listparents = new ArrayList<>();
             for (int i = 0; i < varsTable.getRowCount(); i++) {
                 varsTable.setValueAt("", i, 0);
                 varsTable.setValueAt("", i, 1);
@@ -473,21 +478,14 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
                     MatchExpr matchExpr = matchExprs.get(i);
                     matchNames[i] = matchExpr.getRegex();
                 }
-                HashMap<String, String> vars = genItem.getVars();
-                varnames.addAll(vars.keySet());
-                for (String var : varnames) {
-                    varsTable.setValueAt(var, row, 0);
-                    varsTable.setValueAt(vars.get(var), row, 2);
-                    row++;
-                }
             }
             if (range < resultExprs.size() + 1) {
                 String result = "";
                 result += resultExprs.get(range - 1);
                 resultField.setText(result);
             }
-            matchesBox.setModel(new DefaultComboBoxModel(matchNames));
         }
+        matchesBox.setModel(new DefaultComboBoxModel(matchNames));
         valueField.setText("");
         varsToExprs.clear();
         resultReady = false;
@@ -495,7 +493,7 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
 
   private void generatorsBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatorsBoxActionPerformed
       int index = generatorsBox.getSelectedIndex();
-      if (index != -1) {          
+      if (index != -1) {
           generator = generators.get(index);
           updateGenerator(generator);
       }
@@ -508,39 +506,55 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
               MatchExpr matchExpr = genItem.getMatchExprs().get(range);
               String e = valueField.getText().trim();
               Expression expr = new Expression(e, syntax);
-              ArrayList<Integer> childList = new ArrayList<>(); // TODO : replacer plus haut
-              ArrayList<int[]> parentList = new ArrayList<>();
-              ExprNode en = new ExprNode(expr, childList, parentList);
+              ExprNode en = new ExprNode(expr, new ArrayList<Integer>(), new ArrayList<int[]>());
               int i = exprNodes.indexOf(en);
               if (i != -1) { // expression dans la liste
-                  en = exprNodes.get(i).copy();
+                  en = exprNodes.get(i);
+                  listparents.add(en);
+                  en = en.copy();
                   if (matchExpr.checkExprNode(en, genItem.getFreevars(), genItem.getListvars(),
                           varsToExprs, syntax)) {
-                      if (range + 1 < matchesBox.getItemCount()) { // choix suivant
+                      if (range + 1 < matchesBox.getItemCount()) { // modèle suivant
                           matchesBox.setSelectedIndex(range + 1);
                       } else { // check results
                           int index = (Integer) resultRanges.getValue() - 1;
                           Result result = genItem.getResultExprs().get(index);
                           ExprNode en1 = result.addExpr(en, varsToExprs, genItem.getFreevars(),
                                   genItem.getListvars(), syntax, exprNodes, null);
+                          ArrayList<int[]> parentList = new ArrayList<>();
+                          int psize = listparents.size();
+                          if (psize > 0) {
+                              int[] p = new int[psize];
+                              for (int k = 0; k < p.length; k++) {
+                                  p[k] = exprNodes.indexOf(listparents.get(k));
+                              }
+                              parentList.add(p);
+                          }
+                          en1.setParentList(parentList);
                           resultField.setText(en1.getE().toString(syntaxWrite));
                           resultReady = true;
                       }
-                      if (manuelButton.isSelected()) {
+                      if (manuelButton.isSelected()) { // remplit la table des variables
+                          int row = 0;
                           for (Map.Entry<Expression, Expression> entry : varsToExprs.entrySet()) {
                               String key = entry.getKey().toString(syntaxWrite);
                               String val = entry.getValue().toString(syntaxWrite);
-                              int row = varnames.indexOf(key);
-                              if (row != -1) {
-                                  varsTable.setValueAt(val, row, 1);
-                              }
+                              String type = entry.getValue().getType();
+                              varsTable.setValueAt(key, row, 0);
+                              varsTable.setValueAt(val, row, 1);                              
+                              varsTable.setValueAt(type, row, 2);
+                              row++;
                           }
                       }
                       valueField.setText("");
+                  } else {
+                      NotifyDescriptor error = new NotifyDescriptor.Message("non conforme au modèle",
+                              NotifyDescriptor.INFORMATION_MESSAGE);
+                      DialogDisplayer.getDefault().notify(error);
                   }
               }
           } catch (Exception ex) {
-              Exceptions.printStackTrace(ex);
+              NotifyDescriptor error = new NotifyDescriptor.Message(ex);
           }
       }
   }//GEN-LAST:event_valueFieldActionPerformed
@@ -549,13 +563,15 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
       try {
           String eText = resultField.getText().trim();
           Expression e = null;
+          ArrayList<Integer> childList = new ArrayList<>();
+          ArrayList<int[]> parentList = new ArrayList<>();
           if (genItem.getMatchExprs().isEmpty()) { // résultat direct
               e = new Expression(eText, syntax);
-              int index = (Integer) resultRanges.getValue() - 1;
-              Result result = genItem.getResultExprs().get(index);
-              e.setType(result.getName());
-              ArrayList<Integer> childList = new ArrayList<>();
-              ArrayList<int[]> parentList = new ArrayList<>();
+              if (!genItem.getResultExprs().isEmpty()) {
+                  int index = (Integer) resultRanges.getValue() - 1;
+                  Result result = genItem.getResultExprs().get(index);
+                  e.setType(result.getName());
+              }
               exprNodes.add(new ExprNode(e, childList, parentList));
           } else if (resultReady) {
               e = exprNodes.get(exprNodes.size() - 1).getE();
@@ -565,6 +581,7 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
               addToDocument(exprNodes.subList(n - 1, n));
           }
       } catch (Exception ex) {
+          NotifyDescriptor error = new NotifyDescriptor.Message(ex);
           Exceptions.printStackTrace(ex);
       }
       resultField.setText("");
@@ -578,7 +595,7 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
      * @throws Exception
      */
     private void addToDocument(List<ExprNode> newExprs) throws Exception {
-        String gname = (generator == null)? "freelist" : generator.getName();
+        String gname = (generator == null) ? "freelist" : generator.getName();
         Element root = document.getDocumentElement();
         Element gen = document.createElement("generator");
         gen.setAttribute("name", gname);
@@ -594,8 +611,6 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
         if (!found) {
             root.appendChild(gen);
         }
-        int idx = gen.getElementsByTagName("expr").getLength();
-        if(idx == -1) idx = 0;
         for (ExprNode exprNode : newExprs) {
             //addDiscards(exprNode);
             String parents = "", enfants = "";
@@ -613,7 +628,7 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
             Expression e = exprNode.getE();
             String etxt = e.toString(syntaxWrite);
             String type = e.getType();
-            int index = exprNodes.indexOf(exprNode) + idx;
+            int index = exprNodes.indexOf(exprNode);
             Element expr = document.createElement("expr");
             expr.setAttribute("id", "" + index);
             expr.setAttribute("type", type);
@@ -702,7 +717,7 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
                     boolean once = exprNodes.isEmpty();
                     do {
                         for (GenItem genItem : generator.getGenItems()) {
-                            if (!once && (genItem.getVars().isEmpty())) {
+                            if (!once) {
                                 continue;
                             }
                             int oldsize = exprNodes.size();

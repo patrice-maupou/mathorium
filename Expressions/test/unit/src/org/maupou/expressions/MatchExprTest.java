@@ -109,7 +109,7 @@ public class MatchExprTest {
     @Test
     public void testCheckExpr() throws Exception {
         System.out.println("checkExpr");
-        HashMap<Expression, Expression> vars = new HashMap<>(), expVars = new HashMap<>();
+        HashMap<Expression, Expression> vars = new HashMap<>(), varsExpected = new HashMap<>();
         ArrayList<Expression> es = new ArrayList<>();
         for (int i = 1; i < entries.length-1; i++) {
             if(i < 3) {
@@ -119,7 +119,7 @@ public class MatchExprTest {
             }
             else {
                 String[] v = entries[i].split("=");
-                expVars.put(new Expression(v[0], syntax), new Expression(v[1], syntax));
+                varsExpected.put(new Expression(v[0], syntax), new Expression(v[1], syntax));
             }
         } 
         boolean result = matchExprs.get(0).checkExpr(es.get(0), vars, freevars, listvars, syntax);
@@ -130,7 +130,7 @@ public class MatchExprTest {
         }        
         System.out.println(es.get(1).toString(syntax.getSyntaxWrite()));
         printVars(vars, syntax);
-        assertEquals(expVars, vars);
+        assertEquals(varsExpected, vars);
     }
     
     
@@ -145,22 +145,6 @@ public class MatchExprTest {
         System.out.print("}\n");
     }
 
-    /**
-     * Test of checkConditions method, of class MatchExpr.
-     */
-    /*
-    @Test
-    public void testCheckConditions() {
-        System.out.println("checkConditions");
-        ExprNode en = null;
-        Syntax syntax = null;
-        MatchExpr instance = null;
-        boolean expResult = false;
-        boolean result = instance.checkConditions(en, syntax);
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }//*/
 
     /**
      * Test of toString method, of class MatchExpr.
@@ -177,89 +161,11 @@ public class MatchExprTest {
         fail("The test case is a prototype.");
     }//*/
 
-    /**
-     * Test of getRegex method, of class MatchExpr.
-     */
-    /*
-    @Test
-    public void testGetRegex() {
-        System.out.println("getRegex");
-        String expResult = "";
-        for (int i = 0; i < matchExprs.size(); i++) {
-            MatchExpr matchExpr = matchExprs.get(i);
-            String result = matchExpr.getRegex();
-            assertEquals(expResult, result);
-        }
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-    //*/
-
-    /**
-     * Test of getNode method, of class MatchExpr.
-     */
-    /*
-    @Test
-    public void testGetNode() {
-        System.out.println("getNode");
-        MatchExpr instance = null;
-        String expResult = "";
-        String result = instance.getNode();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-    //*/
-
-    /**
-     * Test of getType method, of class MatchExpr.
-     */
-    /*
-    @Test
-    public void testGetType() {
-        System.out.println("getType");
-        MatchExpr instance = null;
-        String expResult = "";
-        String result = instance.getType();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-    //*/
-
-    /**
-     * Test of getSchema method, of class MatchExpr.
-     */
-    /*
-    @Test
-    public void testGetSchema() {
-        System.out.println("getSchema");
-        MatchExpr instance = null;
-        Expression expResult = null;
-        Expression result = instance.getSchema();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }//*/
-
-    /**
-     * Test of getCheck method, of class MatchExpr.
-     */
-    /*
-    @Test
-    public void testGetCheck() {
-        System.out.println("getCheck");
-        MatchExpr instance = null;
-        Expression expResult = null;
-        Expression result = instance.getCheck();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }//*/
 
     /**
      * Test of extendMap method, of class MatchExpr.
      */
+    
     @Test
     public void testExtendMap() {
         System.out.println("extendMap");

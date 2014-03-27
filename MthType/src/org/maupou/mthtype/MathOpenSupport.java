@@ -42,5 +42,14 @@ public class MathOpenSupport extends OpenSupport implements OpenCookie, CloseCoo
         WindowManager.getDefault().setTopComponentFloating(gvtc, false);
         gvtc.requestActive();
     }
+    
+    /*
+    @Override
+    public boolean close() {
+        boolean ret = super.close();
+        ret &= gvtc.close();       
+        return ret;
+    }
+    //*/
 
 }

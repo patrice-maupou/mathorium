@@ -16,36 +16,21 @@ import org.w3c.dom.NodeList;
  */
 public class GenItem {
 
-    private String name;
-    private ArrayList<MatchExpr> matchExprs;
-    private ArrayList<Result> resultExprs;
-    private HashMap<String,String> freevars;
-    private ArrayList<Expression> listvars;
-    private HashMap<String, String> vars;
+    private final String name;
+    private final ArrayList<MatchExpr> matchExprs;
+    private final ArrayList<Result> resultExprs;
+    private final HashMap<String,String> freevars; //table de remplacement d'un type par un autre (propvar->prop)
+    private final ArrayList<Expression> listvars; //  liste de référence des variables
     private boolean local;
-    private Scope scope;
 
-    /**
-     * @return the freevars
-     */
+    
     public HashMap<String,String> getFreevars() {
         return freevars;
     }
 
-    /**
-     * @return the listvars
-     */
     public ArrayList<Expression> getListvars() {
         return listvars;
     }
-
-    
-    
-
-    public enum Scope {
-
-        root, all, left, right
-    };
 
     /**
      * constructeur
@@ -56,33 +41,13 @@ public class GenItem {
      * @param listvars
      * @throws Exception
      */
-    public GenItem(Element e, Syntax syntax, HashMap<String,String> freevars, ArrayList<Expression> listvars) 
-            throws Exception {
+    public GenItem(Element e, Syntax syntax, HashMap<String,String> freevars, 
+            ArrayList<Expression> listvars) throws Exception {
         name = e.getAttribute("name");
-        scope = Scope.root;
-        if (e.hasAttribute("scope")) {
-            switch (e.getAttribute("scope")) {
-                case "root":
-                    scope = Scope.root;
-                    break;
-                case "all":
-                    scope = Scope.all;
-                    break;
-                case "left":
-                    scope = Scope.left;
-                    break;
-                case "right":
-                    scope = Scope.right;
-                    break;
-                default:
-                    throw new AssertionError();
-            }
-        }
         this.freevars = freevars;
         this.listvars = listvars;
         matchExprs = new ArrayList<>();
         NodeList nodelist = e.getElementsByTagName("match");
-        vars = new HashMap<>();
         for (int i = 0; i < nodelist.getLength(); i++) {
             MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), syntax, listvars);
             matchExprs.add(matchExpr);
@@ -186,17 +151,6 @@ public class GenItem {
 
     public ArrayList<Result> getResultExprs() {
         return resultExprs;
-    }
-
-    /**
-     * @return the vars
-     */
-    public HashMap<String, String> getVars() {
-        return vars;
-    }
-    
-    public Scope getScope() {
-        return scope;
     }
 
     /**

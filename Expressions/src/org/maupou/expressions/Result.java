@@ -83,12 +83,14 @@ public class Result {
             }
         }
         if (!inlist) {
-            for (ExprNode exprNode : exprDiscards) {
-                Expression expr = exprNode.getE();
-                HashMap<Expression, Expression> nvars = new HashMap<>();
-                if (e.matchRecursively(expr, freevars, listvars, nvars, syntax.getSubtypes(), en)) {
-                    inlist = true;
-                    break;
+            if (exprDiscards != null) {
+                for (ExprNode exprNode : exprDiscards) {
+                    Expression expr = exprNode.getE();
+                    HashMap<Expression, Expression> nvars = new HashMap<>();
+                    if (e.matchRecursively(expr, freevars, listvars, nvars, syntax.getSubtypes(), en)) {
+                        inlist = true;
+                        break;
+                    }
                 }
             }
             if (!inlist) {

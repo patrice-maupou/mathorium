@@ -14,6 +14,10 @@ comparaison entre A=A->(B->A) et A=(A->B)->C donne nvars={A=A->B} nsvars={C=B->A
 nvars corrige vars={A=(A->B)->(B->(A->B))} et nsvars corrige svars={B=B->(B->A)}
 
 but : ((A->B)->(B->(A->B))) -> (B->(B->A))
+-------------------------------------------------
+
+<match name="LEFT" local="t" global="z"><![CDATA[u(v+w)]]><![CDATA[uv+uw)]]></match>
+<result>z</result>
 
 -------------------------------------------------
 Types relatifs  C f:a->b , D g:a->b

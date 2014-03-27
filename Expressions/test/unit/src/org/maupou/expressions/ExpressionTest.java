@@ -21,13 +21,13 @@ import org.w3c.dom.Element;
  */
 public class ExpressionTest {
 
-    private Syntax syntaxList;
+    private Syntax syntax;
     private SyntaxWrite syntaxWrite;
     private File directory;
     private String[] entries;
     private String[] results;
     private String[] printing;
-    private String replacements, matches, matchBoth;
+    private String replacements, matches, matchBoth, matchsubExpr;
     private String depths;
 
     public ExpressionTest() {
@@ -44,18 +44,15 @@ public class ExpressionTest {
     @Before
     public void setUp() {
         directory = new File("C:/Users/Patrice/Documents/NetBeansProjects/MathFiles");
-        File syntaxFile = new File(directory, "number_syntax.xml");
-        File syntaxWriteFile = new File(directory, "out_syntax.xml");
+        File syntaxFile = new File(directory, "number_syntax.syx");
         File expressions = new File(directory, "expressionsTests.xml");
-        if (syntaxFile.isFile() && expressions.isFile() && syntaxWriteFile.isFile()) {
+        if (syntaxFile.isFile() && expressions.isFile()) {
             try {
                 DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
                 DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
                 Document document = documentBuilder.parse(syntaxFile);
-                syntaxList = new Syntax(document);
-                document = documentBuilder.parse(syntaxWriteFile);
-                String name = document.getDocumentElement().getAttribute("name");
-                syntaxWrite = new SyntaxWrite(document.getDocumentElement(), syntaxList.getUnused());
+                syntax = new Syntax(document);
+                syntaxWrite = syntax.getSyntaxWrite();
                 document = documentBuilder.parse(expressions);
                 Element texts = document.getElementById("exprs");
                 String exprsText = texts.getTextContent();
@@ -74,6 +71,10 @@ public class ExpressionTest {
                 if (texts != null) {
                     matches = texts.getTextContent();
                 }
+                texts = document.getElementById("matchsubExpr");
+                if (texts != null) {
+                    matchsubExpr = texts.getTextContent();
+                }
                 texts = document.getElementById("matchBoth");
                 if (texts != null) {
                     matchBoth = texts.getTextContent();
@@ -91,23 +92,50 @@ public class ExpressionTest {
     @After
     public void tearDown() {
     }
+    
+    @Test
+    public void testMatchsubExpr() throws Exception {
+        System.out.println("matchsubExpr");
+        HashMap<String, Set<String>> subtypes = syntax.getSubtypes();
+        HashMap<Expression, Expression> replace = new HashMap<>();
+        HashMap<String, String> freevars = new HashMap<>();
+        ArrayList<Expression> listvars = new ArrayList<>();
+        String[] ms = matchsubExpr.split("\",\\s+\"");
+        String[] ls = ms[1].split("\\s");
+        for (String l : ls) {
+            Expression v = new Expression(l, syntax);
+            listvars.add(v);
+        }
+        for (int i = 2; i < ms.length - 1; i += 6) {
+            Expression e = new Expression(ms[i], syntax);
+            Expression schema = new Expression(ms[i + 1], syntax);
+            freevars.put(ms[i + 2], ms[i + 3]);
+            Expression change = new Expression(ms[i + 4], syntax);
+            Expression expected = new Expression(ms[i + 5], syntax);
+            replace.clear();
+            Expression result = e.matchsubExpr(schema, change, null, freevars, listvars, replace, subtypes);
+            
+            System.out.println("" + replace);
+            assertEquals(expected, result);
+        }
+    }
 
     @Test
     public void testMatch() throws Exception {
         System.out.println("match");
-        HashMap<String, Set<String>> subtypes = syntaxList.getSubtypes();
+        HashMap<String, Set<String>> subtypes = syntax.getSubtypes();
         HashMap<Expression, Expression> replace = new HashMap<>();
         HashMap<String, String> freevars = new HashMap<>();
         ArrayList<Expression> listvars = new ArrayList<>();
         String[] ms = matches.split("\",\\s+\"");
         String[] ls = ms[1].split("\\s");
         for (String l : ls) {
-            Expression v = new Expression(l, syntaxList);
+            Expression v = new Expression(l, syntax);
             listvars.add(v);
         }
         for (int i = 2; i < ms.length - 1; i += 4) {
-            Expression e = new Expression(ms[i], syntaxList);
-            Expression schema = new Expression(ms[i + 1], syntaxList);
+            Expression e = new Expression(ms[i], syntax);
+            Expression schema = new Expression(ms[i + 1], syntax);
             freevars.put(ms[i + 2], ms[i + 3]);
             replace.clear();
             boolean fit = e.match(schema, freevars, listvars, replace, subtypes);
@@ -119,19 +147,19 @@ public class ExpressionTest {
     @Test
     public void testMatchBoth() throws Exception {
         System.out.println("matchBoth");
-        HashMap<String, Set<String>> subtypes = syntaxList.getSubtypes();
+        HashMap<String, Set<String>> subtypes = syntax.getSubtypes();
         HashMap<Expression, Expression> replace = new HashMap<>();
         HashMap<Expression, Expression> sreplace = new HashMap<>();
         ArrayList<Expression> listvars = new ArrayList<>();
         String[] ms = matchBoth.split("\",\\s+\"");
         String[] ls = ms[1].split("\\s");
         for (String l : ls) {
-            Expression v = new Expression(l, syntaxList);
+            Expression v = new Expression(l, syntax);
             listvars.add(v);
         }
         for (int i = 2; i < ms.length - 1; i += 4) {
-            Expression e = new Expression(ms[i], syntaxList);
-            Expression schema = new Expression(ms[i + 1], syntaxList);
+            Expression e = new Expression(ms[i], syntax);
+            Expression schema = new Expression(ms[i + 1], syntax);
             HashMap<String, String> freevars = new HashMap<>();
             freevars.put(ms[i + 2], ms[i + 3]);
             replace.clear();
@@ -157,15 +185,15 @@ public class ExpressionTest {
         String[] replaces = replacements.split("\",\\s+\"");
         for (int i = 1; i < replaces.length - 1; i += 3) {
             String eTxt = replaces[i];
-            Expression e = new Expression(eTxt, syntaxList);
+            Expression e = new Expression(eTxt, syntax);
             String[] maptxt = replaces[i + 1].split(",");
             String rTxt = replaces[i + 2];
-            Expression result = new Expression(rTxt, syntaxList);
+            Expression result = new Expression(rTxt, syntax);
             HashMap<Expression, Expression> map = new HashMap<>();
             for (String maptxt1 : maptxt) {
                 String[] couple = maptxt1.split("=");
                 assertEquals("pas d'égalité", couple.length, 2);
-                map.put(new Expression(couple[0], syntaxList), new Expression(couple[1], syntaxList));
+                map.put(new Expression(couple[0], syntax), new Expression(couple[1], syntax));
             }
             e = e.replace(map);
             assertEquals(eTxt + " mal transformé", result, e);
@@ -177,7 +205,7 @@ public class ExpressionTest {
         System.out.println("depth");
         String[] depthtxts = depths.split("\",\\s+\"");
         for (int i = 1; i < depthtxts.length - 1; i += 2) {
-            Expression e = new Expression(depthtxts[i], syntaxList);
+            Expression e = new Expression(depthtxts[i], syntax);
             int depth = Integer.parseInt(depthtxts[i + 1]);
             assertEquals("profondeur inadéquate sur " + e.toString(syntaxWrite), depth, e.depth());
         }
@@ -195,7 +223,7 @@ public class ExpressionTest {
         int m = 35; //
         for (int i = 1; i < m; i++) {
             String entry = entries[i];
-            Expression exp = new Expression(entry, syntaxList);
+            Expression exp = new Expression(entry, syntax);
             String expString = exp.toString();
             String expected = results[i];
             System.out.println(i + ":  " + entry + "  ->  " + expString + "   type: " + exp.getType());
@@ -211,7 +239,7 @@ public class ExpressionTest {
         int m = 35; //
         for (int i = 1; i < m; i++) { // le dernier n'est pas bon : 3*(1+2*(x-b)^2)-(a+4) ou (x-b)-a
             String entry = entries[i];
-            Expression exp = new Expression(entry, syntaxList);
+            Expression exp = new Expression(entry, syntax);
             String expString;
             try {
                 expString = exp.toString(syntaxWrite);
