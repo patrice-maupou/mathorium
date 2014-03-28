@@ -19,7 +19,8 @@ public class GenItem {
     private final String name;
     private final ArrayList<MatchExpr> matchExprs;
     private final ArrayList<Result> resultExprs;
-    private final HashMap<String,String> freevars; //table de remplacement d'un type par un autre (propvar->prop)
+    private final HashMap<String,String> freevars; //table de remplacement d'un type par un autre 
+    //(propvar->prop)
     private final ArrayList<Expression> listvars; //  liste de référence des variables
     private boolean local;
 
@@ -87,9 +88,10 @@ public class GenItem {
                     Expression e = en1.getE();
                     HashMap<Expression, Expression> nvars = new HashMap<>();
                     nvars.putAll(vars);
-                    if (matchExpr.checkExprNode(en1, freevars, listvars, nvars, syntax)) {
+                    if(matchExpr.checkExpr(e, nvars, freevars, listvars, syntax)) {
                         ArrayList<int[]> parentList = new ArrayList<>();
-                        int[] p = Arrays.copyOf(en.getParentList().get(0), en.getParentList().get(0).length);
+                        int[] p = Arrays.copyOf(en.getParentList().get(0), 
+                                en.getParentList().get(0).length);
                         p[n] = i;
                         parentList.add(p);
                         en1 = new ExprNode(e, en.getChildList(), parentList);
@@ -118,8 +120,7 @@ public class GenItem {
     private void addResults(ExprNode en, HashMap<Expression, Expression> vars, Syntax syntax, int level, 
             ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards) 
             throws Exception {
-        for (int i = 0; i < resultExprs.size(); i++) {
-            Result result = resultExprs.get(i);
+        for (Result result : resultExprs) {
             if (result.getLevel() <= level) {
                 ExprNode en1 = en.copy();
                 result.addExpr(en1, vars, freevars, listvars, syntax, exprNodes, exprDiscards);
@@ -130,8 +131,8 @@ public class GenItem {
     @Override
     public String toString() {
         String ret = "";
-        for (int i = 0; i < matchExprs.size(); i++) {
-            String cond = matchExprs.get(i).getRegex();
+        for (MatchExpr matchExpr : matchExprs) {
+            String cond = matchExpr.getRegex();
             ret += "   " + cond;
         }
         ret += "  ->  ";

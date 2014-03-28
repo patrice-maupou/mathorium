@@ -6,11 +6,8 @@ package org.maupou.expressions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -21,10 +18,10 @@ import org.w3c.dom.Node;
 public class MatchExpr {
 
     private String regex;
-    private final String node; // à utiliser pour une sous-expression (non utilisé)
+    private final Syntax syntax;
     private final String type;
-    private Expression schema, change, global;
-    private final LinkedHashMap<Expression, Expression> replaceMap;
+    private Expression schema, global;
+    private final HashMap<Expression, Expression> replaceMap;
     private final boolean recursive;
     private final HashMap<String, String> options;  // données par des égalités
 
@@ -38,7 +35,7 @@ public class MatchExpr {
      */
     public MatchExpr(Element match, Syntax syntax, ArrayList<Expression> listvars) throws Exception {
         options = new HashMap<>();
-        node = match.getAttribute("node");
+        this.syntax = syntax;
         type = match.getAttribute("name");
         String s = match.getAttribute("global");
         if (!s.isEmpty()) {
@@ -54,24 +51,8 @@ public class MatchExpr {
             }
         }
         recursive = "yes".equals(options.get("recursive"));
-        replaceMap = new LinkedHashMap<>();
+        replaceMap = new HashMap<>();
         Node txtNode = match.getFirstChild();
-        /* avant
-         int cnt = 0;
-         while (txtNode != null) {
-         if (txtNode.getNodeType() == Node.CDATA_SECTION_NODE) {
-         if (cnt == 0) {
-         regex = txtNode.getTextContent();
-         schema = new Expression(regex, syntax);
-         } else if (cnt == 1) {
-         change = new Expression(txtNode.getTextContent(), syntax);
-         }
-         cnt++;
-         }
-         txtNode = txtNode.getNextSibling();
-         }
-         //*/
-        //* modif
         Expression key = null;
         int cnt = 0;
         while (txtNode != null) {
@@ -86,15 +67,11 @@ public class MatchExpr {
                 } else {
                     Expression value = new Expression(txtNode.getTextContent(), syntax);
                     key = replaceMap.put(key, value);
-                    if (cnt == 1) {
-                        change = value;
-                    }
                 }
                 cnt++;
             }
             txtNode = txtNode.getNextSibling();
         }
-        //*/
         String types = match.getAttribute("types");
         if (!types.isEmpty()) {
             String[] couples = types.split(",");
@@ -107,29 +84,6 @@ public class MatchExpr {
         }
     }
 
-    /**
-     * vérifie si expr correspond au schema, et si oui, les nouvelles variables
-     * de même nom que celles dans svars doivent aussi correspondre
-     *
-     * @param en l'expr examinée par rapport à schema
-     * @param typesMap table de remplacement d'un type par un autre
-     * (propvar->prop)
-     * @param listvars liste de référence des variables
-     * @param vars table des variables déjà connues, ex: A:=(A->B)->A
-     * @param syntax
-     * @return true si l'expression convient
-     * @throws Exception
-     */
-    public boolean checkExprNode(ExprNode en, HashMap<String, String> typesMap,
-            ArrayList<Expression> listvars, HashMap<Expression, Expression> vars, Syntax syntax)
-            throws Exception {
-        boolean ret = false;
-        Expression expr = en.getE().copy();
-        if (getSchema() != null) {
-            ret = checkExpr(expr, vars, typesMap, listvars, syntax);
-        }
-        return ret;
-    }
 
     /**
      * match l'expression expr, tient compte des variables de ses pour
@@ -148,17 +102,17 @@ public class MatchExpr {
     public boolean checkExpr(Expression expr, HashMap<Expression, Expression> vars,
             HashMap<String, String> typesMap, ArrayList<Expression> listvars, Syntax syntax)
             throws Exception {
-        boolean ret = false;
+        boolean ret;
         if (expr != null) { // schema : A->B type: prop
             HashMap<Expression, Expression> svars = new HashMap<>();
-            if (change == null) {
+            if (global == null) {
                 ret = expr.match(getSchema(), typesMap, listvars, svars, syntax.getSubtypes());
-            } else if (global != null) {
+            } else {
                 Expression e = expr;
                 boolean[] modifs = new boolean[1];
                 do {
                     modifs[0] = false;
-                    e = e.matchsubExpr(schema, change, modifs, typesMap, listvars, svars,
+                    e = e.matchsubExpr2(replaceMap, modifs, typesMap, listvars, svars,
                             syntax.getSubtypes());
                 } while (recursive && modifs[0]);
                 svars.clear();
@@ -232,16 +186,12 @@ public class MatchExpr {
 
     @Override
     public String toString() {
-        String ret = "regex = " + regex + "   " + node + type + " " + options;
+        String ret = "regex = " + regex + "   " + type + " " + options;
         return ret;
     }
 
     public String getRegex() {
         return regex;
-    }
-
-    public String getNode() {
-        return node;
     }
 
     public String getType() {
@@ -252,12 +202,12 @@ public class MatchExpr {
         return schema;
     }
 
-    public Expression getChange() {
-        return change;
-    }
-
     public Expression getGlobal() {
         return global;
+    }
+
+    public Syntax getSyntax() {
+        return syntax;
     }
 
 }

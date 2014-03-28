@@ -27,7 +27,7 @@ public class ExpressionTest {
     private String[] entries;
     private String[] results;
     private String[] printing;
-    private String replacements, matches, matchBoth, matchsubExpr;
+    private String replacements, matches, matchBoth, matchsubExpr, matchsubExpr2;
     private String depths;
 
     public ExpressionTest() {
@@ -75,6 +75,12 @@ public class ExpressionTest {
                 if (texts != null) {
                     matchsubExpr = texts.getTextContent();
                 }
+                texts = document.getElementById("matchsubExpr2");
+                if (texts != null) {
+                    matchsubExpr2 = texts.getTextContent();
+                    String separator = texts.getAttribute("separator");
+                    matchsubExpr2 = separator + matchsubExpr2;
+                }
                 texts = document.getElementById("matchBoth");
                 if (texts != null) {
                     matchBoth = texts.getTextContent();
@@ -94,11 +100,48 @@ public class ExpressionTest {
     }
     
     @Test
+    public void testMatchsubExpr2() throws Exception {
+        System.out.println("matchsubExpr2");
+        boolean[] modifs = new boolean[] {false};
+        HashMap<String, Set<String>> subtypes = syntax.getSubtypes();
+        HashMap<Expression, Expression> vars = new HashMap<>();
+        HashMap<Expression, Expression> replaceMap = new HashMap<>();
+        HashMap<String, String> typesMap = new HashMap<>();
+        ArrayList<Expression> listvars = new ArrayList<>();
+        String[] ms = matchsubExpr2.split("\",\\s+\"");
+        String separator = ms[0];
+        String[] ls = ms[1].split("\\s");
+        for (String l : ls) {
+            Expression v = new Expression(l, syntax);
+            listvars.add(v);
+        }        
+        for (int i = 2; i < ms.length - 1; i += 5) {
+            Expression e = new Expression(ms[i], syntax);
+            replaceMap.clear();
+            String[] replace = ms[i+1].split(separator);
+            for (int j = 0; j < replace.length; j += 2) {
+                Expression key = new Expression(replace[j], syntax);
+                Expression value = new Expression(replace[j+1], syntax);
+                replaceMap.put(key, value);
+            }
+            typesMap.put(ms[i + 2], ms[i + 3]);
+            Expression expected = new Expression(ms[i + 4], syntax);
+            vars.clear();
+            Expression result = e.matchsubExpr2(replaceMap, modifs, typesMap, listvars, 
+                    vars, subtypes);
+            
+            System.out.println("" + vars);
+            assertEquals(expected, result);
+        }
+    }
+    
+    @Test
     public void testMatchsubExpr() throws Exception {
         System.out.println("matchsubExpr");
+        boolean[] modifs = new boolean[] {false};
         HashMap<String, Set<String>> subtypes = syntax.getSubtypes();
         HashMap<Expression, Expression> replace = new HashMap<>();
-        HashMap<String, String> freevars = new HashMap<>();
+        HashMap<String, String> typesMap = new HashMap<>();
         ArrayList<Expression> listvars = new ArrayList<>();
         String[] ms = matchsubExpr.split("\",\\s+\"");
         String[] ls = ms[1].split("\\s");
@@ -109,11 +152,12 @@ public class ExpressionTest {
         for (int i = 2; i < ms.length - 1; i += 6) {
             Expression e = new Expression(ms[i], syntax);
             Expression schema = new Expression(ms[i + 1], syntax);
-            freevars.put(ms[i + 2], ms[i + 3]);
+            typesMap.put(ms[i + 2], ms[i + 3]);
             Expression change = new Expression(ms[i + 4], syntax);
             Expression expected = new Expression(ms[i + 5], syntax);
             replace.clear();
-            Expression result = e.matchsubExpr(schema, change, null, freevars, listvars, replace, subtypes);
+            Expression result = e.matchsubExpr(schema, change, modifs, typesMap, listvars, 
+                    replace, subtypes);
             
             System.out.println("" + replace);
             assertEquals(expected, result);

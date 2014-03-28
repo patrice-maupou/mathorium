@@ -253,7 +253,6 @@ public class Expression {
         }
     }
 
-
     /**
      * si e est une sous-expression de l'expression actuelle, le etype est celui
      * de e
@@ -364,9 +363,8 @@ public class Expression {
      * @param subtypes table des sous-types
      * @return vrai si une sous-expression est conforme au modèle
      */
-    public Expression matchsubExpr(Expression schema, Expression change, boolean[] modifs, 
-            HashMap<String, String> typesMap, ArrayList<Expression> listvars, HashMap<Expression,
-            Expression> vars, HashMap<String, Set<String>> subtypes) {
+    public Expression matchsubExpr(Expression schema, Expression change, boolean[] modifs,
+            HashMap<String, String> typesMap, ArrayList<Expression> listvars, HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes) {
         Expression e = copy();
         if (match(schema, typesMap, listvars, vars, subtypes)) {
             e = change.replace(vars);
@@ -375,7 +373,41 @@ public class Expression {
             for (int i = 0; i < e.getChildren().size(); i++) {
                 Expression child = e.getChildren().get(i);
                 vars.clear();
-                e.getChildren().set(i, child.matchsubExpr(schema, change, modifs, typesMap, 
+                e.getChildren().set(i, child.matchsubExpr(schema, change, modifs, typesMap,
+                        listvars, vars, subtypes));
+            }
+        }
+        return e;
+    }
+
+    /**
+     * Transforme l'expression en utilisant la table des remplacements replaceMap pour les sous-expressions
+     * qui conviennent.
+     * 
+     * @param replaceMap table des transformations à effectuer
+     * @param modifs liste qui contient un seul boolean modifié à true si l'expression a été modifiée.
+     * @param typesMap
+     * @param listvars
+     * @param vars table des variables des entrées de replaceMap
+     * @param subtypes
+     * @return  vrai si une sous-expression est conforme au modèle
+     */
+    public Expression matchsubExpr2(HashMap<Expression, Expression> replaceMap, boolean[] modifs,
+            HashMap<String, String> typesMap, ArrayList<Expression> listvars, 
+            HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes) {
+        Expression e = copy();
+        for (Map.Entry<Expression, Expression> entry : replaceMap.entrySet()) {
+            if (match(entry.getKey(), typesMap, listvars, vars, subtypes)) {
+                e = entry.getValue().replace(vars);
+                modifs[0] = true;
+                return e;
+            }
+        }
+        if(e.getChildren() != null) {
+            for (int i = 0; i < e.getChildren().size(); i++) {
+                Expression child = e.getChildren().get(i);
+                vars.clear();
+                e.getChildren().set(i, child.matchsubExpr2(replaceMap, modifs, typesMap,
                         listvars, vars, subtypes));
             }
         }
@@ -387,7 +419,8 @@ public class Expression {
      * forcément égale à this, mais est une transformée de this.
      *
      * @param schema modèle
-     * @param typesMap type0 peut être remplacé par son image type1 ex: propvar->prop
+     * @param typesMap type0 peut être remplacé par son image type1 ex:
+     * propvar->prop
      * @param listvars
      * @param vars table de remplacement des variables de this
      * @param schvars table de remplacement des variables de schema
