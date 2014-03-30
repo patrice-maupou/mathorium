@@ -132,7 +132,7 @@ public class GenItem {
     public String toString() {
         String ret = "";
         for (MatchExpr matchExpr : matchExprs) {
-            String cond = matchExpr.getRegex();
+            String cond = matchExpr.toString();
             ret += "   " + cond;
         }
         ret += "  ->  ";

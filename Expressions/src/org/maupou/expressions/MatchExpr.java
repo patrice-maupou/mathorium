@@ -17,7 +17,6 @@ import org.w3c.dom.Node;
  */
 public class MatchExpr {
 
-    private String regex;
     private final Syntax syntax;
     private final String type;
     private Expression schema, global;
@@ -61,7 +60,6 @@ public class MatchExpr {
                     key = new Expression(txtNode.getTextContent(), syntax);
                     replaceMap.put(key, null);
                     if (cnt == 0) {
-                        regex = txtNode.getTextContent();
                         schema = key;
                     }
                 } else {
@@ -112,7 +110,7 @@ public class MatchExpr {
                 boolean[] modifs = new boolean[1];
                 do {
                     modifs[0] = false;
-                    e = e.matchsubExpr2(replaceMap, modifs, typesMap, listvars, svars,
+                    e = e.matchsubExpr2(getReplaceMap(), modifs, typesMap, listvars, svars,
                             syntax.getSubtypes());
                 } while (recursive && modifs[0]);
                 svars.clear();
@@ -186,13 +184,10 @@ public class MatchExpr {
 
     @Override
     public String toString() {
-        String ret = "regex = " + regex + "   " + type + " " + options;
+        String ret = replaceMap.toString();
         return ret;
     }
 
-    public String getRegex() {
-        return regex;
-    }
 
     public String getType() {
         return type;
@@ -208,6 +203,10 @@ public class MatchExpr {
 
     public Syntax getSyntax() {
         return syntax;
+    }
+
+    public HashMap<Expression, Expression> getReplaceMap() {
+        return replaceMap;
     }
 
 }

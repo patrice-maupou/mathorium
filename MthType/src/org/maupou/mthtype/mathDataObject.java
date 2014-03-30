@@ -17,6 +17,8 @@ import org.openide.NotifyDescriptor;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
+import org.openide.cookies.CloseCookie;
+import org.openide.cookies.OpenCookie;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.MIMEResolver;
 import org.openide.loaders.DataObject;
@@ -100,6 +102,7 @@ import org.w3c.dom.Element;
 public class mathDataObject extends MultiDataObject {
     private Syntax syntax;
     private Document document;
+    private MathOpenSupport mathOpenSupport;
 
     public mathDataObject(FileObject pf, MultiFileLoader loader) throws DataObjectExistsException, IOException {
         super(pf, loader);
@@ -118,7 +121,10 @@ public class mathDataObject extends MultiDataObject {
                     Document syxdoc = documentBuilder.parse(syntaxFile);
                     syntax = new Syntax(syxdoc);
                     syntax.addGenerators(syxdoc);
-                    cookies.add(new MathOpenSupport(getPrimaryEntry()));
+                    mathOpenSupport = new MathOpenSupport(getPrimaryEntry());
+                    //cookies.add(mathOpenSupport);
+                    cookies.assign(OpenCookie.class, mathOpenSupport);
+                    cookies.assign(CloseCookie.class, mathOpenSupport);
                 }
             }
         } catch (Exception ex) {
@@ -151,6 +157,10 @@ public class mathDataObject extends MultiDataObject {
 
     public Document getDocument() {
         return document;
+    }
+
+    public MathOpenSupport getMathOpenSupport() {
+        return mathOpenSupport;
     }
 
 }

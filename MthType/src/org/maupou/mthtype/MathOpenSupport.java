@@ -43,13 +43,11 @@ public class MathOpenSupport extends OpenSupport implements OpenCookie, CloseCoo
         gvtc.requestActive();
     }
     
-    /*
     @Override
     public boolean close() {
         boolean ret = super.close();
-        ret &= gvtc.close();       
+        gvtc.close(); // ne fait rien
         return ret;
     }
-    //*/
 
 }
