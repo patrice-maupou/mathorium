@@ -121,8 +121,6 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
             }
         }
     }
-    
-    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -474,32 +472,32 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
         resultField.setText("");
         ArrayList<Result> resultExprs = genItem.getResultExprs();
         resultRanges.setModel(new SpinnerNumberModel(1, 1, 1, 0));
-        String[] matchNames = new String[0];
+        ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
+        int n = matchExprs.size();
+        HashMap<Expression, Expression> map = (n == 0) ? new HashMap() : matchExprs.get(0).getReplaceMap();
+        matchRange = 0;
+        fillTable(map);
+        listparents = new ArrayList<>();
+        for (int i = 0; i < varsTable.getRowCount(); i++) {
+            varsTable.setValueAt("", i, 0);
+            varsTable.setValueAt("", i, 1);
+            varsTable.setValueAt("", i, 2);
+        }
         if (!resultExprs.isEmpty()) {
             resultRanges.setModel(new SpinnerNumberModel(range, 1, resultExprs.size(), 1));
-            ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();            
-            int n = matchExprs.size();
-            HashMap<Expression, Expression> map = (n == 0)? new HashMap() : matchExprs.get(0).getReplaceMap();
-            matchRange = 0;
-            fillTable(map);
-            listparents = new ArrayList<>();
-            for (int i = 0; i < varsTable.getRowCount(); i++) {
-                varsTable.setValueAt("", i, 0);
-                varsTable.setValueAt("", i, 1);
-                varsTable.setValueAt("", i, 2);
-            }
             if (range < resultExprs.size() + 1) {
                 String result = "";
                 result += resultExprs.get(range - 1);
                 resultField.setText(result);
-                if(n == 0) resultField.requestFocus();
+                if (n == 0) {
+                    resultField.requestFocus();
+                }
             }
         }
         valueField.setText("");
         varsToExprs.clear();
         resultReady = false;
     }
-
 
     private void fillTable(HashMap<Expression, Expression> map) {
         int rows = replaceMap.getRowCount();
@@ -512,7 +510,8 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
                 try {
                     t0 = key.toString(syntaxWrite);
                     t1 = val.toString(syntaxWrite);
-                } catch (Exception exc) {}
+                } catch (Exception exc) {
+                }
             }
             replaceMap.setValueAt(t0, row, 0);
             replaceMap.setValueAt(t1, row, 1);

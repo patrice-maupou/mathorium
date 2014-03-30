@@ -397,10 +397,13 @@ public class Expression {
             HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes) {
         Expression e = copy();
         for (Map.Entry<Expression, Expression> entry : replaceMap.entrySet()) {
-            if (match(entry.getKey(), typesMap, listvars, vars, subtypes)) {
+            if (e.match(entry.getKey(), typesMap, listvars, vars, subtypes)) {
                 e = entry.getValue().replace(vars);
                 modifs[0] = true;
                 return e;
+            }
+            else {
+                vars.clear();
             }
         }
         if(e.getChildren() != null) {
