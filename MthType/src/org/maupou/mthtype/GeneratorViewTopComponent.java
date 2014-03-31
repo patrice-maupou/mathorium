@@ -124,6 +124,10 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
         }
     }
 
+    /**
+     * Etablit la liste exprNodes à partir du document
+     * @param doc le dom chargé
+     */
     private void readExprNodes(Document doc) {
         NodeList list = doc.getElementsByTagName("expr");
         for (int i = 0; i < list.getLength(); i++) {
@@ -493,23 +497,6 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
                 .addGap(50, 50, 50))
         );
     }// </editor-fold>//GEN-END:initComponents
-
-    /**
-     * crée et retourne un document vide compatible avec la syntaxe disponible
-     *
-     * @param syntaxPath
-     * @return un document "dom"
-     * @throws ParserConfigurationException
-     */
-    private Document getBaseDocument(String syntaxPath) throws ParserConfigurationException {
-        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-        Document doc = docBuilder.newDocument();
-        Element exprs = doc.createElement("expressions");
-        doc.appendChild(exprs);
-        exprs.setAttribute("syntax", syntaxPath);
-        return doc;
-    }
 
 
   private void genItemBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_genItemBoxActionPerformed
