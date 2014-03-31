@@ -28,9 +28,6 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingWorker;
 import javax.swing.text.StyledDocument;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -42,7 +39,6 @@ import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.text.DataEditorSupport;
-import org.openide.util.Exceptions;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.CloneableTopComponent;
 import org.openide.windows.TopComponent;
@@ -170,7 +166,8 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
                     ExprNode en = new ExprNode(e, childs, parents);
                     exprNodes.add(en);
                 } catch (Exception ex) {
-                    NotifyDescriptor error = new NotifyDescriptor.Message(ex);
+                    String message = "No expression for " + etxt;
+                    NotifyDescriptor error = new NotifyDescriptor.Message(message);
                 }
             }
         }
@@ -529,6 +526,9 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
                 if (n == 0) {
                     resultField.requestFocus();
                 }
+                else {
+                    valueField.requestFocus();
+                }
             }
         }
         valueField.setText("");
@@ -536,6 +536,10 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
         resultReady = false;
     }
 
+    /**
+     * Mise à jour de la table des modèles
+     * @param map table des modèles et remplacements éventuels
+     */
     private void fillTable(HashMap<Expression, Expression> map) {
         int rows = replaceMap.getRowCount();
         Iterator<Expression> it = map.keySet().iterator();
@@ -547,8 +551,7 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
                 try {
                     t0 = key.toString(syntaxWrite);
                     t1 = val.toString(syntaxWrite);
-                } catch (Exception exc) {
-                }
+                } catch (Exception exc) {}
             }
             replaceMap.setValueAt(t0, row, 0);
             replaceMap.setValueAt(t1, row, 1);
@@ -739,6 +742,12 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
     private void resultRangesStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_resultRangesStateChanged
         int range = (Integer) resultRanges.getValue();
         updateGenItem(genItem, range);
+        if(genItem.getMatchExprs().isEmpty()) {
+            resultField.requestFocus();
+        }
+        else {
+            valueField.requestFocus();
+        }
     }//GEN-LAST:event_resultRangesStateChanged
 
     private void levelSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_levelSpinnerStateChanged
