@@ -26,7 +26,6 @@ import org.openide.loaders.DataObjectExistsException;
 import org.openide.loaders.MultiDataObject;
 import org.openide.loaders.MultiFileLoader;
 import org.openide.nodes.CookieSet;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
@@ -126,7 +125,7 @@ public class mathDataObject extends MultiDataObject {
                     cookies.assign(OpenCookie.class, mathOpenSupport);
                     cookies.assign(CloseCookie.class, mathOpenSupport);
                 }
-            }
+            } 
         } catch (Exception ex) {
             NotifyDescriptor error = new NotifyDescriptor.Message(ex);
         }

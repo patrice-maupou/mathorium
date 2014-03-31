@@ -100,8 +100,8 @@ public class ExpressionTest {
     }
     
     @Test
-    public void testMatchsubExpr2() throws Exception {
-        System.out.println("matchsubExpr2");
+    public void testMatchsubExpr() throws Exception {
+        System.out.println("matchsubExpr");
         boolean[] modifs = new boolean[] {false};
         HashMap<String, Set<String>> subtypes = syntax.getSubtypes();
         HashMap<Expression, Expression> vars = new HashMap<>();
@@ -127,7 +127,7 @@ public class ExpressionTest {
             typesMap.put(ms[i + 2], ms[i + 3]);
             Expression expected = new Expression(ms[i + 4], syntax);
             vars.clear();
-            Expression result = e.matchsubExpr2(replaceMap, modifs, typesMap, listvars, 
+            Expression result = e.matchsubExpr(replaceMap, modifs, typesMap, listvars, 
                     vars, subtypes);
             
             System.out.println("" + vars);
@@ -135,34 +135,6 @@ public class ExpressionTest {
         }
     }
     
-    @Test
-    public void testMatchsubExpr() throws Exception {
-        System.out.println("matchsubExpr");
-        boolean[] modifs = new boolean[] {false};
-        HashMap<String, Set<String>> subtypes = syntax.getSubtypes();
-        HashMap<Expression, Expression> replace = new HashMap<>();
-        HashMap<String, String> typesMap = new HashMap<>();
-        ArrayList<Expression> listvars = new ArrayList<>();
-        String[] ms = matchsubExpr.split("\",\\s+\"");
-        String[] ls = ms[1].split("\\s");
-        for (String l : ls) {
-            Expression v = new Expression(l, syntax);
-            listvars.add(v);
-        }
-        for (int i = 2; i < ms.length - 1; i += 6) {
-            Expression e = new Expression(ms[i], syntax);
-            Expression schema = new Expression(ms[i + 1], syntax);
-            typesMap.put(ms[i + 2], ms[i + 3]);
-            Expression change = new Expression(ms[i + 4], syntax);
-            Expression expected = new Expression(ms[i + 5], syntax);
-            replace.clear();
-            Expression result = e.matchsubExpr(schema, change, modifs, typesMap, listvars, 
-                    replace, subtypes);
-            
-            System.out.println("" + replace);
-            assertEquals(expected, result);
-        }
-    }
 
     @Test
     public void testMatch() throws Exception {

@@ -43,12 +43,13 @@ import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.text.DataEditorSupport;
 import org.openide.util.Exceptions;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.CloneableTopComponent;
+import org.openide.windows.TopComponent;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
@@ -91,6 +92,7 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
         initComponents();
         varsToExprs = new HashMap<>();
         listparents = new ArrayList<>();
+        exprNodes = new ArrayList<>();
         //setName("GeneratorView Window");
         //setToolTipText(Bundle.HINT_GeneratorViewTopComponent());
     }
@@ -99,12 +101,11 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
         this();
         this.mdo = mdo;
         syntax = mdo.getSyntax();
-        String syntaxPath = mdo.getDocument().getDocumentElement().getAttribute("syntax");
+        document = mdo.getDocument();
         try {
             DataEditorSupport dataEditorSupport = mdo.getLookup().lookup(DataEditorSupport.class);
             styleDocument = dataEditorSupport.openDocument();
-            document = getBaseDocument(syntaxPath);
-        } catch (IOException | ParserConfigurationException ex) {
+        } catch (IOException ex) {
             NotifyDescriptor error = new NotifyDescriptor.Message(ex);
         }
         if (syntax != null) {
@@ -118,6 +119,55 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
             if (!generators.isEmpty()) {
                 generator = generators.get(0);
                 updateGenerator(generator);
+            }
+            readExprNodes(document);
+        }
+    }
+
+    private void readExprNodes(Document doc) {
+        NodeList list = doc.getElementsByTagName("expr");
+        for (int i = 0; i < list.getLength(); i++) {
+            Element item = (Element) list.item(i);
+            Node next = item.getFirstChild();
+            String etxt = "";
+            ArrayList<Integer> childs = new ArrayList<>();
+            ArrayList<int[]> parents = new ArrayList<>();
+            while (next != null) {
+                if (next.getNodeType() == Node.CDATA_SECTION_NODE) {
+                    etxt = next.getTextContent();
+                } else if (next.getNodeType() == Node.ELEMENT_NODE) {
+                    Element elem = (Element) next;
+                    switch (elem.getTagName()) {
+                        case "parents":
+                            String[] s = elem.getTextContent().trim().split(" ");
+                            for (String string : s) {
+                                String[] si = string.split("-");
+                                int[] p = new int[2];
+                                if (si.length == 2) {
+                                    p[0] = Integer.parseInt(si[0]);
+                                    p[1] = Integer.parseInt(si[1]);
+                                    parents.add(p);
+                                }
+                            }
+                            break;
+                        case "children":
+                            s = elem.getTextContent().trim().split(" ");
+                            for (String string : s) {
+                                childs.add(Integer.parseInt(string));
+                            }
+                            break;
+                    }
+                }
+                next = next.getNextSibling();
+            }
+            if(!etxt.isEmpty()) {
+                try {
+                    Expression e = new Expression(etxt, syntax);
+                    ExprNode en = new ExprNode(e, childs, parents);
+                    exprNodes.add(en);
+                } catch (Exception ex) {
+                    NotifyDescriptor error = new NotifyDescriptor.Message(ex);
+                }
             }
         }
     }
@@ -836,7 +886,6 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
     @Override
     public void componentOpened() {
         varsToExprs = new HashMap<>();
-        exprNodes = new ArrayList<>();
     }
 
     @Override

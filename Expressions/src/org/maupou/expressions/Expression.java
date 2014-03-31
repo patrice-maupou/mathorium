@@ -350,35 +350,6 @@ public class Expression {
         return fit;
     }
 
-    /**
-     * Cherche la première sous-expression qui convienne au modèle, mais il faut
-     * un pointeur sur le noeud parent. Exemple : 8(5+7)-2(4+5) et schema: a+b,
-     *
-     * @param schema le modèle
-     * @param change le modèle remplaçant
-     * @param modifs
-     * @param typesMap
-     * @param listvars
-     * @param vars
-     * @param subtypes table des sous-types
-     * @return vrai si une sous-expression est conforme au modèle
-     */
-    public Expression matchsubExpr(Expression schema, Expression change, boolean[] modifs,
-            HashMap<String, String> typesMap, ArrayList<Expression> listvars, HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes) {
-        Expression e = copy();
-        if (match(schema, typesMap, listvars, vars, subtypes)) {
-            e = change.replace(vars);
-            modifs[0] = true;
-        } else if (e.getChildren() != null) {
-            for (int i = 0; i < e.getChildren().size(); i++) {
-                Expression child = e.getChildren().get(i);
-                vars.clear();
-                e.getChildren().set(i, child.matchsubExpr(schema, change, modifs, typesMap,
-                        listvars, vars, subtypes));
-            }
-        }
-        return e;
-    }
 
     /**
      * Transforme l'expression en utilisant la table des remplacements replaceMap pour les sous-expressions
@@ -392,7 +363,7 @@ public class Expression {
      * @param subtypes
      * @return  vrai si une sous-expression est conforme au modèle
      */
-    public Expression matchsubExpr2(HashMap<Expression, Expression> replaceMap, boolean[] modifs,
+    public Expression matchsubExpr(HashMap<Expression, Expression> replaceMap, boolean[] modifs,
             HashMap<String, String> typesMap, ArrayList<Expression> listvars, 
             HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes) {
         Expression e = copy();
@@ -410,7 +381,7 @@ public class Expression {
             for (int i = 0; i < e.getChildren().size(); i++) {
                 Expression child = e.getChildren().get(i);
                 vars.clear();
-                e.getChildren().set(i, child.matchsubExpr2(replaceMap, modifs, typesMap,
+                e.getChildren().set(i, child.matchsubExpr(replaceMap, modifs, typesMap,
                         listvars, vars, subtypes));
             }
         }

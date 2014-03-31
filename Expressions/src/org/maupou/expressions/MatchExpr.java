@@ -110,7 +110,7 @@ public class MatchExpr {
                 boolean[] modifs = new boolean[1];
                 do {
                     modifs[0] = false;
-                    e = e.matchsubExpr2(getReplaceMap(), modifs, typesMap, listvars, svars,
+                    e = e.matchsubExpr(getReplaceMap(), modifs, typesMap, listvars, svars,
                             syntax.getSubtypes());
                 } while (recursive && modifs[0]);
                 svars.clear();
