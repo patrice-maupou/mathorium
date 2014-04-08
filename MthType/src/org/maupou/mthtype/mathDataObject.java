@@ -5,19 +5,13 @@
  */
 package org.maupou.mthtype;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import org.maupou.expressions.Syntax;
 import org.netbeans.core.spi.multiview.MultiViewElement;
 import org.netbeans.core.spi.multiview.text.MultiViewEditorElement;
-import org.openide.NotifyDescriptor;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
-import org.openide.cookies.CloseCookie;
 import org.openide.cookies.OpenCookie;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.MIMEResolver;
@@ -30,7 +24,6 @@ import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 @Messages({
     "LBL_math_LOADER=Files of math"
@@ -99,36 +92,18 @@ import org.w3c.dom.Element;
     )
 })
 public class mathDataObject extends MultiDataObject {
+
     private Syntax syntax;
     private Document document;
-    private MathOpenSupport mathOpenSupport;
+    private final MathOpenSupport mathOpenSupport;
 
-    public mathDataObject(FileObject pf, MultiFileLoader loader) throws DataObjectExistsException, IOException {
+    public mathDataObject(FileObject pf, MultiFileLoader loader) throws DataObjectExistsException, 
+            IOException {
         super(pf, loader);
         registerEditor("text/x-math+xml", true);
         CookieSet cookies = getCookieSet();
-        try {
-            DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-            InputStream is = pf.getInputStream();
-            document = documentBuilder.parse(is);
-            if (document != null) {
-                Element root = document.getDocumentElement();
-                String path = root.getAttribute("syntax");
-                if (!path.isEmpty()) {
-                    File syntaxFile = new File(path);
-                    Document syxdoc = documentBuilder.parse(syntaxFile);
-                    syntax = new Syntax(syxdoc);
-                    syntax.addGenerators(syxdoc);
-                    mathOpenSupport = new MathOpenSupport(getPrimaryEntry());
-                    //cookies.add(mathOpenSupport);
-                    cookies.assign(OpenCookie.class, mathOpenSupport);
-                    cookies.assign(CloseCookie.class, mathOpenSupport);
-                }
-            } 
-        } catch (Exception ex) {
-            NotifyDescriptor error = new NotifyDescriptor.Message(ex);
-        }
+        mathOpenSupport = new MathOpenSupport(getPrimaryEntry());
+        cookies.assign(OpenCookie.class, mathOpenSupport);
     }
 
     @Override
@@ -145,21 +120,31 @@ public class mathDataObject extends MultiDataObject {
             position = 1000
     )
     @Messages("LBL_math_EDITOR=Source")
+    
     public static MultiViewEditorElement createEditor(Lookup lkp) {
-        MultiViewEditorElement multiViewEditor = new MultiViewEditorElement(lkp);
-        return multiViewEditor;
+        return new MultiViewEditorElement(lkp);
     }
+  
 
     public Syntax getSyntax() {
         return syntax;
+    }
+    
+    public void setSyntax(Syntax syntax) {
+        this.syntax = syntax;
     }
 
     public Document getDocument() {
         return document;
     }
 
+    public void setDocument(Document document) {
+        this.document = document;
+    }
+    
     public MathOpenSupport getMathOpenSupport() {
         return mathOpenSupport;
     }
+
 
 }

@@ -2,6 +2,7 @@ package org.maupou.expressions;
 
 import java.util.*;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -9,11 +10,10 @@ import java.util.regex.Matcher;
  */
 public class Expression {
 
-    private final String name;
+    private String name;
     private String type;
     private ArrayList<Expression> children;
     private boolean symbol;
-    private Syntax syntax;
 
     /**
      * Création directe en connaissant tous les paramètres
@@ -22,14 +22,12 @@ public class Expression {
      * @param type
      * @param children
      * @param symbol
-     * @param syntax responsable de la création de l'expression
      */
-    public Expression(String name, String type, ArrayList<Expression> children, boolean symbol, Syntax syntax) {
+    public Expression(String name, String type, ArrayList<Expression> children, boolean symbol) {
         this.name = name;
         this.type = type;
         this.children = children;
         this.symbol = symbol;
-        //this.syntax = syntax; // FIXIT
     }
 
     /**
@@ -42,7 +40,6 @@ public class Expression {
     public Expression(String text, Syntax syntax) throws Exception {
         Expression e = splitSimpleExpressions(text, syntax);
         symbol = false;
-        //this.syntax = syntax; // FIXIT
         if (e != null) {
             name = e.getName();
             type = e.getType();
@@ -52,6 +49,74 @@ public class Expression {
             type = null;
             throw new Exception("Expression <" + text + "> non valide");
         }
+    }
+
+    /**
+     * inverse de toText()
+     *
+     * @param text texte complet avec les types
+     * @throws Exception
+     */
+    public Expression(String text) throws Exception {
+        symbol = false;
+        ArrayList<Expression> list = new ArrayList<>();
+        String[] ret = scanExpr(text, list); 
+        if(list.size() == 1 && ret[1].isEmpty()) {
+            name = list.get(0).getName();
+            type = list.get(0).getType();
+            children = list.get(0).getChildren();
+        } else {
+            name = "non valid Expression";
+            type = null;
+            throw new Exception("Expression <" + text + "> non valide");
+        }
+    }
+
+    /**
+     * la fin est basée sur les valeurs possibles du dernier match "simple;type"
+     * si le marqueur est "):type" on ajoute l'expression à list, on retourne.
+     * "," on ajoute l'expression à list, on continue
+     *
+     * @param text chaîne à analyser
+     * @param list
+     * @return le texte restant et le dernier marqueur
+     */
+    public static String[] scanExpr(String text, ArrayList<Expression> list) {
+        String[] ret = new String[]{"", text};
+        String mark = "";
+        Matcher m = Pattern.compile("([^\\(\\),]+):(\\w+)(,|\\):|)").matcher(text);
+        if (m.lookingAt()) { // expression simple
+            String name = m.group(1);
+            String type = m.group(2);
+            mark = (m.groupCount() == 3) ? m.group(3) : "";
+            list.add(new Expression(name, type, null, false));
+            text = text.substring(m.end());
+        } else { // composée
+            m = Pattern.compile("\\((\\w+),").matcher(text); // exemple "(add,"
+            if (m.lookingAt()) {
+                String name = m.group(1);
+                ArrayList<Expression> childs = new ArrayList<>();
+                text = text.substring(m.end());
+                ret = scanExpr(text, childs);
+                text = ret[1];
+                if (ret[0].equals("):") || ret[0].isEmpty()) { // fin normale
+                    m = Pattern.compile("(\\w+)(,|\\):|)").matcher(text);
+                    if (m.lookingAt()) {
+                        mark = (m.groupCount() == 2)? m.group(2) : "";
+                        String type = m.group(1);
+                        Expression e = new Expression(name, type, childs, false);
+                        list.add(e); // liste remplacée par un seul élément
+                        text = text.substring(m.end());
+                    }
+                }
+            }
+        }
+        if ("):".equals(mark) || mark.isEmpty()) { // niveau terminé
+            ret = new String[]{mark, text};
+        } else if (",".equals(mark)) { // même niveau
+            ret = scanExpr(text, list);
+        }
+        return ret;
     }
 
     /**
@@ -83,7 +148,7 @@ public class Expression {
                     SyntaxPattern syntaxPattern = simpleRule.getSyntaxPatternGroups().get(i + 1);
                     setType(syntaxPattern.getTypeChecks().get(0).getType());
                     done = text.equals(matcher.group());
-                    e = new Expression(matcher.group(), getType(), getChildren(), false, syntax);
+                    e = new Expression(matcher.group(), getType(), getChildren(), false);
                     tm.put(matcher.start(), e);
                     text = text.substring(0, matcher.start())
                             + tokenvar.substring(0, matcher.end() - matcher.start())
@@ -110,7 +175,7 @@ public class Expression {
             List<SyntaxRule> listRules, HashMap<String, Set<String>> subtypes, int offset) {
 
         String tkvar = tokenvar.substring(0, 2) + "*";
-        if (text.matches(tkvar)) {
+        if (text.matches(tkvar)) { // expression décodée
             return tm.get(offset);
         }
         Expression e = null;
@@ -142,7 +207,8 @@ public class Expression {
                     ArrayList<Expression> ch = new ArrayList<>();
                     for (int i = grouprange; i < groupnext; i++) {
                         if ((m.group(i) != null) && !(var && nodeName.equals(m.group(i)))) { // last child
-                            e = decreasingSearch(m.group(i), tokenvar, tm, listRules, subtypes, offset + m.start(i));
+                            e = decreasingSearch(m.group(i), tokenvar, tm, listRules, subtypes,
+                                    offset + m.start(i));
                             if (e == null) {
                                 return e;
                             }
@@ -165,7 +231,7 @@ public class Expression {
                         }
                         // élimination des descendants, changement dans text
                         if (found) {
-                            e = new Expression(nodeName, typeCheck.getType(), ch, false, syntax);
+                            e = new Expression(nodeName, typeCheck.getType(), ch, false);
                             int start = m.start() + offset;
                             for (int k = 1; k <= childs.length; k++) {
                                 start = tm.ceilingKey(start);
@@ -202,14 +268,14 @@ public class Expression {
     public Expression copy() {
         Expression e;
         if (children == null) {
-            e = new Expression(name, type, null, isSymbol(), syntax);
+            e = new Expression(name, type, null, isSymbol());
         } else {
             ArrayList<Expression> nchildren = new ArrayList<>();
-            for (int i = 0; i < children.size(); i++) {
-                Expression child = children.get(i).copy();
+            for (Expression children1 : children) {
+                Expression child = children1.copy();
                 nchildren.add(child);
             }
-            e = new Expression(name, type, nchildren, isSymbol(), syntax);
+            e = new Expression(name, type, nchildren, isSymbol());
         }
         return e;
     }
@@ -224,12 +290,12 @@ public class Expression {
         if (e == null) {
             if (children != null) {
                 ArrayList<Expression> echilds = new ArrayList<>();
-                for (int i = 0; i < children.size(); i++) {
-                    echilds.add(children.get(i).replace(map));
+                for (Expression children1 : children) {
+                    echilds.add(children1.replace(map));
                 }
-                e = new Expression(name, type, echilds, isSymbol(), syntax);
+                e = new Expression(name, type, echilds, isSymbol());
             } else {
-                e = new Expression(name, type, null, isSymbol(), syntax);
+                e = new Expression(name, type, null, isSymbol());
             }
         }
         return e;
@@ -350,21 +416,21 @@ public class Expression {
         return fit;
     }
 
-
     /**
-     * Transforme l'expression en utilisant la table des remplacements replaceMap pour les sous-expressions
-     * qui conviennent.
-     * 
+     * Transforme l'expression en utilisant la table des remplacements
+     * replaceMap pour les sous-expressions qui conviennent.
+     *
      * @param replaceMap table des transformations à effectuer
-     * @param modifs liste qui contient un seul boolean modifié à true si l'expression a été modifiée.
+     * @param modifs liste qui contient un seul boolean modifié à true si
+     * l'expression a été modifiée.
      * @param typesMap
      * @param listvars
      * @param vars table des variables des entrées de replaceMap
      * @param subtypes
-     * @return  vrai si une sous-expression est conforme au modèle
+     * @return vrai si une sous-expression est conforme au modèle
      */
     public Expression matchsubExpr(HashMap<Expression, Expression> replaceMap, boolean[] modifs,
-            HashMap<String, String> typesMap, ArrayList<Expression> listvars, 
+            HashMap<String, String> typesMap, ArrayList<Expression> listvars,
             HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes) {
         Expression e = copy();
         for (Map.Entry<Expression, Expression> entry : replaceMap.entrySet()) {
@@ -372,12 +438,11 @@ public class Expression {
                 e = entry.getValue().replace(vars);
                 modifs[0] = true;
                 return e;
-            }
-            else {
+            } else {
                 vars.clear();
             }
         }
-        if(e.getChildren() != null) {
+        if (e.getChildren() != null) {
             for (int i = 0; i < e.getChildren().size(); i++) {
                 Expression child = e.getChildren().get(i);
                 vars.clear();
@@ -531,24 +596,38 @@ public class Expression {
         return ret;
     }
 
+    /**
+     * Ecriture complète de l'expression comprenant le type et permettant de
+     * reconstruire l'expression exemple : (ADD,3:natural,x:real):real
+     *
+     * @return la chaîne représentant l'expression
+     */
+    public String toText() {
+        StringBuilder sb = new StringBuilder(getName());
+        if (getChildren() != null) {
+            sb.insert(0, "(");
+            for (Expression child : getChildren()) {
+                sb.append(",");
+                sb.append(child.toText());
+            }
+            sb.append(")");
+        }
+        sb.append(":").append(type);
+        return sb.toString();
+    }
+
     @Override
     public String toString() {
-        String ret;
-        try {
-            ret = toString(syntax.getSyntaxWrite());
-        } catch (Exception ex) {
-            StringBuilder sb = new StringBuilder(getName());
-            if (getChildren() != null) {
-                sb.insert(0, "(");
-                for (Expression expression : getChildren()) {
-                    sb.append(",");
-                    sb.append(expression);
-                }
-                sb.append(")");
+        StringBuilder sb = new StringBuilder(getName());
+        if (getChildren() != null) {
+            sb.insert(0, "(");
+            for (Expression expression : getChildren()) {
+                sb.append(",");
+                sb.append(expression);
             }
-            ret = sb.toString();
+            sb.append(")");
         }
-        return ret;
+        return sb.toString();
     }
 
     /**
@@ -575,13 +654,6 @@ public class Expression {
      */
     public ArrayList<Expression> getChildren() {
         return children;
-    }
-
-    /**
-     * @return the syntax
-     */
-    public Syntax getSyntax() {
-        return syntax;
     }
 
     /**

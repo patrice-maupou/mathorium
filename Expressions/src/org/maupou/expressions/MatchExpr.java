@@ -38,7 +38,7 @@ public class MatchExpr {
         type = match.getAttribute("name");
         String s = match.getAttribute("global");
         if (!s.isEmpty()) {
-            global = new Expression(s, type, null, true, syntax);
+            global = new Expression(s, type, null, true);
         }
         String[] listopts = match.getAttribute("options").split(",");
         for (String option : listopts) {
@@ -84,13 +84,12 @@ public class MatchExpr {
 
 
     /**
-     * match l'expression expr, tient compte des variables de ses pour
-     * actualiser ses
+     * match l'expression expr en tenant compte de la table vars (variables déjà attribuées).
+     * 1. si global == null, match direct de expr contre schema.
+     * 2. sinon, transformation de l'expression par la table replaceMap, résultat dans global
      *
-     * @param expr l'expression examinée par rapport à schema, ex :
-     * ((A->B)->C)->(B->C)
-     * @param typesMap table de remplacement d'un type par un autre
-     * (propse->prop)
+     * @param expr l'expression examinée par rapport à schema, ex : ((A->B)->C)->(B->C)
+     * @param typesMap table de remplacement d'un type par un autre (propse->prop)
      * @param listvars liste des symboles à remplacer
      * @param vars table des variables déjà connues, ex: {A:=(A->B)->A}
      * @param syntax
@@ -105,7 +104,7 @@ public class MatchExpr {
             HashMap<Expression, Expression> svars = new HashMap<>();
             if (global == null) {
                 ret = expr.match(getSchema(), typesMap, listvars, svars, syntax.getSubtypes());
-            } else {
+            } else { // il s'agit de remplacements
                 Expression e = expr;
                 boolean[] modifs = new boolean[1];
                 do {

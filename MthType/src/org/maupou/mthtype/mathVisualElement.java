@@ -249,10 +249,12 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
             }
             updateText(mdoDocument);
         }
+        requestFocus();
     }
 
     @Override
     public void componentClosed() {
+        mdo.getMathOpenSupport().close();
     }
 
     @Override

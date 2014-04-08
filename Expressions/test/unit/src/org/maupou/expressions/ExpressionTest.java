@@ -25,6 +25,7 @@ public class ExpressionTest {
     private SyntaxWrite syntaxWrite;
     private File directory;
     private String[] entries;
+    private String[] complete;
     private String[] results;
     private String[] printing;
     private String replacements, matches, matchBoth, matchsubExpr, matchsubExpr2;
@@ -60,6 +61,8 @@ public class ExpressionTest {
                 texts = document.getElementById("results");
                 String resultsText = texts.getTextContent();
                 results = resultsText.split("\",\\s+\"");
+                Element completeText = document.getElementById("complete");
+                complete = completeText.getTextContent().split("\",\\s+\"");
                 texts = document.getElementById("write_numbers");
                 printing = texts.getTextContent().split("\",\\s+\"");
                 // remplacements
@@ -98,11 +101,11 @@ public class ExpressionTest {
     @After
     public void tearDown() {
     }
-    
+
     @Test
     public void testMatchsubExpr() throws Exception {
         System.out.println("matchsubExpr");
-        boolean[] modifs = new boolean[] {false};
+        boolean[] modifs = new boolean[]{false};
         HashMap<String, Set<String>> subtypes = syntax.getSubtypes();
         HashMap<Expression, Expression> vars = new HashMap<>();
         HashMap<Expression, Expression> replaceMap = new HashMap<>();
@@ -114,27 +117,26 @@ public class ExpressionTest {
         for (String l : ls) {
             Expression v = new Expression(l, syntax);
             listvars.add(v);
-        }        
+        }
         for (int i = 2; i < ms.length - 1; i += 5) {
             Expression e = new Expression(ms[i], syntax);
             replaceMap.clear();
-            String[] replace = ms[i+1].split(separator);
+            String[] replace = ms[i + 1].split(separator);
             for (int j = 0; j < replace.length; j += 2) {
                 Expression key = new Expression(replace[j], syntax);
-                Expression value = new Expression(replace[j+1], syntax);
+                Expression value = new Expression(replace[j + 1], syntax);
                 replaceMap.put(key, value);
             }
             typesMap.put(ms[i + 2], ms[i + 3]);
             Expression expected = new Expression(ms[i + 4], syntax);
             vars.clear();
-            Expression result = e.matchsubExpr(replaceMap, modifs, typesMap, listvars, 
+            Expression result = e.matchsubExpr(replaceMap, modifs, typesMap, listvars,
                     vars, subtypes);
-            
+
             System.out.println("" + vars);
             assertEquals(expected, result);
         }
     }
-    
 
     @Test
     public void testMatch() throws Exception {
@@ -249,7 +251,41 @@ public class ExpressionTest {
     }
 
     @Test
-    public void testToString2() throws Exception {
+    public void testToText() throws Exception {
+        System.out.println("toText");
+        int n = entries.length;
+        int m = complete.length - 1; //
+        for (int i = 1; i < m; i++) {
+            String entry = entries[i];
+            Expression exp = new Expression(entry, syntax);
+            String expString = exp.toText();
+            String expected = complete[i];
+            System.out.println(expString);
+            assertEquals(expected, expString);
+        }
+        System.out.println("\n");
+    }
+
+    /**
+     * Test of scanExpr method, of class Expression.
+     */
+    @Test
+    public void testScanExpr() throws Exception {
+        System.out.println("scanExpr");
+        for (int i = 1; i < complete.length - 1; i++) {
+            String text = complete[i];
+            Expression expected = new Expression(entries[i], syntax);
+            ArrayList<Expression> list = new ArrayList<>();
+            String[] ret = Expression.scanExpr(text, list);
+            assertEquals(expected, list.get(0));
+            System.out.println(i + " :" + entries[i] + "    size: " + list.size() 
+                    + " marqueur: " + ret[0] + "text: " + ret[1]);
+        }
+        System.out.println("\n");
+    }
+
+    @Test 
+    public void testToString_syntaxWrite() throws Exception {
         System.out.println("toString(syntaxWrite)");
         int n = entries.length;
         int m = 35; //
@@ -267,4 +303,5 @@ public class ExpressionTest {
             assertEquals(expected, expString);
         }
     }
+
 }

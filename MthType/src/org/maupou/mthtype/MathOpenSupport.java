@@ -9,6 +9,7 @@ import org.openide.cookies.CloseCookie;
 import org.openide.cookies.OpenCookie;
 import org.openide.loaders.MultiDataObject;
 import org.openide.loaders.OpenSupport;
+import org.openide.text.DataEditorSupport;
 import org.openide.windows.CloneableTopComponent;
 import org.openide.windows.Mode;
 import org.openide.windows.WindowManager;
@@ -46,7 +47,10 @@ public class MathOpenSupport extends OpenSupport implements OpenCookie, CloseCoo
     @Override
     public boolean close() {
         boolean ret = super.close();
-        gvtc.close(); // ne fait rien
+        DataEditorSupport support = mdo.getLookup().lookup(DataEditorSupport.class);
+        if(support != null) {
+            support.close();
+        }
         return ret;
     }
 
