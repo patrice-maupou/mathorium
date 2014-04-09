@@ -668,7 +668,6 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
                           if (t != null) {
                               valueField.setText(t.toString(syntaxWrite));
                               valueField.requestFocus();
-                              varsToExprs.remove(matchExpr.getGlobal());
                           }
                       } else { // check results
                           int index = (Integer) resultRanges.getValue() - 1;
@@ -704,13 +703,14 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
                           }
                       }
                   } else {
-                      NotifyDescriptor error = new NotifyDescriptor.Message("non conforme au modèle",
-                              NotifyDescriptor.INFORMATION_MESSAGE);
-                      DialogDisplayer.getDefault().notify(error);
+                      displayWarning("non conforme au modèle", NotifyDescriptor.INFORMATION_MESSAGE);
                   }
               }
+              else {
+                  displayWarning(e +" n'est pas dans la liste", NotifyDescriptor.INFORMATION_MESSAGE);
+              }
           } catch (Exception ex) {
-              NotifyDescriptor error = new NotifyDescriptor.Message(ex);
+              displayWarning(ex.getMessage(), NotifyDescriptor.ERROR_MESSAGE);
           }
       } else {
           resultField.setText(e);
@@ -718,6 +718,16 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
       }
   }//GEN-LAST:event_valueFieldActionPerformed
 
+  /**
+   * affiche un panel avec un message
+   * @param message
+   * @param type 
+   */
+  private void displayWarning(String message, int type) {
+      NotifyDescriptor warning = new NotifyDescriptor.Message(message, type);
+      DialogDisplayer.getDefault().notify(warning);
+  }
+  
     /**
      * met à jour le document de tc en ajoutant les nouvelles expressions et
      * l'ouvre à nouveau

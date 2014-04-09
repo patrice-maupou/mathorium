@@ -6,7 +6,6 @@ package org.maupou.expressions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -114,6 +113,7 @@ public class MatchExpr {
                 } while (recursive && modifs[0]);
                 svars.clear();
                 svars.put(global, e);
+                vars.put(global, e);
                 ret = true;
             }
             if (vars.isEmpty()) { // ajouter les nouvelles variables
@@ -121,7 +121,7 @@ public class MatchExpr {
                 for (Expression var : listvars) {
                     var.setSymbol(true);
                 }
-            } else { // ce n'est pas le premier modèle
+            } else if (global == null) { // ce n'est pas le premier modèle
                 HashMap<Expression, Expression> nsvars = new HashMap<>(), nvars = new HashMap<>();
                 for (Map.Entry<Expression, Expression> var : vars.entrySet()) {
                     Expression svar = svars.get(var.getKey()); // A->B
