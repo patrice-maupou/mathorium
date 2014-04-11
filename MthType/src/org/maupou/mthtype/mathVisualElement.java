@@ -60,17 +60,17 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
                 mdoDocument.addDocumentListener(new DocumentListener() {
                     @Override
                     public void insertUpdate(DocumentEvent e) {
-                        updateText(mdoDocument);
+                        textPane.setText(updateText(mdoDocument));
                     }
 
                     @Override
                     public void removeUpdate(DocumentEvent e) {
-                        updateText(mdoDocument);
+                        textPane.setText(updateText(mdoDocument));
                     }
 
                     @Override
                     public void changedUpdate(DocumentEvent e) {
-                        updateText(mdoDocument);
+                        textPane.setText(updateText(mdoDocument));
                     }
                 });
             } catch (IOException ex) {
@@ -83,18 +83,18 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
      * réécrit le texte d'après le StyledDocument
      * @param doc le document de référence pour l'édition
      */
-    private void updateText(StyledDocument doc) {
+    private static String updateText(StyledDocument doc) {
         String text = "";
         try {
             text = doc.getText(0, doc.getLength());
         } catch (BadLocationException ex) {
         }
         StringBuilder output = new StringBuilder();
-        String[] result = readTag("expressions", text);
+        String[] result = readTag("expressions", text, null);
         if (!result[1].isEmpty()) { // texte intérieur
             text = result[1];
             while (!text.isEmpty()) {
-                result = readTag("generator", text);
+                result = readTag("generator", text, null);
                 HashMap<String, String> attrs = readAttributes(result[0]);
                 String gname = attrs.get("name");
                 if (gname != null) {
@@ -104,20 +104,20 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
                 text = result[2]; // texte restant
             }
         }
-        textPane.setText(output.toString());
+        return output.toString();
     }
 
     /**
-     * extrait et traite les expressions
+     * extrait et traite les expressions d'un generator
      *
      * @param text chaîne à analyser
      * @param output chaîne de sortie
      */
-    private void parse(String text, StringBuilder output) {
+    private static void parse(String text, StringBuilder output) {
         String[] result;
         while (!text.isEmpty()) {
-            result = readTag("expr", text);
-            String[] commentTag = readTag("comment", result[1]);
+            result = readTag("expr", text, null);
+            String[] commentTag = readTag("comment", result[1], null);
             if (!commentTag[1].isEmpty()) {
                 output.append("<div>").append(commentTag[1]).append("</div>");
             }
@@ -131,16 +131,24 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
      *
      * @param tag le nom de la balise
      * @param text la partie du texte à analyser
+     * @param specific liste particulière d'attributs
      * @return liste de 3 chaînes : les attributs, l'intérieur, et le reste
      */
-    private String[] readTag(String tag, String text) {
+    public static String[] readTag(String tag, String text, String specific) {
         String[] result = new String[]{"", "", ""};
-        String regex = "<" + tag + "(|(\\s\\w+=\\u0022.+?\\u0022)+)>(.+?)</" + tag + ">";
+        String attribs = "(|(\\s\\w+=\\u0022.+?\\u0022)+)";
+        if(specific != null) attribs = "(\\s" + specific + ")";
+        String regex = "<" + tag + attribs + ">(.+?)</" + tag + ">";
         Pattern p = Pattern.compile(regex, Pattern.DOTALL);
         Matcher m = p.matcher(text);
-        if(m.find()) {      
-            if(m.group(2) != null) result[0] = m.group(2);
-            if(m.group(3) != null) result[1] = m.group(3);
+        if(m.find()) {            
+            if (specific == null) {
+                result[0] = m.group(2);
+                result[1] = m.group(3);
+            } else {
+                result[0] = specific;
+                result[1] = m.group(2);                
+            }
             if(m.end() < text.length()) {
                 result[2] = text.substring(m.end());
             }
@@ -153,7 +161,7 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
      * @param text chaîne de caractères définissant des attributs
      * @return table des attributs
      */
-    private HashMap<String, String> readAttributes(String text) {
+    public static HashMap<String, String> readAttributes(String text) {
         HashMap<String, String> map = new HashMap<>();
         String[] params = text.split("\\s");
         for (String param : params) {
@@ -172,7 +180,7 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
      * @param text
      * @param output
      */
-    private void readCDATA(String text, StringBuilder output) {
+    private static void readCDATA(String text, StringBuilder output) {
         int start = text.indexOf("[CDATA[");
         if (start != -1) {
             start += 7;
@@ -247,7 +255,7 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
                 styleSheet.addRule("div {color:grey; font-size:12; font-style:italic; }");
                 Exceptions.printStackTrace(ex);
             }
-            updateText(mdoDocument);
+            textPane.setText(updateText(mdoDocument));
         }
         requestFocus();
     }

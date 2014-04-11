@@ -19,14 +19,14 @@ public class GenItem {
     private final String name;
     private final ArrayList<MatchExpr> matchExprs;
     private final ArrayList<Result> resultExprs;
-    private final HashMap<String,String> freevars; //table de remplacement d'un type par un autre 
+    private final HashMap<String,String> typesMap; //table de remplacement d'un type par un autre 
     //(propvar->prop)
     private final ArrayList<Expression> listvars; //  liste de référence des variables
     private boolean local;
 
     
     public HashMap<String,String> getFreevars() {
-        return freevars;
+        return typesMap;
     }
 
     public ArrayList<Expression> getListvars() {
@@ -38,14 +38,14 @@ public class GenItem {
      *
      * @param e élément de tagname "genrule" ou "discard"
      * @param syntax
-     * @param freevars
+     * @param typesMap
      * @param listvars
      * @throws Exception
      */
-    public GenItem(Element e, Syntax syntax, HashMap<String,String> freevars, 
+    public GenItem(Element e, Syntax syntax, HashMap<String,String> typesMap, 
             ArrayList<Expression> listvars) throws Exception {
         name = e.getAttribute("name");
-        this.freevars = freevars;
+        this.typesMap = typesMap;
         this.listvars = listvars;
         matchExprs = new ArrayList<>();
         NodeList nodelist = e.getElementsByTagName("match");
@@ -83,21 +83,30 @@ public class GenItem {
         if (exprNodes.size() < limit) {
             if (!matchExprs.isEmpty() && n < matchExprs.size()) {
                 MatchExpr matchExpr = matchExprs.get(n);
-                for (int i = 0; i < exprNodes.size(); i++) {
-                    ExprNode en1 = exprNodes.get(i);
-                    Expression e = en1.getE();
-                    HashMap<Expression, Expression> nvars = new HashMap<>();
-                    nvars.putAll(vars);
-                    if(matchExpr.checkExpr(e, nvars, freevars, listvars, syntax)) {
-                        ArrayList<int[]> parentList = new ArrayList<>();
-                        int[] p = Arrays.copyOf(en.getParentList().get(0), 
-                                en.getParentList().get(0).length);
-                        p[n] = i;
-                        parentList.add(p);
-                        en1 = new ExprNode(e, en.getChildList(), parentList);
-                        int[] sb = generate(n + 1, limit, level, syntax, en1, nvars, exprNodes, exprDiscards);
-                        System.arraycopy(sb, 0, bounds, 1, matchExprs.size() - n);
-                        bounds[0] = (i < bounds[0]) ? i : bounds[0];
+                if (matchExpr.getGlobal() == null) {
+                    for (int i = 0; i < exprNodes.size(); i++) {
+                        ExprNode en1 = exprNodes.get(i);
+                        Expression e = en1.getE();
+                        HashMap<Expression, Expression> nvars = new HashMap<>();
+                        nvars.putAll(vars);
+                        if (matchExpr.checkExpr(e, nvars, typesMap, listvars, syntax)) {
+                            ArrayList<int[]> parentList = new ArrayList<>();
+                            int[] p = Arrays.copyOf(en.getParentList().get(0),
+                                    en.getParentList().get(0).length);
+                            p[n] = i;
+                            parentList.add(p);
+                            en1 = new ExprNode(e, en.getChildList(), parentList);
+                            int[] sb = generate(n + 1, limit, level, syntax, en1, nvars, 
+                                    exprNodes, exprDiscards);
+                            System.arraycopy(sb, 0, bounds, 1, matchExprs.size() - n);
+                            bounds[0] = (i < bounds[0]) ? i : bounds[0];
+                        }
+                    }
+                }
+                else { // transformer la variable global si elle existe
+                    Expression e = vars.get(matchExpr.getGlobal());
+                    if(e != null) {
+                        matchExpr.checkExpr(e, vars, typesMap, listvars, syntax);
                     }
                 }
             } else {
@@ -123,7 +132,7 @@ public class GenItem {
         for (Result result : resultExprs) {
             if (result.getLevel() <= level) {
                 ExprNode en1 = en.copy();
-                result.addExpr(en1, vars, freevars, listvars, syntax, exprNodes, exprDiscards);
+                result.addExpr(en1, vars, typesMap, listvars, syntax, exprNodes, exprDiscards);
             }
         }
     }

@@ -26,9 +26,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingWorker;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Position;
 import javax.swing.text.StyledDocument;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -91,6 +98,7 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
     private int level, limit, matchRange;
     private Document document;
     private StyledDocument styleDocument;
+    private DocumentListener dl;
 
     public GeneratorViewTopComponent() {
         initComponents();
@@ -106,9 +114,28 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
         getDocument(mdo);
         try {
             DataEditorSupport dataEditorSupport = mdo.getLookup().lookup(DataEditorSupport.class);
-            styleDocument = dataEditorSupport.openDocument();
+            if (dataEditorSupport != null) {
+                styleDocument = dataEditorSupport.openDocument();
+                dl = new DocumentListener() {
+                    @Override
+                    public void insertUpdate(DocumentEvent de) {
+                        docToExprs(generator);
+                    }
+
+                    @Override
+                    public void removeUpdate(DocumentEvent de) {
+                        docToExprs(generator);
+                    }
+
+                    @Override
+                    public void changedUpdate(DocumentEvent de) {
+                        docToExprs(generator);
+                    }
+                };
+                styleDocument.addDocumentListener(dl);
+            }
         } catch (IOException ex) {
-            NotifyDescriptor error = new NotifyDescriptor.Message(ex);
+            displayWarning("Pas de styleDocument disponible", NotifyDescriptor.ERROR_MESSAGE);
         }
         if (syntax != null) {
             syntaxWrite = syntax.getSyntaxWrite();
@@ -154,66 +181,55 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
     }
 
     /**
-     * Etablit la liste exprNodes à partir du document
+     * parcourt le styledDocument et met à jour ce composant
      *
-     * @param doc le dom chargé
+     * @param generator l'objet courant
      */
-    private void readExprNodes(Document doc, Generator generator) {
-        NodeList genList = doc.getElementsByTagName("generator");
-        Element element;
-        for (int i = 0; i < genList.getLength(); i++) {
-            element = (Element) genList.item(i);
-            if (element.getAttribute("name").equals(generator.getName())) {
-                NodeList list = element.getElementsByTagName("expr");
-                for (int j = 0; j < list.getLength(); j++) {
-                    Element item = (Element) list.item(j);
-                    Node next = item.getFirstChild();
-                    String etxt = "";
-                    ArrayList<Integer> childs = new ArrayList<>();
-                    ArrayList<int[]> parents = new ArrayList<>();
-                    while (next != null) {
-                        if (next.getNodeType() == Node.TEXT_NODE && etxt.isEmpty()) {
-                            etxt = next.getTextContent();
-                        } else if (next.getNodeType() == Node.ELEMENT_NODE) {
-                            Element elem = (Element) next;
-                            switch (elem.getTagName()) {
-                                case "parents":
-                                    String[] s = elem.getTextContent().trim().split(" ");
-                                    for (String string : s) {
-                                        String[] si = string.split("-");
-                                        int[] p = new int[2];
-                                        if (si.length == 2) {
-                                            p[0] = Integer.parseInt(si[0]);
-                                            p[1] = Integer.parseInt(si[1]);
-                                            parents.add(p);
-                                        }
-                                    }
-                                    break;
-                                case "children":
-                                    s = elem.getTextContent().trim().split(" ");
-                                    for (String string : s) {
-                                        childs.add(Integer.parseInt(string));
-                                    }
-                                    break;
+    private void docToExprs(Generator generator) {
+        exprNodes.clear();
+        try {
+            Position end = styleDocument.getEndPosition();
+            String text = styleDocument.getText(0, end.getOffset());
+            String specific = "name=\\u0022" + generator.getName() + "\\u0022";
+            String[] elem = mathVisualElement.readTag("generator", text, specific);
+            text = elem[1];
+            while (!text.isEmpty()) {
+                elem = mathVisualElement.readTag("expr", text, null);
+                ArrayList<int[]> parents = new ArrayList<>();
+                ArrayList<Integer> childs = new ArrayList<>();
+                String attribs = elem[0];
+                String inner = elem[1];
+                text = elem[2]; // le reste
+                if (!inner.isEmpty()) {
+                    elem = mathVisualElement.readTag("text", inner, null);
+                    Expression e = new Expression(elem[1]);
+                    elem = mathVisualElement.readTag("parents", inner, null);
+                    if (!elem[1].isEmpty()) {
+                        String[] s = elem[1].trim().split(" ");
+                        for (String string : s) {
+                            String[] si = string.split("-");
+                            int[] p = new int[2];
+                            if (si.length == 2) {
+                                p[0] = Integer.parseInt(si[0]); // exception avec [CDATA
+                                p[1] = Integer.parseInt(si[1]);
+                                parents.add(p);
                             }
                         }
-                        next = next.getNextSibling();
                     }
-                    if (!etxt.isEmpty()) {
-                        try {
-                            Expression e = new Expression(etxt);
-                            ExprNode en = new ExprNode(e, childs, parents);
-                            exprNodes.add(en);
-                        } catch (Exception ex) {
-                            String message = "No expression for " + etxt;
-                            NotifyDescriptor error = new NotifyDescriptor.Message(message);
+                    elem = mathVisualElement.readTag("children", inner, null);
+                    if (!elem[1].isEmpty()) {
+                        String[] s = elem[1].trim().split(" ");
+                        for (String string : s) {
+                            childs.add(Integer.parseInt(string));
                         }
                     }
+                    exprNodes.add(new ExprNode(e, childs, parents));
                 }
             }
-            break;
+            updateEditor();
+        } catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
         }
-        updateEditor();
     }
 
     /**
@@ -222,8 +238,8 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
     private void updateEditor() {
         int max = exprNodes.size();
         if (max > 0) {
-            exprRange.setModel(new SpinnerNumberModel(1, 1, max, 1));
-            ExprNode en = exprNodes.get(0);
+            exprRange.setModel(new SpinnerNumberModel(max, 1, max, 1));
+            ExprNode en = exprNodes.get(max - 1);
             try {
                 editorPane.setText(en.getE().toString(syntaxWrite));
             } catch (Exception ex) {
@@ -705,9 +721,8 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
                   } else {
                       displayWarning("non conforme au modèle", NotifyDescriptor.INFORMATION_MESSAGE);
                   }
-              }
-              else {
-                  displayWarning(e +" n'est pas dans la liste", NotifyDescriptor.INFORMATION_MESSAGE);
+              } else {
+                  displayWarning(e + " n'est pas dans la liste", NotifyDescriptor.INFORMATION_MESSAGE);
               }
           } catch (Exception ex) {
               displayWarning(ex.getMessage(), NotifyDescriptor.ERROR_MESSAGE);
@@ -718,16 +733,30 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
       }
   }//GEN-LAST:event_valueFieldActionPerformed
 
-  /**
-   * affiche un panel avec un message
-   * @param message
-   * @param type 
-   */
-  private void displayWarning(String message, int type) {
-      NotifyDescriptor warning = new NotifyDescriptor.Message(message, type);
-      DialogDisplayer.getDefault().notify(warning);
-  }
-  
+    /**
+     * affiche un panel avec un message
+     *
+     * @param message
+     * @param type
+     */
+    private void displayWarning(String message, int type) {
+        NotifyDescriptor warning = new NotifyDescriptor.Message(message, type);
+        DialogDisplayer.getDefault().notify(warning);
+    }
+
+    public synchronized void addToStyledDocument(List<ExprNode> newExprs) throws Exception {
+        AttributeSet as = styleDocument.getDefaultRootElement().getAttributes();
+        Position end = styleDocument.getEndPosition();
+        String text = styleDocument.getText(0, end.getOffset());        
+        String[] elem = mathVisualElement.readTag("expressions", text, null);
+        text = elem[1].trim();
+        String specific = "name=\\u0022" + generator.getName() + "\\u0022";
+        elem = mathVisualElement.readTag("generator", text, specific);
+        if(elem[0].isEmpty()) { // créer l'élément
+            
+        }
+    }
+
     /**
      * met à jour le document de tc en ajoutant les nouvelles expressions et
      * l'ouvre à nouveau
@@ -735,7 +764,7 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
      * @param newExprs expressions à ajouter
      * @throws Exception
      */
-    private void addToDocument(List<ExprNode> newExprs) throws Exception {
+    private synchronized void addToDocument(List<ExprNode> newExprs) throws Exception {
         String gname = (generator == null) ? "freelist" : generator.getName();
         Element root = document.getDocumentElement();
         Element gen = document.createElement("generator");
@@ -754,6 +783,7 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
         }
         for (ExprNode exprNode : newExprs) {
             //addDiscards(exprNode);
+            //*
             String parents = "", enfants = "";
             for (int[] is : exprNode.getParentList()) {
                 for (int i = 0; i < is.length; i++) {
@@ -779,18 +809,21 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
              Element comment = document.createElement("comment");
              txtnode = document.createCDATASection("");
              //*/
+            //* modif le texte est dans l'élément text
+            Element text = document.createElement("text");
             Text createTextNode = document.createTextNode(e.toText());
-            expr.appendChild(createTextNode);
+            text.appendChild(createTextNode);
+            expr.appendChild(text);
             if (!parents.isEmpty()) {
                 Element par = document.createElement("parents");
-                txtnode = document.createCDATASection(parents);
-                par.appendChild(txtnode);
+                createTextNode = document.createTextNode(parents);
+                par.appendChild(createTextNode);
                 expr.appendChild(par);
             }
             if (!enfants.isEmpty()) {
                 Element children = document.createElement("children");
-                txtnode = document.createCDATASection(enfants);
-                children.appendChild(txtnode);
+                createTextNode = document.createTextNode(enfants);
+                children.appendChild(createTextNode);
                 expr.appendChild(children);
             }
             gen.appendChild(expr);
@@ -859,17 +892,20 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
             //*
             exrpDiscards = new ArrayList<>(); // FIXME : boucle infinie
             //*/
+            styleDocument.removeDocumentListener(dl);
             SwingWorker worker = new SwingWorker<ArrayList<ExprNode>, String[]>() {
                 @Override
                 protected ArrayList<ExprNode> doInBackground() throws Exception {
                     level = 1;
-                    boolean once = exprNodes.isEmpty();
+                    boolean once = true;
+                    int oldsize = 0;
                     do {
                         for (GenItem genItem : generator.getGenItems()) {
-                            if (!once) {
+                            if ((!once && genItem.getMatchExprs().isEmpty())
+                                    || genItem.getResultExprs().isEmpty()) {
                                 continue;
                             }
-                            int oldsize = exprNodes.size();
+                            oldsize = exprNodes.size();
                             int matchsize = genItem.getMatchExprs().size();
                             int[] genpList = new int[matchsize];
                             HashMap<Expression, Expression> evars = new HashMap<>();
@@ -882,9 +918,10 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
                             addToDocument(newExprs);
                         }
                         once = false;
-                    } while (exprNodes.size() < limit);
+                    } while (exprNodes.size() < limit && oldsize < exprNodes.size());
                     goButton.setText("execute");
-                    updateEditor();
+                    updateEditor();                    
+                    styleDocument.addDocumentListener(dl);
                     return exprNodes;
                 }
             };
@@ -942,7 +979,7 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
         for (int i = 0; i < itemStrings.length; i++) {
             itemStrings[i] = genItems.get(i).getName();
         }
-        readExprNodes(document, generator);
+        docToExprs(generator);
         genItemBox.setModel(new DefaultComboBoxModel(itemStrings));
         genItem = genItems.get(0);
         updateGenItem(genItem, 1);

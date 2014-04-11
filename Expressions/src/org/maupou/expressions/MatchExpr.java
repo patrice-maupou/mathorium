@@ -81,14 +81,16 @@ public class MatchExpr {
         }
     }
 
-
     /**
-     * match l'expression expr en tenant compte de la table vars (variables déjà attribuées).
-     * 1. si global == null, match direct de expr contre schema.
-     * 2. sinon, transformation de l'expression par la table replaceMap, résultat dans global
+     * match l'expression expr en tenant compte de la table vars (variables déjà
+     * attribuées). 1. si global == null, match direct de expr contre schema. 2.
+     * sinon, transformation de l'expression par la table replaceMap, résultat
+     * dans global
      *
-     * @param expr l'expression examinée par rapport à schema, ex : ((A->B)->C)->(B->C)
-     * @param typesMap table de remplacement d'un type par un autre (propse->prop)
+     * @param expr l'expression examinée par rapport à schema, ex :
+     * ((A->B)->C)->(B->C)
+     * @param typesMap table de remplacement d'un type par un autre
+     * (propse->prop)
      * @param listvars liste des symboles à remplacer
      * @param vars table des variables déjà connues, ex: {A:=(A->B)->A}
      * @param syntax
@@ -98,11 +100,40 @@ public class MatchExpr {
     public boolean checkExpr(Expression expr, HashMap<Expression, Expression> vars,
             HashMap<String, String> typesMap, ArrayList<Expression> listvars, Syntax syntax)
             throws Exception {
-        boolean ret;
+        boolean ret = true;
         if (expr != null) { // schema : A->B type: prop
             HashMap<Expression, Expression> svars = new HashMap<>();
             if (global == null) {
                 ret = expr.match(getSchema(), typesMap, listvars, svars, syntax.getSubtypes());
+                if (vars.isEmpty()) { // ajouter les nouvelles variables
+                    vars.putAll(svars);
+                    for (Expression var : listvars) {
+                        var.setSymbol(true);
+                    }
+                } else { // ce n'est pas le premier modèle
+                    HashMap<Expression, Expression> nsvars = new HashMap<>(), nvars = new HashMap<>();
+                    for (Map.Entry<Expression, Expression> var : vars.entrySet()) {
+                        Expression svar = svars.get(var.getKey()); // A->B
+                        Expression e = var.getValue(); // (A->B)->C
+                        if (ret && svar != null) { // nsvars={A=(A->B)->C, B=B->C} mais pas le C de B:=  
+                            ret &= e.match(svar, typesMap, listvars, nsvars, syntax.getSubtypes());
+                        }
+                    }
+                    //* modif pour matchBoth
+                    if (ret) {
+                        for (Expression e : svars.values()) { // renomme certaines variables
+                            extendMap(e, nsvars, listvars);
+                        }
+                        for (Expression var : vars.keySet()) { // corrige vars avec svars
+                            vars.put(var, vars.get(var).replace(nvars));
+                        }
+                        for (Expression svar : svars.keySet()) {
+                            svars.put(svar, svars.get(svar).replace(nsvars));
+                        }
+                        vars.putAll(svars);
+                    }
+                }
+                expr.markUsedVars(listvars);
             } else { // il s'agit de remplacements
                 Expression e = expr;
                 boolean[] modifs = new boolean[1];
@@ -111,40 +142,8 @@ public class MatchExpr {
                     e = e.matchsubExpr(getReplaceMap(), modifs, typesMap, listvars, svars,
                             syntax.getSubtypes());
                 } while (recursive && modifs[0]);
-                svars.clear();
-                svars.put(global, e);
                 vars.put(global, e);
-                ret = true;
             }
-            if (vars.isEmpty()) { // ajouter les nouvelles variables
-                vars.putAll(svars);
-                for (Expression var : listvars) {
-                    var.setSymbol(true);
-                }
-            } else if (global == null) { // ce n'est pas le premier modèle
-                HashMap<Expression, Expression> nsvars = new HashMap<>(), nvars = new HashMap<>();
-                for (Map.Entry<Expression, Expression> var : vars.entrySet()) {
-                    Expression svar = svars.get(var.getKey()); // A->B
-                    Expression e = var.getValue(); // (A->B)->C
-                    if (ret && svar != null) { // nsvars={A=(A->B)->C, B=B->C} mais pas le C de B:=  
-                        ret &= e.match(svar, typesMap, listvars, nsvars, syntax.getSubtypes());
-                    }
-                }
-                //* modif pour matchBoth
-                if (ret) {
-                    for (Expression e : svars.values()) { // renomme certaines variables
-                        extendMap(e, nsvars, listvars);
-                    }
-                    for (Expression var : vars.keySet()) { // corrige vars avec svars
-                        vars.put(var, vars.get(var).replace(nvars));
-                    }
-                    for (Expression svar : svars.keySet()) {
-                        svars.put(svar, svars.get(svar).replace(nsvars));
-                    }
-                    vars.putAll(svars);
-                }
-            }
-            expr.markUsedVars(listvars);
         } else { // expr est nulle : vérifier si le schéma correspond au type
             Expression e = getSchema().replace(vars);
             ret = type.equals(e.getType());
@@ -186,7 +185,6 @@ public class MatchExpr {
         String ret = replaceMap.toString();
         return ret;
     }
-
 
     public String getType() {
         return type;
