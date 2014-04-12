@@ -47,7 +47,8 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
     private final mathDataObject mdo;
     private final JToolBar toolbar = new JToolBar();
     private transient MultiViewElementCallback callback;
-    private StyledDocument mdoDocument;
+    private StyledDocument styledDocument;
+    private DocumentListener documentListener;
 
     public mathVisualElement(Lookup lkp) {
         mdo = lkp.lookup(mathDataObject.class);
@@ -56,23 +57,21 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
         DataEditorSupport dataEditorSupport = mdo.getLookup().lookup(DataEditorSupport.class);
         if (dataEditorSupport != null) {
             try {
-                mdoDocument = dataEditorSupport.openDocument();
-                mdoDocument.addDocumentListener(new DocumentListener() {
+                styledDocument = dataEditorSupport.openDocument();
+                documentListener = new DocumentListener() {
                     @Override
                     public void insertUpdate(DocumentEvent e) {
-                        textPane.setText(updateText(mdoDocument));
+                        textPane.setText(updateText(styledDocument));
                     }
-
                     @Override
                     public void removeUpdate(DocumentEvent e) {
-                        textPane.setText(updateText(mdoDocument));
+                        textPane.setText(updateText(styledDocument));
                     }
-
                     @Override
                     public void changedUpdate(DocumentEvent e) {
-                        textPane.setText(updateText(mdoDocument));
                     }
-                });
+                };
+                styledDocument.addDocumentListener(documentListener);
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);
             }
@@ -255,7 +254,7 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
                 styleSheet.addRule("div {color:grey; font-size:12; font-style:italic; }");
                 Exceptions.printStackTrace(ex);
             }
-            textPane.setText(updateText(mdoDocument));
+            textPane.setText(updateText(styledDocument));
         }
         requestFocus();
     }
