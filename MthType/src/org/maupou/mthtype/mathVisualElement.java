@@ -19,6 +19,7 @@ import javax.swing.JToolBar;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.Position;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
@@ -56,30 +57,29 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
         initComponents();
         DataEditorSupport dataEditorSupport = mdo.getLookup().lookup(DataEditorSupport.class);
         if (dataEditorSupport != null) {
-            try {
-                styledDocument = dataEditorSupport.openDocument();
-                documentListener = new DocumentListener() {
-                    @Override
-                    public void insertUpdate(DocumentEvent e) {
-                        textPane.setText(updateText(styledDocument));
-                    }
-                    @Override
-                    public void removeUpdate(DocumentEvent e) {
-                        textPane.setText(updateText(styledDocument));
-                    }
-                    @Override
-                    public void changedUpdate(DocumentEvent e) {
-                    }
-                };
-                styledDocument.addDocumentListener(documentListener);
-            } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
-            }
+            styledDocument = dataEditorSupport.getDocument();
+            documentListener = new DocumentListener() {
+                @Override
+                public void insertUpdate(DocumentEvent e) {
+                    textPane.setText(updateText(styledDocument));
+                }
+
+                @Override
+                public void removeUpdate(DocumentEvent e) {
+                    textPane.setText(updateText(styledDocument));
+                }
+
+                @Override
+                public void changedUpdate(DocumentEvent e) {
+                }
+            };
+            styledDocument.addDocumentListener(documentListener);
         }
     }
 
     /**
      * réécrit le texte d'après le StyledDocument
+     *
      * @param doc le document de référence pour l'édition
      */
     private static String updateText(StyledDocument doc) {
@@ -116,15 +116,15 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
         String[] result;
         while (!text.isEmpty()) {
             result = readTag("expr", text, null);
-            String[] commentTag = readTag("comment", result[1], null);
-            if (!commentTag[1].isEmpty()) {
-                output.append("<div>").append(commentTag[1]).append("</div>");
+            String[] tag = readTag("comment", result[1], null);
+            if (!tag[1].isEmpty()) {
+                output.append("<div>").append(tag[1]).append("</div>");
             }
             readCDATA(result[1], output);
             text = result[2];
         }
     }
-    
+
     /**
      * Recherche la première balise de la chaîne text ayant pour nom tag
      *
@@ -136,19 +136,21 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
     public static String[] readTag(String tag, String text, String specific) {
         String[] result = new String[]{"", "", ""};
         String attribs = "(|(\\s\\w+=\\u0022.+?\\u0022)+)";
-        if(specific != null) attribs = "(\\s" + specific + ")";
+        if (specific != null) {
+            attribs = "(\\s" + specific + ")";
+        }
         String regex = "<" + tag + attribs + ">(.+?)</" + tag + ">";
         Pattern p = Pattern.compile(regex, Pattern.DOTALL);
         Matcher m = p.matcher(text);
-        if(m.find()) {            
+        if (m.find()) {
             if (specific == null) {
                 result[0] = m.group(2);
                 result[1] = m.group(3);
             } else {
                 result[0] = specific;
-                result[1] = m.group(2);                
+                result[1] = m.group(2);
             }
-            if(m.end() < text.length()) {
+            if (m.end() < text.length()) {
                 result[2] = text.substring(m.end());
             }
         }
@@ -239,23 +241,25 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
 
     @Override
     public void componentOpened() {
-        if (mdo.getSyntax() != null) {
-            HTMLEditorKit kit = new HTMLEditorKit();
-            textPane.setEditorKit(kit);
-            StyleSheet styleSheet = kit.getStyleSheet();
-            try {
-                Element e = mdo.getDocument().getDocumentElement();
-                String syntaxPath = e.getAttribute("syntax");
+        HTMLEditorKit kit = new HTMLEditorKit();
+        textPane.setEditorKit(kit);
+        StyleSheet styleSheet = kit.getStyleSheet();
+        try {
+            Position end = styledDocument.getEndPosition();
+            String text = styledDocument.getText(0, end.getOffset());
+            Matcher matcher = Pattern.compile("syntax=\\u0022(.+)\\u0022>").matcher(text);
+            if (matcher.find()) {
+                String syntaxPath = matcher.group(1);
                 String path = (new File(syntaxPath)).getParent() + "/mth.css";
                 styleSheet.importStyleSheet(new URL("file:/" + path));
                 kit.setStyleSheet(styleSheet);
-            } catch (MalformedURLException ex) {
-                styleSheet.addRule("var {color:blue; font-size:12; font-style:normal; margin: 4px; }");
-                styleSheet.addRule("div {color:grey; font-size:12; font-style:italic; }");
-                Exceptions.printStackTrace(ex);
             }
-            textPane.setText(updateText(styledDocument));
+        } catch (BadLocationException | MalformedURLException ex) {
+            styleSheet.addRule("var {color:blue; font-size:12; font-style:normal; margin: 4px; }");
+            styleSheet.addRule("div {color:grey; font-size:12; font-style:italic; }");
+            Exceptions.printStackTrace(ex);
         }
+        textPane.setText(updateText(styledDocument));
         requestFocus();
     }
 
