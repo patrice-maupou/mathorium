@@ -1,0 +1,21 @@
+/*
+    Document   : mth
+    Created on : 1 juil. 2012, 16:05:57
+    Author     : Patrice Maupou
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+
+
+var {
+    color:blue; 
+    font-size:medium; 
+    font-style:normal; 
+    margin: 4px; }
+
+div {
+    color:grey; 
+    font-size:medium; 
+    font-style:italic; 
+}

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--DOCTYPE syntax SYSTEM "syntax.dtd"-->
+
+<!-- the one character string unused is mandatory and must not be used in any expression
+     the regex (®_*) stands for an already found subexpression
+-->
+<syntax xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="syntaxSchema.xsd"
+        name="number_syntax" unused="®">
+   <!-- reading format -->
+  <read>
+  <!-- Rule identified by the key "SIMPLES" is mandatory to get the basic blocks of the expression.  -->
+  <rule key="SIMPLES">
+    <pattern><![CDATA[\d]]>
+      <type name="digit" subtypes="cv"></type>
+    </pattern>
+    <pattern><![CDATA[[a-e]]]>
+      <type name="nv"></type>
+    </pattern>
+    <pattern><![CDATA[[u-w]]]>
+      <type name="cv"></type>
+    </pattern>
+  </rule>
+  <rule child="a,b" group="(®_*)">
+    <pattern node="CONCAT"><![CDATA[ab]]>
+      <type name="natural" subtypes="digit,nv,cv" value="natural,digit"></type>
+    </pattern>
+  </rule>
+  <rule child="a,b" group="(®_*)">
+    <pattern node="ADD"><![CDATA[\(a\+b\)|a\+b]]>
+      <type name="natural" value="natural,natural"></type>
+    </pattern>
+  </rule>
+  <rule child="a,b" group="(®_*)">
+    <pattern node="EQU"><![CDATA[a=b]]>
+      <type name="equality" value="natural,natural"></type>
+    </pattern>
+  </rule>
+</read>
+
+  <!-- automatic generation of naturals equalities -->
+  <generators name="addition_and_equality">
+    <variable type="digit" name="cv" list="u v w"/> 
+    <variable type="natural" name="nv" list="a b c"/>  
+    <genrule name="base">
+      <result name="equality"><![CDATA[0+0=0]]></result>
+      <result name="equality"><![CDATA[0+1=1]]></result>
+      <result name="equality"><![CDATA[1+1=2]]></result>
+      <result name="equality"><![CDATA[2+1=3]]></result>
+      <result name="equality"><![CDATA[3+1=4]]></result>
+      <result name="equality"><![CDATA[4+1=5]]></result>
+      <result name="equality"><![CDATA[5+1=6]]></result>
+      <result name="equality"><![CDATA[6+1=7]]></result>
+      <result name="equality"><![CDATA[7+1=8]]></result>
+      <result name="equality"><![CDATA[8+1=9]]></result>
+      <result name="equality"><![CDATA[9+1=10]]></result>
+    </genrule>
+    <genrule name="unit=0-8">
+      <match name="equality"><![CDATA[u+1=v]]></match>
+      <match name="equality"><![CDATA[a+1=bu]]></match>
+      <result name="equality"><![CDATA[bu+1=bv]]></result>
+    </genrule>
+    <genrule name="unit=9">
+      <match name="equality"><![CDATA[a+1=b9]]></match>
+      <match name="equality"><![CDATA[b+1=c]]></match>
+      <result name="equality"><![CDATA[b9+1=c0]]></result>
+    </genrule>
+    <genrule name="add all">
+      <match name="equality"><![CDATA[a+b=c]]></match>
+      <match name="equality"><![CDATA[b+1=d]]></match>
+      <match name="equality"><![CDATA[c+1=e]]></match>
+      <result name="equality"><![CDATA[a+d=e]]></result>
+    </genrule>
+  </generators>
+
+  <!-- printing format  -->
+  <write>
+    <wrule child="a,b">
+      <node name="EQU"><![CDATA[a=b]]></node>
+    </wrule>
+    <wrule child="a,b">
+      <node name="ADD"><![CDATA[a+b]]></node>
+      <child replace="a->(a)" rules="ADD"></child>
+      <child replace="b->(b)" rules="ADD"></child>
+    </wrule>
+    <wrule child="a,b">
+      <node name="CONCAT"><![CDATA[ab]]></node>
+    </wrule>
+  </write>
+</syntax>

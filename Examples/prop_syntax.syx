@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--DOCTYPE syntax SYSTEM "syntax.dtd"-->
+
+<!-- the one character string unused is mandatory and must not be used in any expression
+     the regex (®_*) stands for an already found subexpression
+-->
+<syntax xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="syntaxSchema.xsd"
+        name="prop_syntax" unused="®">
+
+  <!-- parsing rules  -->
+  <read>
+    <rule key="SIMPLES">
+      <pattern><![CDATA[[S-Z]'*]]>
+        <type name="propthm"></type>
+      </pattern>
+      <pattern><![CDATA[[A-Q]'*]]>
+        <type name="propvar" subtypes="propthm"></type>
+      </pattern>
+    </rule>
+    <rule key="ENCLOSING" child="a" group="([^\(\)]+)">
+      <pattern node="a"><![CDATA[\(a\)]]>
+        <type name="inherit"  value="prop"></type>
+      </pattern>
+    </rule>
+    <rule key="NOT" child="A" group="(®_*)">
+      <pattern node="NOT"><![CDATA[~A]]>
+        <type name="prop" value="prop"></type>
+      </pattern>
+    </rule>
+    <rule key="IMPLIES" child="A,B" group="(®_*)">
+      <pattern node="IMPLIES"><![CDATA[A->B]]>
+        <type name="prop" subtypes="thm,propvar,propthm" value="prop,prop"></type>
+      </pattern>
+    </rule>
+  </read>
+
+<!-- generation of theorems
+    remarques : Si T thm alors T->(B->T) et B->T aussi d'après dummy
+                Si B->C thm, A->(B->C) puis (A->B)->(A->C) le sont.
+
+  -->
+<generators name="theorems">
+  <variable type="prop" name="propvar" list="A B C D E F G H"/>
+  <variable type="thm" name="propthm" list="S T U V W X Y Z"/>
+  <genrule name="axiomes">
+    <result level="1" name="thm" ref="dummy"><![CDATA[A->(B->A)]]></result>
+    <result level="1" name="thm" ref="distr"><![CDATA[(A->(B->C))->((A->B)->(A->C))]]></result>
+    <result level="1" name="thm" ref="simpl"><![CDATA[((A->B)->C)->(B->C)]]></result>
+    <result level="3" name="thm" ref="contra"><![CDATA[(~A->~B)->(B->A)]]></result>
+  </genrule>
+  <genrule name="modus ponens">
+    <match name="thm"><![CDATA[A]]></match>
+    <match name="thm"><![CDATA[A->B]]></match>
+    <result level="1" name="thm" ref="mp"><![CDATA[B]]></result>
+  </genrule>
+  <discard name="thm" scope="right">
+      <match name="thm"><![CDATA[T]]></match>
+      <result name="thm"><![CDATA[A->T]]></result>
+  </discard>
+  <discard>
+      <match name="thm"><![CDATA[B->C]]></match>
+      <result name="thm"><![CDATA[(A->B)->(A->C)]]></result>
+  </discard>
+</generators>
+
+<!-- writing rules -->
+ <write>
+    <wrule child="a">
+      <node name="NOT"><![CDATA[~a]]></node>
+      <child replace="a->(a)" rules="IMPLIES"></child>
+    </wrule>
+    <wrule child="a,b">
+      <node name="IMPLIES"><![CDATA[a->b]]></node>
+      <child replace="a->(a)" rules="IMPLIES"></child>
+      <child replace="b->(b)" rules="IMPLIES"></child>
+    </wrule>
+  </write>
+</syntax>

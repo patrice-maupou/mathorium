@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<expressions syntax="C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples/prop_syntax.syx">
+<generator name="theorems">
+<expr id="0" type="thm"><![CDATA[A->(B->A)]]>
+<text>(IMPLIES,A:propvar,(IMPLIES,B:propvar,A:propvar):prop):thm</text>
+</expr>
+<expr id="1" type="thm"><![CDATA[(A->(B->C))->((A->B)->(A->C))]]>
+<text>(IMPLIES,(IMPLIES,A:propvar,(IMPLIES,B:propvar,C:propvar):prop):prop,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,C:propvar):prop):prop):thm</text>
+</expr>
+<expr id="2" type="thm"><![CDATA[((A->B)->C)->(B->C)]]>
+<text>(IMPLIES,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,C:propvar):prop,(IMPLIES,B:propvar,C:propvar):prop):thm</text>
+</expr>
+<expr id="3" type="thm"><![CDATA[C->(A->(B->A))]]>
+<text>(IMPLIES,C:propvar,(IMPLIES,A:propvar,(IMPLIES,B:propvar,A:propvar):prop):thm):thm</text>
+<parents>0-0 3-5 3-13 4-8 4-13 5-13</parents>
+<children>13 14</children>
+</expr>
+<expr id="4" type="thm"><![CDATA[(A->B)->(A->A)]]>
+<text>(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,A:propvar):prop):thm</text>
+<parents>0-1 4-5 4-15 5-8 5-15</parents>
+<children>5 15 16 17</children>
+</expr>
+<expr id="5" type="thm"><![CDATA[A->A]]>
+<text>(IMPLIES,A:propvar,A:propvar):thm</text>
+<parents>0-4 1-4 2-4 3-4 4-1 4-4 4-16 5-4 5-5 5-16</parents>
+</expr>
+<expr id="6" type="thm"><![CDATA[D->((A->(B->C))->((A->B)->(A->C)))]]>
+<text>(IMPLIES,D:propvar,(IMPLIES,(IMPLIES,A:propvar,(IMPLIES,B:propvar,C:propvar):prop):prop,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,C:propvar):prop):prop):thm):thm</text>
+<parents>1-0</parents>
+<children>18 19</children>
+</expr>
+<expr id="7" type="thm"><![CDATA[((A->(B->C))->(A->B))->((A->(B->C))->(A->C))]]>
+<text>(IMPLIES,(IMPLIES,(IMPLIES,A:propvar,(IMPLIES,B:propvar,C:propvar):prop):prop,(IMPLIES,A:propvar,B:propvar):prop):prop,(IMPLIES,(IMPLIES,A:propvar,(IMPLIES,B:propvar,C:propvar):prop):prop,(IMPLIES,A:propvar,C:propvar):prop):prop):thm</text>
+<parents>1-1</parents>
+</expr>
+<expr id="8" type="thm"><![CDATA[(B->C)->((A->B)->(A->C))]]>
+<text>(IMPLIES,(IMPLIES,B:propvar,C:propvar):prop,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,C:propvar):prop):prop):thm</text>
+<parents>1-2</parents>
+<children>9 12</children>
+</expr>
+<expr id="9" type="thm"><![CDATA[(A->(A->(B->C)))->(A->((A->B)->(A->C)))]]>
+<text>(IMPLIES,(IMPLIES,A:propvar,(IMPLIES,A:propvar,(IMPLIES,B:propvar,C:propvar):prop):prop):prop,(IMPLIES,A:propvar,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,C:propvar):prop):prop):prop):thm</text>
+<parents>1-8</parents>
+</expr>
+<expr id="10" type="thm"><![CDATA[D->(((A->B)->C)->(B->C))]]>
+<text>(IMPLIES,D:propvar,(IMPLIES,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,C:propvar):prop,(IMPLIES,B:propvar,C:propvar):prop):thm):thm</text>
+<parents>2-0</parents>
+</expr>
+<expr id="11" type="thm"><![CDATA[(((A->B)->C)->B)->(((A->B)->C)->C)]]>
+<text>(IMPLIES,(IMPLIES,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,C:propvar):prop,B:propvar):prop,(IMPLIES,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,C:propvar):prop,C:propvar):prop):thm</text>
+<parents>2-1</parents>
+</expr>
+<expr id="12" type="thm"><![CDATA[(A->((A->B)->C))->(A->(B->C))]]>
+<text>(IMPLIES,(IMPLIES,A:propvar,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,C:propvar):prop):prop,(IMPLIES,A:propvar,(IMPLIES,B:propvar,C:propvar):prop):prop):thm</text>
+<parents>2-8</parents>
+</expr>
+<expr id="13" type="thm"><![CDATA[D->(C->(A->(B->A)))]]>
+<text>(IMPLIES,D:propvar,(IMPLIES,C:propvar,(IMPLIES,A:propvar,(IMPLIES,B:propvar,A:propvar):prop):thm):thm):thm</text>
+<parents>3-0 3-8 3-14</parents>
+</expr>
+<expr id="14" type="thm"><![CDATA[(C->A)->(C->(B->A))]]>
+<text>(IMPLIES,(IMPLIES,C:propvar,A:propvar):prop,(IMPLIES,C:propvar,(IMPLIES,B:propvar,A:propvar):prop):prop):thm</text>
+<parents>3-1</parents>
+<children>17</children>
+</expr>
+<expr id="15" type="thm"><![CDATA[C->((A->B)->(A->A))]]>
+<text>(IMPLIES,C:propvar,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,A:propvar):thm):thm):thm</text>
+<parents>4-0</parents>
+</expr>
+<expr id="16" type="thm"><![CDATA[B->(A->A)]]>
+<text>(IMPLIES,B:propvar,(IMPLIES,A:propvar,A:propvar):thm):thm</text>
+<parents>4-2 4-17 5-0</parents>
+</expr>
+<expr id="17" type="thm"><![CDATA[(A->B)->(B->(A->A))]]>
+<text>(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,B:propvar,(IMPLIES,A:propvar,A:propvar):thm):thm):thm</text>
+<parents>4-14</parents>
+</expr>
+<expr id="18" type="thm"><![CDATA[E->(D->((A->(B->C))->((A->B)->(A->C))))]]>
+<text>(IMPLIES,E:propvar,(IMPLIES,D:propvar,(IMPLIES,(IMPLIES,A:propvar,(IMPLIES,B:propvar,C:propvar):prop):prop,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,C:propvar):prop):prop):thm):thm):thm</text>
+<parents>6-0</parents>
+</expr>
+<expr id="19" type="thm"><![CDATA[(D->(A->(B->C)))->(D->((A->B)->(A->C)))]]>
+<text>(IMPLIES,(IMPLIES,D:propvar,(IMPLIES,A:propvar,(IMPLIES,B:propvar,C:propvar):prop):prop):prop,(IMPLIES,D:propvar,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,C:propvar):prop):prop):prop):thm</text>
+<parents>6-1</parents>
+</expr>
+</generator>
+</expressions>

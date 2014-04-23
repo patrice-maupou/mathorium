@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--DOCTYPE syntax SYSTEM "syntax.dtd"-->
+
+<!-- the one character string unused is mandatory and must not be used in any expression
+     the regex (®_*) stands for an already found subexpression
+-->
+<syntax xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="syntaxSchema.xsd"
+        name="number_syntax" unused="®">
+    <read>
+        <rule key="SIMPLES">
+            <pattern><![CDATA[[u|U][']*]]>
+            <type name="univers"></type>
+            </pattern>
+            <pattern><![CDATA[C[a-z]+]]>
+            <type name="constant" ></type>
+            </pattern>
+            <pattern><![CDATA[[a-zA-Z][']*]]>
+            <type name="type" subtypes="univers,image"></type>
+            </pattern>
+        </rule>
+        <rule key="IMAGE" child="x" group="([^\(\)]+)">
+            <pattern node="f"><![CDATA[(?<f>[a-zA-Z]+\d*)\(x\)]]>
+                <type name="image" value="type"  subtypes="type" node="type,constant"></type>
+            </pattern>
+        </rule>
+        <rule key="ISTYPEOF" child="a,A">
+            <pattern node="ISTYPE"><![CDATA[a:A]]>
+                <type name="judgment" value="type"></type>
+            </pattern>
+        </rule>
+        <rule key="IDENTITY" child="a,b">
+            <pattern node="ID"><![CDATA[a==b]]>
+                <type name="judgment" value="type"></type>
+            </pattern>
+        </rule>
+        <rule key="HOM" child="A,B"><![CDATA[A->B]]>
+            <pattern node="HOM">
+                <type name="hom" value="type" subtypes="type"></type>
+            </pattern>
+        </rule>
+        <rule key="COMPOSITION" child="f,g"><![CDATA[g∘f]]>
+            <pattern node="COMPOSE">
+                <type name="function" value="type" subtypes="type"></type>
+            </pattern>
+        </rule>
+    </read>
+    
+    <write>
+        <wrule child="x">
+            <node name="[a-zA-Z]+'*" var="f"><![CDATA[f(x)]]></node>
+        </wrule>
+        <wrule child="a,A">
+            <node name="ISTYPE"><![CDATA[a:A]]></node>
+        </wrule>
+        <wrule child="a,b">
+            <node name="ID"><![CDATA[a==b]]></node>
+        </wrule>
+        <wrule child="A,B">
+            <node name="HOM"><![CDATA[A->B]]></node>
+            <child replace="A->(A)" rules="HOM"></child>
+        </wrule>
+        <wrule child="f,g">
+            <node name="COMPOSE"><![CDATA[g∘f]]></node>
+        </wrule>
+    </write>
+        
+</syntax>

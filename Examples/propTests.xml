@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE root [
+<!ELEMENT root (texts)*>
+<!ELEMENT texts (#PCDATA)>
+<!ATTLIST texts name ID #REQUIRED value CDATA "default">
+]>
+
+<root>
+    <!-- deux étapes du modus ponens, d'abord la valeur de A est la première expression
+     puis A->B doit se conformer à la seconde pour obtenir B -->
+    <texts name="checkExpr"><![CDATA[",
+    "((A->B)->C)->(B->C)", "(A->B)->((B->C)->(A->C))", 
+    "A=((A->B)->C)->(B->C)", "B=((B->C)->D)->(((A->B)->C)->D)", 
+    "]]>        
+    </texts>
+</root>
