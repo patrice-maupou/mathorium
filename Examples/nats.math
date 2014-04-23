@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<expressions syntax="C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples/naturals.syx">
+<generator name="addition_and_equality">
+<expr id="0" type="equality"><![CDATA[0+0=0]]>
+<text>(EQU,(ADD,0:digit,0:digit):natural,0:digit):equality</text>
+</expr>
+<expr id="1" type="equality"><![CDATA[0+1=1]]>
+<text>(EQU,(ADD,0:digit,1:digit):natural,1:digit):equality</text>
+</expr>
+<expr id="2" type="equality"><![CDATA[1+1=2]]>
+<text>(EQU,(ADD,1:digit,1:digit):natural,2:digit):equality</text>
+</expr>
+<expr id="3" type="equality"><![CDATA[2+1=3]]>
+<text>(EQU,(ADD,2:digit,1:digit):natural,3:digit):equality</text>
+</expr>
+<expr id="4" type="equality"><![CDATA[3+1=4]]>
+<text>(EQU,(ADD,3:digit,1:digit):natural,4:digit):equality</text>
+</expr>
+<expr id="5" type="equality"><![CDATA[4+1=5]]>
+<text>(EQU,(ADD,4:digit,1:digit):natural,5:digit):equality</text>
+</expr>
+<expr id="6" type="equality"><![CDATA[5+1=6]]>
+<text>(EQU,(ADD,5:digit,1:digit):natural,6:digit):equality</text>
+</expr>
+</generator>
+</expressions>
