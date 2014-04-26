@@ -10,10 +10,11 @@ import java.util.regex.Pattern;
  */
 public class Expression {
 
-    private String name;
+    private final String name;
     private String type;
     private ArrayList<Expression> children;
     private boolean symbol;
+    private int richness;
 
     /**
      * Création directe en connaissant tous les paramètres
@@ -78,7 +79,7 @@ public class Expression {
      * "," on ajoute l'expression à list, on continue
      *
      * @param text chaîne à analyser
-     * @param list
+     * @param list la liste des expressions scannées
      * @return le texte restant et le dernier marqueur
      */
     public static String[] scanExpr(String text, ArrayList<Expression> list) {
@@ -630,11 +631,6 @@ public class Expression {
         return sb.toString();
     }
 
-    /**
-     * le etype de l'expression
-     *
-     * @return le etype
-     */
     public String getType() {
         return type;
     }
@@ -647,26 +643,20 @@ public class Expression {
         return name;
     }
 
-    /**
-     * liste des descendants de l'expression
-     *
-     * @return la liste
-     */
     public ArrayList<Expression> getChildren() {
         return children;
     }
 
-    /**
-     * @return the symbol
-     */
     public boolean isSymbol() {
         return symbol;
     }
 
-    /**
-     * @param symbol the symbol to set
-     */
     public void setSymbol(boolean symbol) {
         this.symbol = symbol;
     }
+
+    public int getRichness() {
+        return richness;
+    }
+
 }

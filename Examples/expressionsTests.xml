@@ -133,16 +133,7 @@
     "3×((m+4)^2-(m+4))", "A*(B^C-B)", "var", "real",
     "]]>
   </texts>
-  <texts name="matchsubExpr"><![CDATA[",
-    "A B C D E F",
-    "a-3×(17+b)", "C×(A+B)", "var", "real", "C×A+C×B", "a-(3×17+3×b)",
-    "2*(i+j)", "C×(A+B)", "var", "integer", "C×A+C×B", "2*i+2*j",
-    "3×((m+4)^2-(m+4))", "A-(B+C)", "var", "real", "A-B-C", "3×((m+4)^2-m-4)",
-    "a(x+2)-b(y+b)", "C×(A+B)", "var", "real", "C×A+C×B", "a*x+a*2-(b*y+b*b)",
-    "a-3+x", "C×(A+B)", "var", "real", "C×A+C×B", "a-3+x",
-    "]]>
-  </texts>
-  <texts name="matchsubExpr2" separator=":"><![CDATA[",
+  <texts name="matchsubExpr" separator=":"><![CDATA[",
     "A B C D E F",
     "a-3×(17+b)", "C×(A+B):C×A+C×B", "var", "real", "a-(3×17+3×b)",
     "2*(i+j)", "C×(A+B):C×A+C×B", "var", "integer", "2*i+2*j",

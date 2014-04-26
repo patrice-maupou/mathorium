@@ -20,7 +20,7 @@ public class MatchExpr {
     private final String type;
     private Expression schema, global;
     private final HashMap<Expression, Expression> replaceMap;
-    private final boolean recursive;
+    private final boolean recursive, bidir;
     private final HashMap<String, String> options;  // données par des égalités
 
     /**
@@ -49,6 +49,7 @@ public class MatchExpr {
             }
         }
         recursive = "yes".equals(options.get("recursive"));
+        bidir = "yes".equals(options.get("bidirectional"));
         replaceMap = new HashMap<>();
         Node txtNode = match.getFirstChild();
         Expression key = null;
@@ -102,10 +103,14 @@ public class MatchExpr {
             throws Exception {
         boolean ret = true;
         if (expr != null) { // schema : A->B type: prop
-            HashMap<Expression, Expression> svars = new HashMap<>();
+            HashMap<Expression, Expression> svars = new HashMap<>(), evars = new HashMap<>();
             if (global == null) {
-                ret = expr.match(getSchema(), typesMap, listvars, svars, syntax.getSubtypes());
-                if (vars.isEmpty()) { // ajouter les nouvelles variables
+                if (bidir) {
+                    ret = expr.matchBoth(getSchema(), typesMap, listvars, evars, svars, syntax.getSubtypes());
+                } else {
+                    ret = expr.match(getSchema(), typesMap, listvars, svars, syntax.getSubtypes());
+                }
+                if (vars.isEmpty()) { // ajouter les nouvelles variables à la table vars
                     vars.putAll(svars);
                     for (Expression var : listvars) {
                         var.setSymbol(true);

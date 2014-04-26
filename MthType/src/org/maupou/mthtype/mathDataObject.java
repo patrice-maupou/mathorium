@@ -6,7 +6,7 @@
 package org.maupou.mthtype;
 
 import java.io.IOException;
-import org.maupou.expressions.Syntax;
+import javax.swing.text.StyledDocument;
 import org.netbeans.core.spi.multiview.MultiViewElement;
 import org.netbeans.core.spi.multiview.text.MultiViewEditorElement;
 import org.openide.awt.ActionID;
@@ -20,10 +20,13 @@ import org.openide.loaders.DataObjectExistsException;
 import org.openide.loaders.MultiDataObject;
 import org.openide.loaders.MultiFileLoader;
 import org.openide.nodes.CookieSet;
+import org.openide.nodes.Node;
+import org.openide.text.DataEditorSupport;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.lookup.AbstractLookup;
+import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
-import org.w3c.dom.Document;
 
 @Messages({
     "LBL_math_LOADER=Files of math"
@@ -93,24 +96,26 @@ import org.w3c.dom.Document;
 })
 public class mathDataObject extends MultiDataObject {
 
-    private Syntax syntax;
-    private Document document;
     private final MathOpenSupport mathOpenSupport;
+    private final StyledDocument styledDocument;
 
-    public mathDataObject(FileObject pf, MultiFileLoader loader) throws DataObjectExistsException, 
+    public mathDataObject(FileObject pf, MultiFileLoader loader)
+            throws DataObjectExistsException, 
             IOException {
         super(pf, loader);
         registerEditor("text/x-math+xml", true);
         CookieSet cookies = getCookieSet();
         mathOpenSupport = new MathOpenSupport(getPrimaryEntry());
         cookies.assign(OpenCookie.class, mathOpenSupport);
+        styledDocument = getStyledDocument();
     }
+    
 
     @Override
     protected int associateLookup() {
         return 1;
     }
-
+    
     @MultiViewElement.Registration(
             displayName = "#LBL_math_EDITOR",
             iconBase = "org/maupou/mthtype/loupesn.gif",
@@ -123,27 +128,16 @@ public class mathDataObject extends MultiDataObject {
     
     public static MultiViewEditorElement createEditor(Lookup lkp) {
         return new MultiViewEditorElement(lkp);
-    }
-  
-
-    public Syntax getSyntax() {
-        return syntax;
-    }
-    
-    public void setSyntax(Syntax syntax) {
-        this.syntax = syntax;
-    }
-
-    public Document getDocument() {
-        return document;
-    }
-
-    public void setDocument(Document document) {
-        this.document = document;
-    }
-    
+    } 
+   
+   
     public MathOpenSupport getMathOpenSupport() {
         return mathOpenSupport;
+    }
+
+    public StyledDocument getStyledDocument() throws IOException {
+        DataEditorSupport editorSupport = getLookup().lookup(DataEditorSupport.class);
+        return editorSupport.openDocument();
     }
 
 

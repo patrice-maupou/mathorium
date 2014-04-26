@@ -28,7 +28,7 @@ public class ExpressionTest {
     private String[] complete;
     private String[] results;
     private String[] printing;
-    private String replacements, matches, matchBoth, matchsubExpr, matchsubExpr2;
+    private String replacements, matches, matchBoth, matchsubExpr;
     private String depths;
 
     public ExpressionTest() {
@@ -74,15 +74,11 @@ public class ExpressionTest {
                 if (texts != null) {
                     matches = texts.getTextContent();
                 }
-                texts = document.getElementById("matchsubExpr");
-                if (texts != null) {
-                    matchsubExpr = texts.getTextContent();
-                }
                 texts = document.getElementById("matchsubExpr2");
                 if (texts != null) {
-                    matchsubExpr2 = texts.getTextContent();
+                    matchsubExpr = texts.getTextContent();
                     String separator = texts.getAttribute("separator");
-                    matchsubExpr2 = separator + matchsubExpr2;
+                    matchsubExpr = separator + matchsubExpr;
                 }
                 texts = document.getElementById("matchBoth");
                 if (texts != null) {
@@ -111,7 +107,7 @@ public class ExpressionTest {
         HashMap<Expression, Expression> replaceMap = new HashMap<>();
         HashMap<String, String> typesMap = new HashMap<>();
         ArrayList<Expression> listvars = new ArrayList<>();
-        String[] ms = matchsubExpr2.split("\",\\s+\"");
+        String[] ms = matchsubExpr.split("\",\\s+\"");
         String separator = ms[0];
         String[] ls = ms[1].split("\\s");
         for (String l : ls) {

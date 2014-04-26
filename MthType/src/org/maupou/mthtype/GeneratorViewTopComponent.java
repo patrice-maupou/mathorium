@@ -116,30 +116,32 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
         this();
         this.mdo = mdo;
         listen = true;
-        DataEditorSupport dataEditorSupport = mdo.getLookup().lookup(DataEditorSupport.class);
-        if (dataEditorSupport != null) {
-            styleDocument = dataEditorSupport.getDocument();
-            dl = new DocumentListener() {
-                @Override
-                public void insertUpdate(DocumentEvent de) {
-                    if (listen) {
-                        docToExprs(generator);
-                    }
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent de) {
-                    if (listen) {
-                        docToExprs(generator);
-                    }
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent de) {
-                }
-            };
-            styleDocument.addDocumentListener(dl);
+        try {
+            styleDocument = mdo.getStyledDocument();
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
         }
+        dl = new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent de) {
+                if (listen) {
+                    docToExprs(generator);
+                }
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent de) {
+                if (listen) {
+                    docToExprs(generator);
+                }
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent de) {
+            }
+        };
+        styleDocument.addDocumentListener(dl);
+        //}
         findSyntax();
         if (syntax != null) {
             syntaxWrite = syntax.getSyntaxWrite();
@@ -165,7 +167,8 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
         try {
             Position end = styleDocument.getEndPosition();
             String text = styleDocument.getText(0, end.getOffset());
-            Matcher matcher = Pattern.compile("syntax=\\u0022(.+)\\u0022>").matcher(text);
+            String q = String.valueOf('"');
+            Matcher matcher = Pattern.compile("syntax=" + q+"(.+)"+q).matcher(text);
             if (matcher.find()) {
                 String path = matcher.group(1);
                 DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -765,6 +768,13 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
         AttributeSet as = styleDocument.getDefaultRootElement().getAttributes();
         Position end = styleDocument.getEndPosition();
         String text = styleDocument.getText(0, end.getOffset());
+        if (text.trim().endsWith("/>")) {
+            int n = text.lastIndexOf("/>");
+            styleDocument.insertString(n+1, "expressions", as);
+            styleDocument.insertString(n, ">\n<", as);
+            end = styleDocument.getEndPosition();
+            text = styleDocument.getText(0, end.getOffset());
+        }
         String q = String.valueOf('"');
         Matcher matcher = Pattern.compile("<expressions.+>").matcher(text);
         if (matcher.find()) {
@@ -1011,6 +1021,8 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
     @Override
     public void componentClosed() {
         mdo.getMathOpenSupport().close();
+        exprNodes.clear();
+        updateEditor();
     }
 
     void writeProperties(java.util.Properties p) {

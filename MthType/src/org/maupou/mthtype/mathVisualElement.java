@@ -49,16 +49,14 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
     private final JToolBar toolbar = new JToolBar();
     private transient MultiViewElementCallback callback;
     private StyledDocument styledDocument;
-    private DocumentListener documentListener;
 
     public mathVisualElement(Lookup lkp) {
         mdo = lkp.lookup(mathDataObject.class);
         assert mdo != null;
-        initComponents();
-        DataEditorSupport dataEditorSupport = mdo.getLookup().lookup(DataEditorSupport.class);
-        if (dataEditorSupport != null) {
-            styledDocument = dataEditorSupport.getDocument();
-            documentListener = new DocumentListener() {
+        try {
+            initComponents();
+            styledDocument = mdo.getStyledDocument();
+            styledDocument.addDocumentListener(new DocumentListener() {
                 @Override
                 public void insertUpdate(DocumentEvent e) {
                     textPane.setText(updateText(styledDocument));
@@ -72,8 +70,9 @@ public final class mathVisualElement extends JPanel implements MultiViewElement 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
                 }
-            };
-            styledDocument.addDocumentListener(documentListener);
+            });
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
         }
     }
 
