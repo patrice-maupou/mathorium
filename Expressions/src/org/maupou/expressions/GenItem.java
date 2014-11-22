@@ -61,6 +61,41 @@ public class GenItem {
     }
 
     /**
+     *
+     * @param level niveau à comparer à celui de genitem
+     * @param mrg rang de matchExpr
+     * @param erg rang de l'exprNode
+     * @param syntax
+     * @param en
+     * @param vars
+     * @param exprNodes
+     * @return
+     * @throws java.lang.Exception
+     */
+    public ExprNode genapply(int level, int mrg, int erg, Syntax syntax, ExprNode en,
+            HashMap<Expression, Expression> vars, ArrayList<ExprNode> exprNodes)
+            throws Exception {
+        ExprNode ret = null;
+        if (!matchExprs.isEmpty() && mrg < matchExprs.size()) {
+            MatchExpr matchExpr = matchExprs.get(mrg);
+            Expression e = exprNodes.get(erg).getE().copy();
+            if (matchExpr.getGlobal() != null) {
+                Expression g = vars.get(matchExpr.getGlobal());
+                e = (g == null) ? e : g;
+            }
+            if (matchExpr.checkExpr(e, vars, typesMap, listvars, syntax)) {
+                ArrayList<int[]> parentList = new ArrayList<>();
+                int[] p = Arrays.copyOf(en.getParentList().get(0),
+                        en.getParentList().get(0).length);
+                p[mrg] = erg;
+                parentList.add(p);
+                ret = new ExprNode(e, en.getChildList(), parentList);
+            }
+        }
+        return ret;
+    }
+
+    /**
      * génère un hypercube d'expressions de côté borné par limit
      *
      * @param n niveau de profondeur des MatchExprs
@@ -74,7 +109,9 @@ public class GenItem {
      * @return
      * @throws Exception
      */
-    public int[] generate(int n, int limit, int level, Syntax syntax, ExprNode en, HashMap<Expression, Expression> vars, ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards)
+    public int[] generate(int n, int limit, int level, Syntax syntax, ExprNode en,
+            HashMap<Expression, Expression> vars, ArrayList<ExprNode> exprNodes,
+            ArrayList<ExprNode> exprDiscards)
             throws Exception {
         int[] bounds = new int[matchExprs.size() - n + 1];
         bounds[0] = limit;
@@ -120,8 +157,8 @@ public class GenItem {
      * @param exprNodes liste d'expressions déjà obtenues
      * @throws Exception
      */
-    private void addResults(ExprNode en, HashMap<Expression, Expression> vars, Syntax syntax, int level,
-            ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards)
+    public void addResults(ExprNode en, HashMap<Expression, Expression> vars, Syntax syntax, 
+            int level, ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards)
             throws Exception {
         for (Result result : resultExprs) {
             if (result.getLevel() <= level) {

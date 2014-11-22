@@ -99,43 +99,43 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
         listen = true;
         try {
             styleDocument = mdo.getStyledDocument();
+            dl = new DocumentListener() {
+                @Override
+                public void insertUpdate(DocumentEvent de) {
+                    if (listen) {
+                        docToExprs(generator);
+                    }
+                }
+
+                @Override
+                public void removeUpdate(DocumentEvent de) {
+                    if (listen) {
+                        docToExprs(generator);
+                    }
+                }
+
+                @Override
+                public void changedUpdate(DocumentEvent de) {
+                }
+            };
+            styleDocument.addDocumentListener(dl);
+            findSyntax();
+            if (syntax != null) {
+                syntaxWrite = syntax.getSyntaxWrite();
+                generators = syntax.getGenerators();
+                String[] genNnames = new String[generators.size()];
+                for (int i = 0; i < generators.size(); i++) {
+                    genNnames[i] = generators.get(i).getName();
+                }
+                generatorsBox.setModel(new DefaultComboBoxModel<>(genNnames));
+                if (!generators.isEmpty()) {
+                    generator = generators.get(0);
+                    updateGenerator(generator);
+                }
+            }
         } catch (IOException ex) {
+            
             Exceptions.printStackTrace(ex);
-        }
-        dl = new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent de) {
-                if (listen) {
-                    docToExprs(generator);
-                }
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent de) {
-                if (listen) {
-                    docToExprs(generator);
-                }
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent de) {
-            }
-        };
-        styleDocument.addDocumentListener(dl);
-        //}
-        findSyntax();
-        if (syntax != null) {
-            syntaxWrite = syntax.getSyntaxWrite();
-            generators = syntax.getGenerators();
-            String[] genNnames = new String[generators.size()];
-            for (int i = 0; i < generators.size(); i++) {
-                genNnames[i] = generators.get(i).getName();
-            }
-            generatorsBox.setModel(new DefaultComboBoxModel<>(genNnames));
-            if (!generators.isEmpty()) {
-                generator = generators.get(0);
-                updateGenerator(generator);
-            }
         }
     }
 
@@ -149,7 +149,7 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
             Position end = styleDocument.getEndPosition();
             String text = styleDocument.getText(0, end.getOffset());
             String q = String.valueOf('"');
-            Matcher matcher = Pattern.compile("syntax=" + q+"(.+)"+q).matcher(text);
+            Matcher matcher = Pattern.compile("syntax=" + q + "(.+)" + q).matcher(text);
             if (matcher.find()) {
                 String path = matcher.group(1);
                 DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -186,7 +186,6 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
                 elem = mathVisualElement.readTag("expr", text, null);
                 ArrayList<int[]> parents = new ArrayList<>();
                 ArrayList<Integer> childs = new ArrayList<>();
-                String attribs = elem[0];
                 String inner = elem[1];
                 text = elem[2]; // le reste
                 if (!inner.isEmpty()) {
@@ -751,7 +750,7 @@ public final class GeneratorViewTopComponent extends CloneableTopComponent {
         String text = styleDocument.getText(0, end.getOffset());
         if (text.trim().endsWith("/>")) {
             int n = text.lastIndexOf("/>");
-            styleDocument.insertString(n+1, "expressions", as);
+            styleDocument.insertString(n + 1, "expressions", as);
             styleDocument.insertString(n, ">\n<", as);
             end = styleDocument.getEndPosition();
             text = styleDocument.getText(0, end.getOffset());

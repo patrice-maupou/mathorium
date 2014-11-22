@@ -1,3 +1,7 @@
+poslist=126
+poslist=246
+poslist=186
+
 
 matchBoth :         match :
 C->(A->(B->A))      C->(A->(B->A))

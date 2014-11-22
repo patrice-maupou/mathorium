@@ -15,6 +15,7 @@ import java.util.Objects;
 public class ExprNode {
 
     private Expression e;
+    private String comment;
     private ArrayList<Integer> childList;
     private ArrayList<int[]> parentList;
     private final ArrayList<Expression> exprs;
@@ -32,6 +33,7 @@ public class ExprNode {
         this.parentList = parentList;
         exprs = new ArrayList<>();
         visible = true;
+        comment = "";
     }
 
     
@@ -79,6 +81,14 @@ public class ExprNode {
 
     public void setE(Expression e) {
         this.e = e;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 
     public ArrayList<Integer> getChildList() {

@@ -1,5 +1,7 @@
 Manifest-Version: 1.0
+AutoUpdate-Show-In-Client: false
 OpenIDE-Module: org.maupou.expressions
 OpenIDE-Module-Localizing-Bundle: org/maupou/expressions/Bundle.properties
+OpenIDE-Module-Provides: Expressions
 OpenIDE-Module-Specification-Version: 1.0
 
