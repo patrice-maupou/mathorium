@@ -63,22 +63,22 @@ public class GenItem {
     /**
      *
      * @param level niveau à comparer à celui de genitem
-     * @param mrg rang de matchExpr
-     * @param erg rang de l'exprNode
+     * @param matchrg rang de matchExpr
+     * @param exprg rang de l'exprNode
      * @param syntax
-     * @param en
-     * @param vars
+     * @param en patron pour la liste parents-enfants
+     * @param vars table de variables des modèles
      * @param exprNodes
      * @return
      * @throws java.lang.Exception
      */
-    public ExprNode genapply(int level, int mrg, int erg, Syntax syntax, ExprNode en,
+    public ExprNode genapply(int level, int matchrg, int exprg, Syntax syntax, ExprNode en,
             HashMap<Expression, Expression> vars, ArrayList<ExprNode> exprNodes)
             throws Exception {
         ExprNode ret = null;
-        if (!matchExprs.isEmpty() && mrg < matchExprs.size()) {
-            MatchExpr matchExpr = matchExprs.get(mrg);
-            Expression e = exprNodes.get(erg).getE().copy();
+        if (!matchExprs.isEmpty() && matchrg < matchExprs.size()) {
+            MatchExpr matchExpr = matchExprs.get(matchrg);
+            Expression e = exprNodes.get(exprg).getE().copy();
             if (matchExpr.getGlobal() != null) {
                 Expression g = vars.get(matchExpr.getGlobal());
                 e = (g == null) ? e : g;
@@ -87,7 +87,7 @@ public class GenItem {
                 ArrayList<int[]> parentList = new ArrayList<>();
                 int[] p = Arrays.copyOf(en.getParentList().get(0),
                         en.getParentList().get(0).length);
-                p[mrg] = erg;
+                p[matchrg] = exprg;
                 parentList.add(p);
                 ret = new ExprNode(e, en.getChildList(), parentList);
             }
@@ -155,17 +155,24 @@ public class GenItem {
      * @param syntax
      * @param level
      * @param exprNodes liste d'expressions déjà obtenues
+     * @param exprDiscards
+     * @return 
      * @throws Exception
      */
-    public void addResults(ExprNode en, HashMap<Expression, Expression> vars, Syntax syntax, 
+    public int addResults(ExprNode en, HashMap<Expression, Expression> vars, Syntax syntax, 
             int level, ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards)
             throws Exception {
+        int ret = 0;
         for (Result result : resultExprs) {
             if (result.getLevel() <= level) {
                 ExprNode en1 = en.copy();
-                result.addExpr(en1, vars, typesMap, listvars, syntax, exprNodes, exprDiscards);
+                en1 = result.addExpr(en1, vars, typesMap, listvars, syntax, exprNodes, exprDiscards);
+                if(en1 != null) {
+                    ret++;
+                }
             }
         }
+        return ret;
     }
 
     @Override
