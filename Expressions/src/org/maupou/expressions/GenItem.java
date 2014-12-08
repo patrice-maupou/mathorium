@@ -95,57 +95,6 @@ public class GenItem {
         return ret;
     }
 
-    /**
-     * génère un hypercube d'expressions de côté borné par limit
-     *
-     * @param n niveau de profondeur des MatchExprs
-     * @param limit
-     * @param level niveau de l'item
-     * @param syntax
-     * @param en
-     * @param vars table des variables : variable -> value
-     * @param exprNodes liste courante
-     * @param exprDiscards
-     * @return
-     * @throws Exception
-     */
-    public int[] generate(int n, int limit, int level, Syntax syntax, ExprNode en,
-            HashMap<Expression, Expression> vars, ArrayList<ExprNode> exprNodes,
-            ArrayList<ExprNode> exprDiscards)
-            throws Exception {
-        int[] bounds = new int[matchExprs.size() - n + 1];
-        bounds[0] = limit;
-        if (exprNodes.size() < limit) {
-            if (!matchExprs.isEmpty() && n < matchExprs.size()) {
-                MatchExpr matchExpr = matchExprs.get(n);
-                for (int i = 0; i < exprNodes.size(); i++) {
-                    ExprNode en1 = exprNodes.get(i);
-                    Expression e = en1.getE().copy();
-                    HashMap<Expression, Expression> nvars = new HashMap<>();
-                    nvars.putAll(vars);
-                    if (matchExpr.getGlobal() != null) {
-                        Expression g = vars.get(matchExpr.getGlobal());
-                        e = (g == null) ? e : g;
-                    }
-                    if (matchExpr.checkExpr(e, nvars, typesMap, listvars, syntax)) {
-                        ArrayList<int[]> parentList = new ArrayList<>();
-                        int[] p = Arrays.copyOf(en.getParentList().get(0),
-                                en.getParentList().get(0).length);
-                        p[n] = i;
-                        parentList.add(p);
-                        en1 = new ExprNode(e, en.getChildList(), parentList);
-                        int[] sb = generate(n + 1, limit, level, syntax, en1, nvars,
-                                exprNodes, exprDiscards);
-                        System.arraycopy(sb, 0, bounds, 1, matchExprs.size() - n);
-                        bounds[0] = (i < bounds[0]) ? i : bounds[0];
-                    }
-                }
-            } else {
-                addResults(en, vars, syntax, level, exprNodes, exprDiscards);
-            }
-        }
-        return bounds;
-    }
 
     /**
      * ajoute les nouveaux résultats à la liste exprNodes
