@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.maupou.mthtype;
+package org.maupou.sampledataobject;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -71,7 +71,7 @@ public final class syxAction implements ActionListener {
             xformer.setOutputProperty(OutputKeys.INDENT, "yes");
             xformer.transform(source, result);
             FileObject pf = FileUtil.createData(file);
-            mathDataObject mdo = (mathDataObject) mathDataObject.find(pf);
+            MathDataObject mdo = (MathDataObject) MathDataObject.find(pf);
             MathOpenSupport lookup = mdo.getLookup().lookup(MathOpenSupport.class);
             lookup.createCloneableTopComponent();
             lookup.open();
