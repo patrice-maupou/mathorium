@@ -92,6 +92,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     private GenItem genItem;
     private boolean resultReady = false;
     private int matchRange, level;
+    private int complete; // tout a été calculé jusqu'à k
     private HashMap<Expression, Expression> varsToExprs;
     private MultiViewElementCallback callback;
     private final JToolBar toolbar = new JToolBar();
@@ -107,6 +108,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         listparents = new ArrayList<>();
         exprPos = new HashMap<>();
         level = 1;
+        complete = -1;
         RP = new RequestProcessor("Generation of expressions", 1, true);         
         log = Logger.getLogger(MathTopComponent.class.getName());
         log.setLevel(Level.INFO);
