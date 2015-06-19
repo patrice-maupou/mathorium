@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE root [
+<!ELEMENT root (results|texts)*>
+<!ELEMENT texts (#PCDATA)>
+<!ATTLIST texts name ID #REQUIRED value CDATA "default">
+<!ATTLIST texts separator CDATA #IMPLIED>
+]>
+
+<root>
+    <!-- Expressions à analyser et tester -->
+  <texts name="exprs"><![CDATA[",
+    "a==b", "A==B", 
+    "c:A", "A:U", 
+    "A->B", "A->B->C->D", "(A->B)->(C->D)",
+    "g(y)", "g(a)->B", "A->g(b)", "g(h(a))",
+    "]]>
+  </texts>
+  <!-- Ecriture cmprenant les types correspondant à la méthode toText()  -->
+  <texts name="complete"><![CDATA[",
+    "(ID,a:term,b:term):judgment", "(ID,A:type,B:type):judgment",
+    "(ISTYPE,c:term,A:type):judgment", "(ISTYPE,A:type,U:type):judgment",
+    "(FUNCTIONS,A:type,B:type):type", 
+    "(FUNCTIONS,A:type,(FUNCTIONS,B:type,(FUNCTIONS,C:type,D:type):type):type):type",
+    "(FUNCTIONS,((FUNCTIONS,A:type,B:type):type):type,((FUNCTIONS,C:type,D:type):type):type):type",
+    "(g,y:term):image", "(FUNCTIONS,((g,a:term):image):type,B:type):type",
+    "(FUNCTIONS,A:type,(g,b:term):image):type",
+    "(g,((h,a:term):image):term):image",
+    "]]>      
+  </texts>
+  <!-- Ecriture correspondant à la méthode toString()  -->
+  <texts name="results"><![CDATA[",
+    "(ID,a,b)", "(ID,A,B)", "(ISTYPE,c,A:type)", "(ISTYPE,A,U)",
+    "(FUNCTIONS,A,B)", "(FUNCTIONS,A,(FUNCTIONS,B,(FUNCTIONS,C,D)))",
+    "(FUNCTIONS,(FUNCTIONS,A,B),(FUNCTIONS,C,D))",
+    "(g,y)", "(FUNCTIONS,(g,a),B)", "(FUNCTIONS,A,(g,b))", "(g,(h,a))",
+    "]]>
+  </texts>
+  <!--texts name="replace"><![CDATA[",
+    "]]>
+  </texts>
+  <texts name="depth"><![CDATA[",
+    "]]>
+  </texts>
+  <texts name="matches"><![CDATA[",
+    "]]>
+  </texts>
+  <texts name="matchsubExpr" separator=":"><![CDATA[",
+    "]]>
+  </texts>
+  <texts name="matchBoth"><![CDATA[",
+    "]]>
+  </texts-->
+  
+  <!-- sortie des expressions par la méthode toString(syntaxWrite) -->
+  <texts name="write_numbers"><![CDATA[",
+    "a==b", "A==B", 
+    "c:A", "A:U", 
+    "A->B", "A->(B->(C->D))", "(A->B)->(C->D)",
+    "g(y)", "g(a)->B", "A->g(b)", "g(h(a))",
+"]]>
+  </texts>
+    
+</root>

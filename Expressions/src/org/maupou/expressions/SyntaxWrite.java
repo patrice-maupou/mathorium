@@ -16,14 +16,16 @@ import org.w3c.dom.NodeList;
  */
 public class SyntaxWrite {
 
-  private HashMap<String, NodeWrite> nameToNode;
-  private ArrayList<NodeWrite> nodeWrites;
-  private String unused;
+  private final HashMap<String, NodeWrite> nameToNode;
+  private final ArrayList<NodeWrite> nodeWrites;
+  private final String unused;
+  private final String name;
 
   public SyntaxWrite(Element write, String unused) throws Exception {
     nameToNode = new HashMap<>();
     nodeWrites = new ArrayList<>();
     this.unused = unused;
+    this.name = write.getAttribute("name");
     NodeList rulesList = write.getElementsByTagName("wrule");
     for (int i = 0; i < rulesList.getLength(); i++) {
       Element rule = (Element) rulesList.item(i);
@@ -39,8 +41,8 @@ public class SyntaxWrite {
       NodeList nodes = rule.getElementsByTagName("node");
       for (int j = 0; j < nodes.getLength(); j++) {
         Element node = (Element) nodes.item(j);
-        String name = node.getAttribute("name");
-        nameToNode.put(name, new NodeWrite(node, childs, childmap, unused));
+        String node_name = node.getAttribute("name");
+        nameToNode.put(node_name, new NodeWrite(node, childs, childmap, unused));
         nodeWrites.add(new NodeWrite(node, childs, childmap, unused));
       }
     }
@@ -50,9 +52,7 @@ public class SyntaxWrite {
   public String toString() {
     String ret = "";
     for (Map.Entry<String, NodeWrite> entry : nameToNode.entrySet()) {
-      String name = entry.getKey();
-      NodeWrite nodeWrite = entry.getValue();
-      ret += name + " : " + nodeWrite + "\n";
+      ret += entry.getKey() + " : " + entry.getValue() + "\n";
     }
     return ret;
   }
@@ -73,4 +73,8 @@ public class SyntaxWrite {
   public String getUnused() {
     return unused;
   }
+
+    public String getName() {
+        return name;
+    }
 }

@@ -92,12 +92,12 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     private GenItem genItem;
     private boolean resultReady = false;
     private int matchRange, level;
-    private int complete; // tout a été calculé jusqu'à k
+    private int complete; // toutes les exprNodes ont été calculées jusqu'à cet entier
     private HashMap<Expression, Expression> varsToExprs;
     private MultiViewElementCallback callback;
     private final JToolBar toolbar = new JToolBar();
     private static RequestProcessor RP;
-    private static Logger log;
+    private static final Logger log = Logger.getLogger(MathTopComponent.class.getName());
 
     public MathTopComponent() {
         initComponents();
@@ -109,8 +109,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         exprPos = new HashMap<>();
         level = 1;
         complete = -1;
-        RP = new RequestProcessor("Generation of expressions", 1, true);         
-        log = Logger.getLogger(MathTopComponent.class.getName());
+        RP = new RequestProcessor("Generation of expressions", 1, true);
         log.setLevel(Level.INFO);
     }
 
@@ -361,8 +360,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         }
         readExprs(text, generator);
         genItemBox.setModel(new DefaultComboBoxModel(itemStrings));
-        genItem = genItems.get(0);
-        updateGenItem(genItem, 1);
+        if (!genItems.isEmpty()) {
+            genItem = genItems.get(0);
+            updateGenItem(genItem, 1);
+        }
         genItemBox.repaint();
         resultSpinner.repaint();
     }
@@ -751,9 +752,9 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
             Expression e = null;
             ArrayList<Integer> childList = new ArrayList<>();
             ArrayList<int[]> parentList = new ArrayList<>();
-            if (genItem.getMatchExprs().isEmpty()) { // résultat direct
+            if (genItem == null || genItem.getMatchExprs().isEmpty()) { // résultat direct
                 e = new Expression(eText, syntax);
-                if (!genItem.getResultExprs().isEmpty()) {
+                if (genItem != null  && !genItem.getResultExprs().isEmpty()) {
                     int index = (Integer) resultSpinner.getValue() - 1;
                     Result result = genItem.getResultExprs().get(index);
                     e.setType(result.getName());
@@ -771,14 +772,16 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                 editField.setText(e.toString(syntaxWrite));
             }
         } catch (Exception ex) {
-            //displayWarning(ex.toString(), NotifyDescriptor.ERROR_MESSAGE);
+            NotifyDescriptor nd = new NotifyDescriptor(ex, "Expression error", 
+                    NotifyDescriptor.DEFAULT_OPTION, NotifyDescriptor.ERROR_MESSAGE, null, null);
+            DialogDisplayer.getDefault().notify(nd);
         }
         resultTextField.setText("");
     }//GEN-LAST:event_resultTextFieldActionPerformed
 
     private void valueTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_valueTextFieldActionPerformed
         String e = valueTextField.getText().trim();
-        if (!genItem.getResultExprs().isEmpty()) {
+        if (genItem != null && !genItem.getResultExprs().isEmpty()) {
             try {
                 MatchExpr matchExpr = genItem.getMatchExprs().get(matchRange);
                 Expression expr = new Expression(e, syntax);

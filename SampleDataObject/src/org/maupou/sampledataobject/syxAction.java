@@ -23,6 +23,7 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 import org.maupou.syntaxtype.syxDataObject;
+import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.filesystems.FileChooserBuilder;
 import org.openide.filesystems.FileObject;
@@ -78,6 +79,7 @@ public final class syxAction implements ActionListener {
             
         } catch (Exception ex) {
             NotifyDescriptor.Message m = new NotifyDescriptor.Message(ex);
+            DialogDisplayer.getDefault().notify(m);
         }
 
     }

@@ -50,6 +50,8 @@ public class MatchExpr {
         }
         recursive = "yes".equals(options.get("recursive"));
         bidir = "yes".equals(options.get("bidirectional"));
+        
+        // table de remplacement
         replaceMap = new HashMap<>();
         Node txtNode = match.getFirstChild();
         Expression key = null;
@@ -59,7 +61,7 @@ public class MatchExpr {
                 if (key == null) {
                     key = new Expression(txtNode.getTextContent(), syntax);
                     replaceMap.put(key, null);
-                    if (cnt == 0) {
+                    if (cnt == 0) { // le premier élément est schema
                         schema = key;
                     }
                 } else {
@@ -70,6 +72,7 @@ public class MatchExpr {
             }
             txtNode = txtNode.getNextSibling();
         }
+        //
         String types = match.getAttribute("types");
         if (!types.isEmpty()) {
             String[] couples = types.split(",");
@@ -112,9 +115,7 @@ public class MatchExpr {
                 }
                 if (vars.isEmpty()) { // ajouter les nouvelles variables à la table vars
                     vars.putAll(svars);
-                    for (Expression var : listvars) {
-                        var.setSymbol(true);
-                    }
+                    listvars.stream().forEach((var) -> {var.setSymbol(true);});
                 } else { // ce n'est pas le premier modèle
                     HashMap<Expression, Expression> nsvars = new HashMap<>(), nvars = new HashMap<>();
                     for (Map.Entry<Expression, Expression> var : vars.entrySet()) {
@@ -179,9 +180,9 @@ public class MatchExpr {
                 }
             }
         } else if (e.getChildren() != null) {
-            for (Expression child : e.getChildren()) {
+            e.getChildren().stream().forEach((child) -> {
                 extendMap(child, vars, listvars);
-            }
+            });
         }
     }
 

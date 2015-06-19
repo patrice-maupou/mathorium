@@ -13,8 +13,8 @@ import org.w3c.dom.NodeList;
  */
 public class SyntaxPattern {
 
-  private ArrayList<TypeCheck> typeChecks;
-  private String name;
+  private final ArrayList<TypeCheck> typeChecks;
+  private final String name;
 
   /**
    *
@@ -35,9 +35,9 @@ public class SyntaxPattern {
       String[] typeValues = typeItem.getAttribute("value").split(",");
       if (type.equals("inherit") && typeValues.length == 1) {
         String[] typeOptions = typeValues[0].split("\\|");
-        for (int j = 0; j < typeOptions.length; j++) {
-          typeValues = new String[]{typeOptions[j]};
-          typeChecks.add(new TypeCheck(typeOptions[j], childs, typeValues));
+        for (String typeOption : typeOptions) {
+          typeValues = new String[]{typeOption};
+          typeChecks.add(new TypeCheck(typeOption, childs, typeValues));
         }
       }
       else {
@@ -61,6 +61,8 @@ public class SyntaxPattern {
   public String getName() {
     return name;
   }
+
+
 
   @Override
   public String toString() {

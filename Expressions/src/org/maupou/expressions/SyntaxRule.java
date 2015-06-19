@@ -13,13 +13,13 @@ import org.w3c.dom.NodeList;
  */
 public class SyntaxRule {
 
-  private TreeMap<Integer, SyntaxPattern> syntaxPatternGroups;
-  // rang du group -> syntaxPattern
+  private final TreeMap<Integer, SyntaxPattern> syntaxPatternGroups;
+  // rang du groupe -> modèle du groupe
   private String id;
   // nom du modèle et nom du noeud de l'expression
-  private String[] childs;
+  private final String[] childs;
   // chaque pattern correspondant à une syntaxPattern2 correspond à un groupe de patternRule
-  private Pattern patternRule;
+  private final Pattern patternRule;
 
   /**
    * Crée une règle de syntaxe
@@ -37,31 +37,29 @@ public class SyntaxRule {
     }
     childs = (childText.isEmpty()) ? new String[0] : childText.split(",");
     syntaxPatternGroups = new TreeMap<>();
-    String patternRuleText = e.getTextContent().trim();
-    patternRuleText = "(" + patternRuleText.replaceAll("[\\s]+", ")|(") + ")";
-    for (int i = 0; i < childs.length; i++) {
-      patternRuleText = patternRuleText.replace(childs[i], group);
-    }
-    patternRule = Pattern.compile(patternRuleText.trim());
+    String patternRuleTxt = "";
     NodeList patternList = e.getElementsByTagName("pattern");
-    int cnt = 1;
+    int cnt = 1; 
     for (int i = 0; i < patternList.getLength(); i++) {
+      if(i > 0) patternRuleTxt += "|";
       Element patternItem = (Element) patternList.item(i);
       String patternText = patternItem.getTextContent().trim();
       SyntaxPattern syntaxPattern = new SyntaxPattern(patternItem, childs, subtypes, unused);
       syntaxPatternGroups.put(cnt, syntaxPattern);
-      if (patternText.indexOf("?<" + syntaxPattern.getName() + ">") != -1) { // variable
-        cnt += 1;
-      }
-      for (int j = 0; j < childs.length; j++) {
-        String child = childs[j];
-        int start = 0;
-        while ((start = patternText.indexOf(child, start)+1) != 0) { // groupe de child
-          cnt += 1;
+      for (String child : childs) {
+        int start = 0, next;
+        while ((next = patternText.indexOf(child, start)+1) != 0) { // groupe de child
+          cnt++;
+          start = next;
         }
+        patternText = patternText.replace(child, group);        
       }
       cnt += 1;
+      if((patternText.contains("(?!(("))) {cnt += 2;}
+      else if((patternText.contains("(?!("))) {cnt += 1;}
+      patternRuleTxt += "(" + patternText + ")";
     }
+    patternRule = Pattern.compile(patternRuleTxt.trim());
   }
 
   public String getId() {
