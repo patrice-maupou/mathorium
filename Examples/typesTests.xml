@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE root [
+<!ELEMENT root (results|texts)*>
+<!ELEMENT texts (#PCDATA)>
+<!ATTLIST texts name ID #REQUIRED value CDATA "default">
+<!ATTLIST texts separator CDATA #IMPLIED>
+]>
+
+<root>
+    <!-- Expressions à analyser et tester -->
+  <texts name="exprs"><![CDATA[",
+    "a==b", "A==B", 
+    "c:A", "A:U", 
+    "A->B", "A->B->C->D", "(A->B)->(C->D)",
+    "g(y)", "g(a)->B", "A->g(b)", "g(h(a))",
+    "]]>
+  </texts>
+  <!-- Ecriture cmprenant les types correspondant à la méthode toText()  -->
+  <texts name="complete"><![CDATA[",
+    "(ID,a:term,b:term):judgment", "(ID,A:type,B:type):judgment",
+    "(ISTYPE,c:term,A:type):judgment", "(ISTYPE,A:type,U:universe):judgment",
+    "(FUNC,A:type,B:type):type", 
+    "(FUNC,A:type,(FUNC,B:type,(FUNC,C:type,D:type):type):type):type",
+    "(FUNC,(FUNC,A:type,B:type):type,(FUNC,C:type,D:type):type):type",
+    "(IMG,g:term,y:term):image", "(FUNC,(IMG,g:term,a:term):image,B:type):type",
+    "(FUNC,A:type,(IMG,g:term,b:term):image):type",
+    "(IMG,g:term,(IMG,h:term,a:term):image):image",
+    "]]>      
+  </texts>
+  <!-- Ecriture correspondant à la méthode toString()  -->
+  <texts name="results"><![CDATA[",
+    "(ID,a,b)", "(ID,A,B)", "(ISTYPE,c,A)", "(ISTYPE,A,U)",
+    "(FUNC,A,B)", "(FUNC,A,(FUNC,B,(FUNC,C,D)))",
+    "(FUNC,(FUNC,A,B),(FUNC,C,D))",
+    "(IMG,g,y)", "(FUNC,(IMG,g,a),B)", "(FUNC,A,(IMG,g,b))", "(IMG,g,(IMG,h,a))",
+    "]]>
+  </texts>  
+  <!-- sortie des expressions par la méthode toString(syntaxWrite) -->
+  <texts name="write_numbers"><![CDATA[",
+    "a==b", "A==B", 
+    "c:A", "A:U", 
+    "A->B", "A->(B->(C->D))", "(A->B)->(C->D)",
+    "g(y)", "g(a)->B", "A->g(b)", "g(h(a))",
+    "]]>
+  </texts>
+  <texts name="replace"><![CDATA[",
+    "]]>
+  </texts>
+  <texts name="depth"><![CDATA[",
+    "]]>
+  </texts>
+  <texts name="matches"><![CDATA[",
+    "]]>
+  </texts>
+  <texts name="matchsubExpr" separator=":"><![CDATA[",
+    "]]>
+  </texts>
+  <texts name="matchBoth"><![CDATA[",
+    "]]>
+  </texts>
+</root>

@@ -8,48 +8,65 @@
 <syntax xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="syntaxSchema.xsd"
         name="number_syntax" unused="®">
+    
     <read>
         <rule key="SIMPLES">
-            <pattern><![CDATA[[u|U][']*]]>
-            <type name="univers"></type>
+            <pattern><![CDATA[[u|U]'*]]>
+            <type name="universe"></type>
             </pattern>
-            <pattern><![CDATA[C[a-z]+]]>
-            <type name="constant" ></type>
+            <pattern><![CDATA[[A-Za-z][a-z]+]]>
+            <type name="constant"></type>
             </pattern>
-            <pattern><![CDATA[[a-zA-Z][']*]]>
-            <type name="type" subtypes="univers,image"></type>
+            <pattern><![CDATA[[a-z]\d*'*]]>
+            <type name="term" subtypes="image"></type>
             </pattern>
-        </rule>
-        <rule key="IMAGE" child="x" group="([^\(\)]+)">
-            <pattern node="f"><![CDATA[(?<f>[a-zA-Z]+\d*)\(x\)]]>
-                <type name="image" value="type"  subtypes="type" node="type,constant"></type>
+            <pattern><![CDATA[[A-Z]\d*'*]]>
+            <type name="type" subtypes="universe,image"></type>
             </pattern>
         </rule>
-        <rule key="ISTYPEOF" child="a,A">
+       
+        <!-- revoir la syntaxe pour image, le pattern est f(.+) au lieu de .+(.+) -->
+        <rule key="IMAGE" child="f,x" group="(®_*)">
+            <pattern node="IMG"><![CDATA[f\(x\)]]>
+                <type name="image" value="term"></type>
+            </pattern>
+        </rule>
+        <rule key="GROUP" child="a" group="(®_*)">
+          <pattern node="a"><![CDATA[\(a\)]]>
+            <type name="inherit"  value="type|term|judgment"></type>
+          </pattern>
+        </rule>
+        <!-- Les deux jugements    -->
+        <rule key="ISTYPE" child="a,A" group="(®_*)">
             <pattern node="ISTYPE"><![CDATA[a:A]]>
-                <type name="judgment" value="type"></type>
+                <type name="judgment" value="term,type"></type>
+                <type name="judgment" value="type,type"></type>
             </pattern>
         </rule>
-        <rule key="IDENTITY" child="a,b">
+        <rule key="IDENTITY" child="a,b" group="(®_*)">
             <pattern node="ID"><![CDATA[a==b]]>
+                <type name="judgment" value="term"></type>
                 <type name="judgment" value="type"></type>
             </pattern>
         </rule>
-        <rule key="HOM" child="A,B"><![CDATA[A->B]]>
-            <pattern node="HOM">
-                <type name="hom" value="type" subtypes="type"></type>
-            </pattern>
-        </rule>
-        <rule key="COMPOSITION" child="f,g"><![CDATA[g∘f]]>
-            <pattern node="COMPOSE">
-                <type name="function" value="type" subtypes="type"></type>
+         
+        <!-- La formation des fonctions  --> 
+        <rule key="FUNCTIONS" child="A,B" group="(®_*)">
+            <pattern node="FUNC"><![CDATA[A->B(?!->)]]>
+                <type name="type" value="type"></type>
             </pattern>
         </rule>
     </read>
     
+    <generators name="none"></generators>
+    
+    <!-- Règle d'écriture d'une expression, compatible avec les règles de lecture citées plus haut
+    -->
     <write>
-        <wrule child="x">
-            <node name="[a-zA-Z]+'*" var="f"><![CDATA[f(x)]]></node>
+        <wrule child="A,B">
+            <node name="FUNC"><![CDATA[A->B]]></node>
+            <child replace="A->(A)" rules="FUNC"></child>
+            <child replace="B->(B)" rules="FUNC"></child>
         </wrule>
         <wrule child="a,A">
             <node name="ISTYPE"><![CDATA[a:A]]></node>
@@ -57,12 +74,8 @@
         <wrule child="a,b">
             <node name="ID"><![CDATA[a==b]]></node>
         </wrule>
-        <wrule child="A,B">
-            <node name="HOM"><![CDATA[A->B]]></node>
-            <child replace="A->(A)" rules="HOM"></child>
-        </wrule>
-        <wrule child="f,g">
-            <node name="COMPOSE"><![CDATA[g∘f]]></node>
+        <wrule child="f,x">
+            <node name="IMG"><![CDATA[f(x)]]></node>
         </wrule>
     </write>
         

@@ -7,7 +7,7 @@
 ]>
 
 <root>
-    <!-- Expressions à interpréter -->
+    <!-- Expressions à analyser et tester -->
   <texts name="exprs"><![CDATA[",
       "17+b", "n*2", "2n", "3*(17+b)",
       "a+3*(17+b)", "32", "3-7",
@@ -25,33 +25,9 @@
       "a+3*(17+b)", "3*x^4-2*x+7",
       "2+|x-3|", "|a+5|-|3+2*x|",
       "3*(1+2*(x-b)^2)-(a+4)",
-      "3<4",
-      "PGCD(6,4,3)", "PGCD(2+3,4)",
-      "3+5<=3*x",
-      "3<5 OU 2>=3", "a<8 ET a>=3",
-      "a<8 ET a>=3 => a<9",
-      "a=3 ET a<9", "a<8 ET (a=3 OU a<9)",
-      "-7", "(-2)+7", "(+3)-2", "3-(+2)",
-      "NON(x<3)", "NON(x=3) => (x<3 OU x>3)",
-      "3-|3-2|",
-      "{a,b,3}", "[3,7]", "]3+4,a[",
-      "(1,2,3)", "(1,(2,3),(4,6),Ø,{a,1})",
-      "(5,[2,8])", "3-4*x^2,x-1,2",
-      "x<2 ⇔ 2>x",
-      "3∈[0,4]", "{3,4}⋃{1,7}", "{n,n+2}⊂ℕ",
-      "ℕ×ℕ", "∁ℕ",
-      "2x", "-2+7", "(2-8)+1",
-      "ℕ-{0}", "ABS", "x∈ℕ", "∀x:x∈ℕ", "∀y:∀x:x∈ℕ ET x=y",
-      "3x^4",
-      "x+1,2<8",
-      "2*9+4*x",
-      "(5+2)*9",
-      "(5+2)*9+4*3",
-      "(3+2)*9+4*x",
-      "ADD(5,1,)", "ADD(1,2,3,4)",
-      "4*x^2-(x+2)",
-"]]>
+      "]]>
   </texts>
+  <!-- Ecriture cmprenant les types correspondant à la méthode toText()  -->
   <texts name="complete"><![CDATA[",
       "(ADD,17:natural,b:real):real", "(MUL,n:natural,2:natural):natural", 
       "(MUL,2:natural,n:natural):natural",
@@ -65,6 +41,7 @@
       "(POW,x:real,4:natural):real",
 "]]>      
   </texts>
+  <!-- Ecriture correspondant à la méthode toString()  -->
   <texts name="results"><![CDATA[",
       "(ADD,17,b)", "(MUL,n,2)", "(MUL,2,n)",
       "(MUL,3,(ADD,17,b))",
@@ -77,7 +54,7 @@
       "(MUL,3,(POW,x,4))",
       "(ADD,(MUL,3,(POW,x,4)),(MUL,2,x))",
       "(SUB,3,7)", "(SUB,(ADD,a,8),41)", "(DIV,3,4)", "(MUL,5,a)", "(POW,3,2)",
-      "(SQR,2)", "(ADD,(SQR,2),1)", "(ADD,3,(ADD,1,2))",
+      "(IMG,SQR,2)", "(ADD,(IMG,SQR,2),1)", "(ADD,3,(ADD,1,2))",
       "(MUL,(ADD,1,2),b)", "(SUB,(MUL,3,a),7)", "(MUL,(ADD,1,2),(ADD,b,a))",
       "(ADD,(SUB,6,3),7)", "(ADD,(SUB,6,(MUL,3,9)),7)",
       "(ADD,a,(MUL,3,(ADD,17,b)))", "(ADD,(SUB,(MUL,3,(POW,x,4)),(MUL,2,x)),7)",
@@ -149,6 +126,7 @@
     "A*(B+C)", "(A+C)*B", "var", "integer",
     "]]>
   </texts>
+  <!-- sortie des expressions par la méthode toString(syntaxWrite) -->
   <texts name="write_numbers"><![CDATA[",
       "17+b", "n×2", "2×n", "3×(17+b)",
       "a+3×(17+b)", "32", "3-7",
@@ -166,31 +144,6 @@
       "a+3×(17+b)", "3×x^4-2×x+7",
       "2+|x-3|", "|a+5|-|3+2×x|",
       "3×(1+2×(x-b)^2)-(a+4)",
-      "3<4",
-      "PGCD(6,4,3)", "PGCD(2+3,4)",
-      "3+5<=3×x",
-      "3<5 OU 2>=3", "a<8 ET a>=3",
-      "a<8 ET a>=3 => a<9",
-      "a=3 ET a<9", "a<8 ET (a=3 OU a<9)",
-      "-7", "(-2)+7", "(+3)-2", "3-(+2)",
-      "NON(x<3)", "NON(x=3) => (x<3 OU x>3)",
-      "3-|3-2|",
-      "{a,b,3}", "[3,7]", "]3+4,a[",
-      "(1,2,3)", "(1,(2,3),(4,6),Ø,{a,1})",
-      "(5,[2,8])", "3-4×x^2,x-1,2",
-      "x<2 ⇔ 2>x",
-      "3∈[0,4]", "{3,4}⋃{1,7}", "{n,n+2}⊂ℕ",
-      "ℕ×ℕ", "∁ℕ",
-      "2x", "-2+7", "(2-8)+1",
-      "ℕ-{0}", "ABS", "x∈ℕ", "∀x:x∈ℕ", "∀y:∀x:x∈ℕ ET x=y",
-      "3x^4",
-      "x+1,2<8",
-      "2×9+4×x",
-      "(5+2)×9",
-      "(5+2)×9+4×3",
-      "(3+2)×9+4×x",
-      "ADD(5,1,)", "ADD(1,2,3,4)",
-      "4×x^2-(x+2)",
-"]]>
+      "]]>
   </texts>
 </root>
