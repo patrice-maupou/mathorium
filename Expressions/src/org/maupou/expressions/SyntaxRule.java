@@ -23,7 +23,7 @@ public class SyntaxRule {
 
   /**
    * Crée une règle de syntaxe
-   *
+   * 
    * @param e
    * @param subtypes
    * @param unused
@@ -33,7 +33,7 @@ public class SyntaxRule {
     String childText = e.getAttribute("child");
     String group = e.getAttribute("group");
     if (group.isEmpty()) {
-      group = "(.+)";
+      group = "(" + unused + "_*)";
     }
     childs = (childText.isEmpty()) ? new String[0] : childText.split(",");
     syntaxPatternGroups = new TreeMap<>();
@@ -54,11 +54,11 @@ public class SyntaxRule {
         }
         patternText = patternText.replace(child, group);        
       }
-      cnt += 1;
+      cnt += 1;  // normalement cnt = cnt + childs.length + 1
       if((patternText.contains("(?!(("))) {cnt += 2;}
       else if((patternText.contains("(?!("))) {cnt += 1;}
       patternRuleTxt += "(" + patternText + ")";
-    }
+    }    
     patternRule = Pattern.compile(patternRuleTxt.trim());
   }
 

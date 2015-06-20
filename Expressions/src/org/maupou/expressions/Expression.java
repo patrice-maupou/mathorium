@@ -178,7 +178,6 @@ public class Expression {
       return tm.get(offset);
     }
     Expression e = null;
-    //* modif
     boolean haschanged;
     do {
     haschanged = false;
@@ -188,42 +187,43 @@ public class Expression {
       Matcher m = rule.getPatternRule().matcher(text);
       while (m.find()) {
         // recherche du groupe correct
-        Integer grouprange = -1, groupnext;
+        Integer curPattern = -1, nextPattern;
         for (Integer key : rule.getSyntaxPatternGroups().keySet()) {
           if (m.group(key) != null) { // c'est le pattern qui convient
-            grouprange = key + 1; // c'est le premier groupe
+            curPattern = key; // c'est le premier groupe
             break;
           }
         }
-        if (grouprange != -1) { // groupe trouvé
-          SyntaxPattern syntaxPattern = rule.getSyntaxPatternGroups().get(grouprange - 1);
+        if (curPattern != -1) { // groupe trouvé
+          SyntaxPattern syntaxPattern = rule.getSyntaxPatternGroups().get(curPattern);
           String nodeName = syntaxPattern.getName();
-          groupnext = rule.getSyntaxPatternGroups().higherKey(grouprange); // clé suivante
-          if (groupnext == null) {
-            groupnext = m.groupCount() + 1; // douteux ! (à cause des groupes ajoutés
-          }
           ArrayList<Expression> ch = new ArrayList<>();
-          for (int i = grouprange; i < groupnext; i++) { // traitement de childs
-            if ((m.group(i) != null) && !(nodeName.equals(m.group(i)))) { // last child
-              e = decreasingSearch(m.group(i), tokenvar, tm, listRules, subtypes, offset + m.start(i));
+          nextPattern = rule.getSyntaxPatternGroups().higherKey(curPattern); // clé suivante
+          if (nextPattern == null) {
+            nextPattern = m.groupCount() + 1;
+          }
+          for (int i = curPattern+1; i < nextPattern; i++) { // traitement de childs
+            if (m.group(i) != null) { // last child
+              e = tm.get( m.start(i));
               if (e == null) { // sous-expression non valide
                 return e;
               }
-                if (ch.size() <= childs.length) {
+              if (ch.size() < childs.length) {
                 ch.add(e);
+                if(ch.size() == childs.length) break;
               }
             }
           }
-          // construction de l'expression
+          // construction de l'expression et modification de text
           boolean foundOK = false;
-          for (TypeCheck typeCheck : syntaxPattern.getTypeChecks()) {
-            for (int i = 0; i < childs.length; i++) {
+          for (TypeCheck typeCheck : syntaxPattern.getTypeChecks()) { // vérification des types
+            for (int i = 0; i < childs.length; i++) { // types des enfants
               String typeExpected = typeCheck.getChildtypes().get(childs[i]);
               if (!(foundOK = subtypes.get(typeExpected).contains(ch.get(i).getType()))) {
                 break;
               }
             }
-            // élimination des descendants, changement dans text
+            // remplacement des enfants dans tm par l'expression
             if (foundOK) {
               e = new Expression(nodeName, typeCheck.getType(), ch, false);
               int start = m.start() + offset;
@@ -236,6 +236,7 @@ public class Expression {
                 tm.remove(start);
               }
               tm.put(m.start() + offset, e);
+              //   changement dans text
               text = text.substring(0, m.start()) + tokenvar.substring(0, m.end() - m.start())
                       + text.substring(m.end());
               m.reset(text);

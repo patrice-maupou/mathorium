@@ -19,7 +19,7 @@
         <type name="propvar" subtypes="propthm"></type>
       </pattern>
     </rule>
-    <rule key="ENCLOSING" child="a" group="([^\(\)]+)">
+    <rule key="ENCLOSING" child="a" group="(®_*)">
       <pattern node="a"><![CDATA[\(a\)]]>
         <type name="inherit"  value="prop"></type>
       </pattern>
