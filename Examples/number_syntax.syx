@@ -39,17 +39,17 @@
     
     <!-- composites elements by decreasing priority -->
     
-    <rule key="PGCD" child="PGCD,a,b" group="(®_*)">
+    <rule key="PGCD" child="PGCD,a,b">
       <pattern node="PGCD"><![CDATA[PGCD\(a,b\)]]>
         <type name="natural" value="cst,natural,natural"></type>
       </pattern>
     </rule>
-    <rule key="SQR" child="SQR,x" group="(®_*)">
+    <rule key="SQR" child="SQR,x">
       <pattern node="SQR"><![CDATA[SQR\(x\)]]>
         <type name="positive" value="cst,positive"></type>
       </pattern>
     </rule>
-    <rule key="GROUP" child="a" group="(®_*)">
+    <rule key="GROUP" child="a">
       <pattern node="ABS"><![CDATA[\|a\|]]>
         <type name="natural" value="integer"></type>
         <type name="positive" value="real"></type>
@@ -58,14 +58,14 @@
         <type name="inherit"  value="natural|integer|positive|real"></type>
       </pattern>
     </rule>
-    <rule key="POW" child="a,n" group="(®_*)">
+    <rule key="POW" child="a,n"">
       <pattern node="POW"><![CDATA[a\^n(?!\()]]>
         <type name="natural" value="natural"></type>
         <type name="integer" value="integer,natural"></type>
         <type name="real" value="real"></type>
       </pattern>
     </rule>
-    <rule key="PROD_FAMILY" child="a,b" group="(®_*)">
+    <rule key="PROD_FAMILY" child="a,b">
       <pattern node="MUL"><![CDATA[a[\*×]b|ab(?!(\(|\^))]]>
         <type name="inherit"  value="natural|integer|positive|real"></type>
       </pattern>
@@ -73,7 +73,7 @@
         <type name="real" value="real"></type>
       </pattern>
     </rule>
-    <rule key="ADD_FAMILY" child="a,b" group="(®_*)">
+    <rule key="ADD_FAMILY" child="a,b">
       <pattern node="ADD"><![CDATA[a\+b(?!(\(|\*|×|\^))]]>
         <type name="inherit"  value="natural|integer|positive|real"></type>
       </pattern>
