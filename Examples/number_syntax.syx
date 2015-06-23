@@ -58,7 +58,7 @@
         <type name="inherit"  value="natural|integer|positive|real"></type>
       </pattern>
     </rule>
-    <rule key="POW" child="a,n"">
+    <rule key="POW" child="a,n">
       <pattern node="POW"><![CDATA[a\^n(?!\()]]>
         <type name="natural" value="natural"></type>
         <type name="integer" value="integer,natural"></type>
