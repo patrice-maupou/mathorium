@@ -55,7 +55,7 @@
       "(MUL,3,(POW,x,4))",
       "(ADD,(MUL,3,(POW,x,4)),(MUL,2,x))",
       "(SUB,3,7)", "(SUB,(ADD,a,8),41)", "(DIV,3,4)", "(MUL,5,a)", "(POW,3,2)",
-      "(IMG,SQR,2)", "(ADD,(IMG,SQR,2),1)", "(ADD,3,(ADD,1,2))",
+      "(SQR,2)", "(ADD,(SQR,2),1)", "(ADD,3,(ADD,1,2))",
       "(MUL,(ADD,1,2),b)", "(SUB,(MUL,3,a),7)", "(MUL,(ADD,1,2),(ADD,b,a))",
       "(ADD,(SUB,6,3),7)", "(ADD,(SUB,6,(MUL,3,9)),7)",
       "(ADD,a,(MUL,3,(ADD,17,b)))", "(ADD,(SUB,(MUL,3,(POW,x,4)),(MUL,2,x)),7)",

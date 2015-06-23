@@ -39,8 +39,13 @@
     
     <!-- composites elements by decreasing priority -->
     
-    <rule key="IMAGE" child="f,x" group="(®_*)">
-      <pattern node="IMG"><![CDATA[f\(x\)]]>
+    <rule key="PGCD" child="PGCD,a,b" group="(®_*)">
+      <pattern node="PGCD"><![CDATA[PGCD\(a,b\)]]>
+        <type name="natural" value="cst,natural,natural"></type>
+      </pattern>
+    </rule>
+    <rule key="SQR" child="SQR,x" group="(®_*)">
+      <pattern node="SQR"><![CDATA[SQR\(x\)]]>
         <type name="positive" value="cst,positive"></type>
       </pattern>
     </rule>
@@ -122,8 +127,11 @@
     <node name="SUB"><![CDATA[a-b]]></node>
     <child replace="b->(b)" rules="ADD,SUB"></child>
   </wrule>
-  <wrule child="f,x">
-    <node name="IMG"><![CDATA[f(x)]]></node>
+  <wrule child="a,b">
+    <node name="PGCD"><![CDATA[PGCD(a,b)]]></node>
+  </wrule>
+  <wrule child="x">
+    <node name="SQR"><![CDATA[SQR(x)]]></node>
   </wrule>
 </write>
 </syntax>
