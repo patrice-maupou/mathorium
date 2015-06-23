@@ -39,7 +39,12 @@ public class Expression {
    * @throws Exception si l'écriture est non valide
    */
   public Expression(String text, Syntax syntax) throws Exception {
-    Expression e = splitSimpleExpressions(text, syntax);
+    /* avant
+     Expression e = parseSimples(text, syntax);    
+     //*/
+    //* modif
+    Expression e = parse(text, syntax);
+    //*/
     symbol = false;
     if (e != null) {
       name = e.getName();
@@ -74,9 +79,9 @@ public class Expression {
   }
 
   /**
-   * la fin est basée sur les valeurs possibles du dernier match "simple;type" si le marqueur est
-   * "):type" on ajoute l'expression à list, on retourne. "," on ajoute l'expression à list, on
-   * continue
+   * la fin est basée sur les valeurs possibles du dernier match "simple;childType" si le marqueur
+   * est "):childType" on ajoute l'expression à list, on retourne. "," on ajoute l'expression à
+   * list, on continue
    *
    * @param text chaîne à analyser
    * @param list la liste des expressions scannées
@@ -128,7 +133,7 @@ public class Expression {
    * @param simpleRule
    * @return une table ordonnée où les parties de texte non interprétées ont la valeur null
    */
-  private Expression splitSimpleExpressions(String text, Syntax syntax) {
+  private Expression parseSimples(String text, Syntax syntax) {
     Expression e = null;
     boolean done = false;
     SyntaxRule simpleRule = syntax.getAtoms();
@@ -158,9 +163,105 @@ public class Expression {
       }
     }
     if (!done) {
-      e = decreasingSearch(text, tokenvar, tm, syntax.getRules(), syntax.getSubtypes(), 0);
+      e = parseComposite(text, tm, syntax.getRules(), syntax.getSubtypes(), tokenvar);
     }
     return e;
+  }
+
+  /**
+   * remplacement des autres "parse" par un seul
+   *
+   * @param text
+   * @param syntax
+   * @return
+   */
+  private Expression parse(String text, Syntax syntax) {
+    String unused = syntax.getUnused();
+    String tokenvar = "____________________________________";
+    StringBuilder buf = new StringBuilder();
+    while (buf.length() < text.length()) {
+      buf.append(tokenvar);
+    }
+    buf.insert(0, unused);
+    tokenvar = buf.toString();
+    String tkvar = unused + "_*"; // remplace les parties décodées
+    TreeMap<Integer, Expression> tm = new TreeMap<>();
+    boolean haschanged;
+    do {
+      haschanged = false;
+      loop_rules:
+      for (SyntaxRule rule : syntax.getRules()) {
+        String[] childs = rule.getChilds();
+        Matcher m = rule.getPatternRule().matcher(text);
+        loop_find:
+        while (m.find()) {
+          SyntaxPattern syntaxPattern = null;
+          ArrayList<Expression> ch = new ArrayList<>();
+          TypeCheck typeCheck;
+          int i, idx = 0;
+          for (Integer key : rule.getSyntaxPatternGroups().keySet()) {
+            if (m.group(key) != null) { // c'est le pattern qui convient
+              idx = key; // c'est le premier groupe
+              syntaxPattern = rule.getSyntaxPatternGroups().get(key);
+              break;
+            }
+          }
+          if (syntaxPattern == null) {
+            break;
+          }
+          String nodeName = syntaxPattern.getName();
+          if (nodeName.isEmpty()) {
+            nodeName = m.group();
+            ch = null;
+            typeCheck = syntaxPattern.getTypeChecks().get(0);
+          } else {
+            // liste des enfants
+            for (int j = idx + 1; j <= m.groupCount(); j++) {
+              if (m.group(j) != null && ch.size() < childs.length) {
+                ch.add(tm.get(m.start(j)));
+              }
+            }
+            // vérification des types des enfants
+            typeCheck = null;
+            for (TypeCheck typChck : syntaxPattern.getTypeChecks()) {
+              for (i = 0; i < childs.length; i++) {
+                String childType = typChck.getChildtypes().get(childs[i]);
+                if (!syntax.getSubtypes().get(childType).contains(ch.get(i).getType())) {
+                  break;
+                }
+              }
+              if (i == childs.length) { // terminé
+                typeCheck = typChck;
+                break;
+              }
+            }
+          }
+          // suppression des enfants dans tm
+          if (typeCheck != null) {
+            Expression e = new Expression(nodeName, typeCheck.getType(), ch, false);
+            for (i = 0; i < childs.length; i++) {
+              int k = idx + i + 1;
+              Expression se = tm.get(m.start(k));
+              if (nodeName.equals(childs[i])) { // effacement au profit du descendant
+                e = se;
+              }
+              tm.remove(m.start(k));
+            }
+            // changement de text et expression dans tm
+            tm.put(m.start(), e);
+            text = text.substring(0, m.start()) + tokenvar.substring(0, m.end() - m.start())
+                    + text.substring(m.end());
+            m.reset(text);
+            if (text.matches(tkvar)) {
+              return e;
+            }
+            haschanged = true;
+            break loop_rules;
+          }
+        } // end loop_find // end loop_find
+      } // end rules // end rules
+    } while (haschanged);
+    return null;
   }
 
   /**
@@ -170,89 +271,86 @@ public class Expression {
    * @param syntax la grammaire
    * @param offset la position de la chaîne à analyser dans le texte complet
    */
-  private Expression decreasingSearch(String text, String tokenvar, TreeMap<Integer, Expression> tm,
-          List<SyntaxRule> listRules, HashMap<String, Set<String>> subtypes, int offset) {
+  private Expression parseComposite(String text, TreeMap<Integer, Expression> tm,
+          List<SyntaxRule> listRules, HashMap<String, Set<String>> subtypes, String tokenvar) {
 
     String tkvar = tokenvar.substring(0, 2) + "*"; // remplace les parties décodées
-    if (text.matches(tkvar)) { // expression déjà décodée
-      return tm.get(offset);
-    }
     Expression e = null;
     boolean haschanged;
     do {
-    haschanged = false;
-    loop_rules:
-    for (SyntaxRule rule : listRules) {
-      String[] childs = rule.getChilds();
-      Matcher m = rule.getPatternRule().matcher(text);
-      while (m.find()) {
-        // recherche du groupe correct
-        Integer curPattern = -1, nextPattern;
-        for (Integer key : rule.getSyntaxPatternGroups().keySet()) {
-          if (m.group(key) != null) { // c'est le pattern qui convient
-            curPattern = key; // c'est le premier groupe
-            break;
-          }
-        }
-        if (curPattern != -1) { // groupe trouvé
-          SyntaxPattern syntaxPattern = rule.getSyntaxPatternGroups().get(curPattern);
-          String nodeName = syntaxPattern.getName();
-          ArrayList<Expression> ch = new ArrayList<>();
-          nextPattern = rule.getSyntaxPatternGroups().higherKey(curPattern); // clé suivante
-          if (nextPattern == null) {
-            nextPattern = m.groupCount() + 1;
-          }
-          for (int i = curPattern+1; i < nextPattern; i++) { // traitement de childs
-            if (m.group(i) != null) { // last child
-              e = tm.get( m.start(i));
-              if (e == null) { // sous-expression non valide
-                return e;
-              }
-              if (ch.size() < childs.length) {
-                ch.add(e);
-                if(ch.size() == childs.length) break;
-              }
+      haschanged = false;
+      loop_rules:
+      for (SyntaxRule rule : listRules) {
+        String[] childs = rule.getChilds();
+        Matcher m = rule.getPatternRule().matcher(text);
+        while (m.find()) {
+          // recherche du groupe correct
+          Integer curPattern = -1, nextPattern;
+          for (Integer key : rule.getSyntaxPatternGroups().keySet()) {
+            if (m.group(key) != null) { // c'est le pattern qui convient
+              curPattern = key; // c'est le premier groupe
+              break;
             }
           }
-          // construction de l'expression et modification de text
-          boolean foundOK = false;
-          for (TypeCheck typeCheck : syntaxPattern.getTypeChecks()) { // vérification des types
-            for (int i = 0; i < childs.length; i++) { // types des enfants
-              String typeExpected = typeCheck.getChildtypes().get(childs[i]);
-              if (!(foundOK = subtypes.get(typeExpected).contains(ch.get(i).getType()))) {
-                break;
-              }
+          if (curPattern != -1) { // groupe trouvé
+            SyntaxPattern syntaxPattern = rule.getSyntaxPatternGroups().get(curPattern);
+            String nodeName = syntaxPattern.getName();
+            ArrayList<Expression> ch = new ArrayList<>();
+            nextPattern = rule.getSyntaxPatternGroups().higherKey(curPattern); // clé suivante
+            if (nextPattern == null) {
+              nextPattern = m.groupCount() + 1;
             }
-            // remplacement des enfants dans tm par l'expression
-            if (foundOK) {
-              e = new Expression(nodeName, typeCheck.getType(), ch, false);
-              int start = m.start() + offset;
-              for (int k = 1; k <= childs.length; k++) {
-                start = tm.ceilingKey(start);
-                Expression se = tm.get(start);
-                if (nodeName.equals(childs[k - 1])) { // effacement au profit du descendant
-                  e = se;
+            for (int i = curPattern + 1; i < nextPattern; i++) { // traitement de childs
+              if (m.group(i) != null) { // last child
+                e = tm.get(m.start(i));
+                if (e == null) { // sous-expression non valide
+                  return e;
                 }
-                tm.remove(start);
+                if (ch.size() < childs.length) {
+                  ch.add(e);
+                  if (ch.size() == childs.length) {
+                    break;
+                  }
+                }
               }
-              tm.put(m.start() + offset, e);
-              //   changement dans text
-              text = text.substring(0, m.start()) + tokenvar.substring(0, m.end() - m.start())
-                      + text.substring(m.end());
-              m.reset(text);
-              if (text.matches(tkvar)) {
-                return e;
-              }
-              haschanged = true;
-              break loop_rules; // retourner boucle loop_rules ?
             }
-          } // end liste typeChecks
-        }
-      } // end loop m.find()
-    } // end loop rules
-    //* modif
-    } while(haschanged && !text.matches(tkvar));
-    //*/
+            // construction de l'expression et modification de text
+            boolean childtypesOK = true;
+            for (TypeCheck typeCheck : syntaxPattern.getTypeChecks()) { // vérification des types
+              for (int i = 0; i < childs.length; i++) { // types des enfants
+                String typeExpected = typeCheck.getChildtypes().get(childs[i]);
+                if (!(childtypesOK = subtypes.get(typeExpected).contains(ch.get(i).getType()))) {
+                  break;
+                }
+              }
+              // remplacement des enfants dans tm par l'expression
+              if (childtypesOK) {
+                e = new Expression(nodeName, typeCheck.getType(), ch, false);
+                int start = m.start();
+                for (int k = 1; k <= childs.length; k++) {
+                  start = tm.ceilingKey(start);
+                  Expression se = tm.get(start);
+                  if (nodeName.equals(childs[k - 1])) { // effacement au profit du descendant
+                    e = se;
+                  }
+                  tm.remove(start);
+                }
+                tm.put(m.start(), e);
+                //   changement dans text
+                text = text.substring(0, m.start()) + tokenvar.substring(0, m.end() - m.start())
+                        + text.substring(m.end());
+                m.reset(text);
+                if (text.matches(tkvar)) {
+                  return e;
+                }
+                haschanged = true;
+                break loop_rules; // retourner boucle loop_rules ?
+              }
+            } // end liste typeChecks
+          }
+        } // end loop m.find()
+      } // end loop rules
+    } while (haschanged && !text.matches(tkvar));
     if (!text.matches(tkvar)) {
       e = null;
     }
@@ -333,8 +431,8 @@ public class Expression {
   }
 
   /**
-   * examine les sous-expressions qui correspondent à schema et leur donne le type de schema et les
-   * met dans la liste des Expr de en
+   * examine les sous-expressions qui correspondent à schema et leur donne le childType de schema et
+   * les met dans la liste des Expr de en
    *
    * @param schema le modèle
    * @param freevars
@@ -380,7 +478,7 @@ public class Expression {
    * des expressions de etype value ex: A->(B->(A->B)) avec A->(B->C) avec C=A->B
    *
    * @param schema l'expression contenant les variables et servant de modèle
-   * @param freevars table associant à un type de variable un type de remplacement
+   * @param freevars table associant à un childType de variable un childType de remplacement
    * @param listvars liste des variables susceptibles d'être utilisées
    * @param vars table des variables à affecter
    * @param subtypes
@@ -392,8 +490,8 @@ public class Expression {
     boolean fit;
     Expression e;
     String vtype = (listvars.contains(schema)) ? freevars.get(schema.type) : null;
-    if (vtype != null) { // le type de remplacement existe
-      if (fit = subtypes.get(vtype).contains(type)) { // type sous-type de vType
+    if (vtype != null) { // le childType de remplacement existe
+      if (fit = subtypes.get(vtype).contains(type)) { // childType sous-childType de vType
         if ((e = vars.get(schema)) != null) { // déjà dans la table vars
           fit = e.equals(this);
         } else { // nouvelle entrée dans vars
@@ -590,8 +688,8 @@ public class Expression {
   }
 
   /**
-   * Ecriture complète de l'expression comprenant le type et permettant de reconstruire l'expression
-   * exemple : (ADD,3:natural,x:real):real
+   * Ecriture complète de l'expression comprenant le childType et permettant de reconstruire
+   * l'expression exemple : (ADD,3:natural,x:real):real
    *
    * @return la chaîne représentant l'expression
    */

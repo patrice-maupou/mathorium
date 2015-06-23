@@ -17,10 +17,11 @@ public class SyntaxPattern {
   private final String name;
   private final String patternText;
   private final Pattern pattern;
-  private int[] rgOfChild;
+  private final int groupCount;
+  private int[] childgroups;
 
   /**
-   * TODO : numéroter les groupes correspondant aux variables rgOfChild avec patternText
+   * TODO : numéroter les groupes correspondant aux variables childgroups avec patternText
    * @param patternItem
    * @param childs
    * @param subtypes
@@ -38,8 +39,9 @@ public class SyntaxPattern {
       txt = txt.replace(child, "(" + unused + "_*)");
     }
     pattern = Pattern.compile(txt);
+    groupCount = pattern.matcher("").groupCount() + 1;
     try {
-      rgOfChild = new int[childs.length];
+      childgroups = new int[childs.length];
       setChildGroups(patternText, childs);
     } catch (IndexOutOfBoundsException iob) {
       System.out.println("écriture incorrecte de " + patternText);
@@ -65,7 +67,7 @@ public class SyntaxPattern {
   private void setChildGroups(String text,  String[] childs) throws IndexOutOfBoundsException {
     int start = 0, np = 0;
     char pre = '_';
-    for (int k = 0; k < rgOfChild.length; k++) {
+    for (int k = 0; k < childgroups.length; k++) {
       int idx = text.indexOf(childs[k]); // ex : "(\(a+b\))"
       String s = text.substring(start, idx);
       for (int i = 0; i < s.length(); i++) {
@@ -74,7 +76,7 @@ public class SyntaxPattern {
         pre = c;
       }
       np++;
-      rgOfChild[k] = np;
+      childgroups[k] = np;
       start = idx + 1;
     }
   }
@@ -94,6 +96,14 @@ public class SyntaxPattern {
 
   public Pattern getPattern() {
     return pattern;
+  }
+
+  public int getGroupCount() {
+    return groupCount;
+  }
+
+  public int[] getChildgroups() {
+    return childgroups;
   }
 
 

@@ -39,11 +39,16 @@ public class Syntax {
           Element rule = (Element) rulesList.item(i);
           SyntaxRule syntaxRule = new SyntaxRule(rule, subtypes, unused);
           syntaxRule.setId(rule.getAttribute("key"));
+          /* avant
           if ("SIMPLES".equals(syntaxRule.getId())) {
             atoms = syntaxRule;
           } else {
             rules.add(syntaxRule);
           }
+          //*/
+          //* modif (couplée avec parse)
+          rules.add(syntaxRule);
+          //*/
         }
       } else {
         name = null;

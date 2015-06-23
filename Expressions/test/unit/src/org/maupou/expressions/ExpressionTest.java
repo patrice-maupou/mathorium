@@ -47,8 +47,7 @@ public class ExpressionTest {
   @Parameters
   public static Collection<Object[]> data() {
     Object[][] files = new Object[][]{
-      {"number_syntax.syx", "expressionsTests.xml"},
-      {"types.syx", "typesTests.xml"}
+      {"number_syntax.syx", "expressionsTests.xml"}//, {"types.syx", "typesTests.xml"}
     };
     return Arrays.asList(files);
   }
@@ -228,6 +227,7 @@ public class ExpressionTest {
 
   /*
    @Test
+   @Ignore
    public void testmarkUsedVars() throws Exception {
         
    }
@@ -258,8 +258,7 @@ public class ExpressionTest {
   }
 
   @Test
-  //@Ignore  
-  
+  //@Ignore   
   public void testDepth() throws Exception {
     if (depths == null) {
       return;
@@ -286,8 +285,9 @@ public class ExpressionTest {
     }
     System.out.println("toString");
     int n = entries.length;
-    n = (n > 35)? 35 : n;
-    for (int i = 1; i < n-1; i++) {
+    int m = results.length;
+    m = (n < m)? n : m;
+    for (int i = 1; i < m-1; i++) {
       String entry = entries[i];
       Expression exp = new Expression(entry, syntax);
       String expString = exp.toString();
@@ -325,7 +325,7 @@ public class ExpressionTest {
    * @throws java.lang.Exception
    */
   @Test
-  //@Ignore
+  @Ignore
   public void testScanExpr() throws Exception {
     if (complete == null) {
       return;
@@ -344,6 +344,7 @@ public class ExpressionTest {
   }
 
   @Test
+  //@Ignore
   public void testToString_syntaxWrite() throws Exception {
     if (printing == null) {
       return;
