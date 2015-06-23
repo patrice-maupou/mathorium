@@ -122,7 +122,7 @@ public class Expression {
 
 
   /**
-   * remplacement des autres "parse" par un seul
+   * analyse le texte et retourne une expression ou null en cas d'erreur
    *
    * @param text
    * @param syntax
@@ -163,7 +163,7 @@ public class Expression {
             break;
           }
           String nodeName = syntaxPattern.getName();
-          if (nodeName.isEmpty()) {
+          if (nodeName.isEmpty()) { // atomes ou expressions simples
             nodeName = m.group();
             ch = null;
             typeCheck = syntaxPattern.getTypeChecks().get(0);
@@ -192,13 +192,16 @@ public class Expression {
           // suppression des enfants dans tm
           if (typeCheck != null) {
             Expression e = new Expression(nodeName, typeCheck.getType(), ch, false);
-            for (i = 0; i < childs.length; i++) {
-              int k = idx + i + 1;
-              Expression se = tm.get(m.start(k));
-              if (nodeName.equals(childs[i])) { // effacement au profit du descendant
-                e = se;
+            if (childs.length > 0 && nodeName.equals(childs[0])) {
+              if(ch != null && ch.size() > 1) {
+                ch.remove(0);
+                e = new Expression(nodeName, typeCheck.getType(), ch, false);
+              } else {
+               e = tm.get(m.start(idx + 1));
               }
-              tm.remove(m.start(k));
+            }
+            for (i = 0; i < childs.length; i++) {
+              tm.remove(m.start(idx + i + 1));
             }
             // changement de text et expression dans tm
             tm.put(m.start(), e);
@@ -229,10 +232,7 @@ public class Expression {
       e = new Expression(name, type, null, isSymbol());
     } else {
       ArrayList<Expression> nchildren = new ArrayList<>();
-      for (Expression children1 : children) {
-        Expression child = children1.copy();
-        nchildren.add(child);
-      }
+      children.stream().map((children1) -> children1.copy()).forEach((child) -> {nchildren.add(child);});
       e = new Expression(name, type, nchildren, isSymbol());
     }
     return e;
@@ -248,9 +248,7 @@ public class Expression {
     if (e == null) {
       if (children != null) {
         ArrayList<Expression> echilds = new ArrayList<>();
-        for (Expression children1 : children) {
-          echilds.add(children1.replace(map));
-        }
+        children.stream().forEach((children1) -> {echilds.add(children1.replace(map));});
         e = new Expression(name, type, echilds, isSymbol());
       } else {
         e = new Expression(name, type, null, isSymbol());
@@ -270,9 +268,7 @@ public class Expression {
     if (index != -1) { // c'est une variable
       listvars.get(index).setSymbol(false);
     } else if (children != null) {
-      for (Expression child : children) {
-        child.markUsedVars(listvars);
-      }
+      children.stream().forEach((child) -> {child.markUsedVars(listvars);});
     }
   }
 
@@ -285,9 +281,7 @@ public class Expression {
     if (this.equals(e)) {
       type = e.getType();
     } else if (children != null) {
-      for (Expression children1 : children) {
-        children1.updateType(e);
-      }
+      children.stream().forEach((children1) -> {children1.updateType(e);});
     }
   }
 
@@ -325,10 +319,10 @@ public class Expression {
       en.getExprs().add(this);
     } else {
       if (children != null) {
-        for (Expression child : children) {
+        children.stream().forEach((child) -> {
           HashMap<Expression, Expression> nvars = new HashMap<>();
           child.matchRecursively(schema, freevars, listvars, nvars, subtypes, en);
-        }
+        });
       }
     }
     return fit;
@@ -431,9 +425,7 @@ public class Expression {
           fit = e.equals(this);
         } else { // nouvelle entrée dans schvars
           schvars.put(schema.copy(), copy());
-          for (Expression value : schvars.values()) {
-            value = value.replace(vars);
-          }
+          schvars.values().stream().forEach((value) -> {value = value.replace(vars);});
         }
       }
     } else if (listvars.contains(this)) { // l'expression est une variable
@@ -444,9 +436,7 @@ public class Expression {
         } else {
           vars.put(copy(), schema.copy());
         }
-        for (Expression value : vars.values()) {
-          value = value.replace(schvars);
-        }
+        vars.values().stream().forEach((value) -> {value.replace(schvars);});
       }
     } else if (fit = name.equals(schema.name)) {
       if (fit = children.size() == schema.getChildren().size()) {
@@ -558,10 +548,10 @@ public class Expression {
     StringBuilder sb = new StringBuilder(getName());
     if (getChildren() != null) {
       sb.insert(0, "(");
-      for (Expression child : getChildren()) {
+      getChildren().stream().forEach((child) -> {
         sb.append(",");
         sb.append(child.toText());
-      }
+      });
       sb.append(")");
     }
     sb.append(":").append(type);
@@ -573,10 +563,10 @@ public class Expression {
     StringBuilder sb = new StringBuilder(getName());
     if (getChildren() != null) {
       sb.insert(0, "(");
-      for (Expression expression : getChildren()) {
+      getChildren().stream().forEach((expression) -> {
         sb.append(",");
         sb.append(expression);
-      }
+      });
       sb.append(")");
     }
     return sb.toString();

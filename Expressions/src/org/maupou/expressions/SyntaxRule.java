@@ -30,10 +30,7 @@ public class SyntaxRule {
   public SyntaxRule(Element e, HashMap<String, Set<String>> subtypes, String unused) {
     id = e.getAttribute("key");
     String childText = e.getAttribute("child");
-    String group = e.getAttribute("group");
-    if (group.isEmpty()) {
-      group = "(" + unused + "_*)";
-    }
+    String group = "(" + unused + "_*)"; 
     childs = (childText.isEmpty()) ? new String[0] : childText.split(",");
     syntaxPatternGroups = new TreeMap<>();
     String patternRuleTxt = "";

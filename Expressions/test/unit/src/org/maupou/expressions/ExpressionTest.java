@@ -325,7 +325,7 @@ public class ExpressionTest {
    * @throws java.lang.Exception
    */
   @Test
-  @Ignore
+  //@Ignore
   public void testScanExpr() throws Exception {
     if (complete == null) {
       return;
