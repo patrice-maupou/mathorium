@@ -16,8 +16,6 @@ public class SyntaxPattern {
   private final ArrayList<TypeCheck> typeChecks;
   private final String name;
   private final String patternText;
-  private final Pattern pattern;
-  private final int groupCount;
   private int[] childgroups;
 
   /**
@@ -38,14 +36,6 @@ public class SyntaxPattern {
     for (String child : childs) {
       txt = txt.replace(child, "(" + unused + "_*)");
     }
-    pattern = Pattern.compile(txt);
-    groupCount = pattern.matcher("").groupCount() + 1;
-    try {
-      childgroups = new int[childs.length];
-      setChildGroups(patternText, childs);
-    } catch (IndexOutOfBoundsException iob) {
-      System.out.println("écriture incorrecte de " + patternText);
-    }
     NodeList typeList = patternItem.getElementsByTagName("type");
     for (int i = 0; i < typeList.getLength(); i++) {
       Element typeItem = (Element) typeList.item(i);
@@ -64,22 +54,6 @@ public class SyntaxPattern {
     }
   }
   
-  private void setChildGroups(String text,  String[] childs) throws IndexOutOfBoundsException {
-    int start = 0, np = 0;
-    char pre = '_';
-    for (int k = 0; k < childgroups.length; k++) {
-      int idx = text.indexOf(childs[k]); // ex : "(\(a+b\))"
-      String s = text.substring(start, idx);
-      for (int i = 0; i < s.length(); i++) {
-        char c = s.charAt(i);
-        if(c == '(' && pre != '\\') np++;
-        pre = c;
-      }
-      np++;
-      childgroups[k] = np;
-      start = idx + 1;
-    }
-  }
 
   /**
    * typeCheck contient un des types du modèle et la correspondance child -> type
@@ -91,19 +65,6 @@ public class SyntaxPattern {
 
   public String getName() {
     return name;
-  }
-
-
-  public Pattern getPattern() {
-    return pattern;
-  }
-
-  public int getGroupCount() {
-    return groupCount;
-  }
-
-  public int[] getChildgroups() {
-    return childgroups;
   }
 
 
