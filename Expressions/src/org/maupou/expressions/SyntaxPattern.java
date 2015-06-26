@@ -16,7 +16,6 @@ public class SyntaxPattern {
   private final ArrayList<TypeCheck> typeChecks;
   private final String name;
   private final String patternText;
-  private int[] childgroups;
 
   /**
    * TODO : numéroter les groupes correspondant aux variables childgroups avec patternText

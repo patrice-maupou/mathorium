@@ -47,7 +47,7 @@ public class ExpressionTest {
   @Parameters
   public static Collection<Object[]> data() {
     Object[][] files = new Object[][]{
-      {"number_syntax.syx", "expressionsTests.xml"}//, {"types.syx", "typesTests.xml"}
+      {"number_syntax.syx", "expressionsTests.xml"}, {"types.syx", "typesTests.xml"}
     };
     return Arrays.asList(files);
   }

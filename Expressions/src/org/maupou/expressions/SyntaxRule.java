@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
@@ -34,27 +35,30 @@ public class SyntaxRule {
     childs = (childText.isEmpty()) ? new String[0] : childText.split(",");
     syntaxPatternGroups = new TreeMap<>();
     String patternRuleTxt = "";
+    String after = ""; // pour les priorités
+    for (int i = 0; i < e.getChildNodes().getLength(); i++) {
+      Node childNode = e.getChildNodes().item(i);
+      if(childNode.getNodeType() == Node.CDATA_SECTION_NODE) {
+        after = childNode.getNodeValue();
+        break;
+      }
+    }
     NodeList patternList = e.getElementsByTagName("pattern");
-    int cnt = 1;
+    int grcnt = 2;
     for (int i = 0; i < patternList.getLength(); i++) {
       if(i > 0) patternRuleTxt += "|";
       Element patternItem = (Element) patternList.item(i);
       String patternText = patternItem.getTextContent().trim();
       SyntaxPattern syntaxPattern = new SyntaxPattern(patternItem, childs, subtypes, unused);
-      syntaxPatternGroups.put(cnt, syntaxPattern);
+      syntaxPatternGroups.put(grcnt, syntaxPattern);
       for (String child : childs) {
-        int start = 0, next;
-        while ((next = patternText.indexOf(child, start)+1) != 0) { // groupe de child
-          cnt++;
-          start = next;
-        }
         patternText = patternText.replace(child, group);        
       }
-      cnt += 1;
-      if((patternText.contains("(?!(("))) {cnt += 2;}
-      else if((patternText.contains("(?!("))) {cnt += 1;}
+      Pattern p = Pattern.compile(patternText);
+      grcnt += p.matcher("").groupCount()+1;
       patternRuleTxt += "(" + patternText + ")";
     }    
+    patternRuleTxt = "(" + patternRuleTxt + ")" + after; 
     patternRule = Pattern.compile(patternRuleTxt.trim());
   }
 
