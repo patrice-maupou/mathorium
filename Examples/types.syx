@@ -26,24 +26,24 @@
         </rule>
        
         <!-- revoir la syntaxe pour image, le pattern est f(.+) au lieu de .+(.+) -->
-        <rule key="IMAGE" child="f,x" group="(®_*)">
+        <rule key="IMAGE" child="f,x">
             <pattern node="IMG"><![CDATA[f\(x\)]]>
                 <type name="image" value="term"></type>
             </pattern>
         </rule>
-        <rule key="GROUP" child="a" group="(®_*)">
+        <rule key="GROUP" child="a">
           <pattern node="a"><![CDATA[\(a\)]]>
             <type name="inherit"  value="type|term|judgment"></type>
           </pattern>
         </rule>
         <!-- Les deux jugements    -->
-        <rule key="ISTYPE" child="a,A" group="(®_*)">
+        <rule key="ISTYPE" child="a,A">
             <pattern node="ISTYPE"><![CDATA[a:A]]>
                 <type name="judgment" value="term,type"></type>
                 <type name="judgment" value="type,type"></type>
             </pattern>
         </rule>
-        <rule key="IDENTITY" child="a,b" group="(®_*)">
+        <rule key="IDENTITY" child="a,b">
             <pattern node="ID"><![CDATA[a==b]]>
                 <type name="judgment" value="term"></type>
                 <type name="judgment" value="type"></type>
@@ -51,7 +51,7 @@
         </rule>
          
         <!-- La formation des fonctions  --> 
-        <rule key="FUNCTIONS" child="A,B" group="(®_*)">
+        <rule key="FUNCTIONS" child="A,B">
             <pattern node="FUNC"><![CDATA[A->B(?!->)]]>
                 <type name="type" value="type"></type>
             </pattern>

@@ -39,16 +39,7 @@ public class Syntax {
           Element rule = (Element) rulesList.item(i);
           SyntaxRule syntaxRule = new SyntaxRule(rule, subtypes, unused);
           syntaxRule.setId(rule.getAttribute("key"));
-          /* avant
-          if ("SIMPLES".equals(syntaxRule.getId())) {
-            atoms = syntaxRule;
-          } else {
-            rules.add(syntaxRule);
-          }
-          //*/
-          //* modif (couplée avec parse)
           rules.add(syntaxRule);
-          //*/
         }
       } else {
         name = null;
@@ -77,8 +68,7 @@ public class Syntax {
     NodeList list = document.getElementsByTagName("generators");
     for (int i = 0; i < list.getLength(); i++) {
       Element genElement = (Element) list.item(i);
-      String name = genElement.getAttribute("name");
-      generators.add(new Generator(name, genElement, this));
+      generators.add(new Generator(genElement.getAttribute("name"), genElement, this));
     }
   }
 

@@ -74,366 +74,362 @@ import org.w3c.dom.Document;
  )
  //*/
 @Messages({
-    "CTL_MathAction=Math",
-    "CTL_MathTopComponent=Math Window",
-    "HINT_MathTopComponent=This is a Math window"
+  "CTL_MathAction=Math",
+  "CTL_MathTopComponent=Math Window",
+  "HINT_MathTopComponent=This is a Math window"
 })
 public final class MathTopComponent extends JPanel implements MultiViewElement {
 
-    private MathDataObject mdo;
-    private ArrayList<ExprNode> exprNodes;
-    private ArrayList<ExprNode> listparents;
-    private HashMap<String, ArrayList<Integer>> exprPos; // nom du générateur -> positions des expressions
-    private String text; // texte de mdo
-    private Syntax syntax;
-    private SyntaxWrite syntaxWrite;
-    private ArrayList<Generator> generators;
-    private Generator generator;
-    private GenItem genItem;
-    private boolean resultReady = false;
-    private int matchRange, level;
-    private int complete; // toutes les exprNodes ont été calculées jusqu'à cet entier
-    private HashMap<Expression, Expression> varsToExprs;
-    private MultiViewElementCallback callback;
-    private final JToolBar toolbar = new JToolBar();
-    private static RequestProcessor RP;
-    private static final Logger log = Logger.getLogger(MathTopComponent.class.getName());
+  private MathDataObject mdo;
+  private ArrayList<ExprNode> exprNodes;
+  private ArrayList<ExprNode> listparents;
+  private HashMap<String, ArrayList<Integer>> exprPos; // nom du générateur -> positions des expressions
+  private String text; // texte de mdo
+  private Syntax syntax;
+  private SyntaxWrite syntaxWrite;
+  private ArrayList<Generator> generators;
+  private Generator generator;
+  private GenItem genItem;
+  private boolean resultReady = false;
+  private int matchRange, level;
+  private int complete; // toutes les exprNodes ont été calculées jusqu'à cet entier
+  private HashMap<Expression, Expression> varsToExprs;
+  private MultiViewElementCallback callback;
+  private final JToolBar toolbar = new JToolBar();
+  private static RequestProcessor RP;
+  private static final Logger log = Logger.getLogger(MathTopComponent.class.getName());
 
-    public MathTopComponent() {
-        initComponents();
-        setName(Bundle.CTL_MathTopComponent());
-        setToolTipText(Bundle.HINT_MathTopComponent());
-        exprNodes = new ArrayList<>();
-        varsToExprs = new HashMap<>();
-        listparents = new ArrayList<>();
-        exprPos = new HashMap<>();
-        level = 1;
-        complete = -1;
-        RP = new RequestProcessor("Generation of expressions", 1, true);
-        log.setLevel(Level.INFO);
+  public MathTopComponent() {
+    initComponents();
+    setName(Bundle.CTL_MathTopComponent());
+    setToolTipText(Bundle.HINT_MathTopComponent());
+    exprNodes = new ArrayList<>();
+    varsToExprs = new HashMap<>();
+    listparents = new ArrayList<>();
+    exprPos = new HashMap<>();
+    level = 1;
+    complete = -1;
+    RP = new RequestProcessor("Generation of expressions", 1, true);
+    log.setLevel(Level.INFO);
+  }
+
+  public MathTopComponent(MathDataObject mdo) {
+    this();
+    init(mdo);
+  }
+
+  /**
+   * lit le fichier des expressions en détectant les générateurs alimente la table mpos
+   *
+   * @param mdo l'objet contenant le fichier à analyser
+   */
+  private void init(MathDataObject mdo) {
+    this.mdo = mdo;
+    try {
+      text = mdo.getPrimaryFile().asText();
+      findSyntax(text);
+      int pos = text.indexOf("</expressions>"); // fin du texte 
+      boolean newtxt = !text.contains("generator") && pos != -1; // pas de générateur
+      String q = String.valueOf('"');
+      StringBuilder sb = new StringBuilder(text);
+      if (syntax != null) {
+        syntaxWrite = syntax.getSyntaxWrite();
+        generators = syntax.getGenerators();
+        String[] genNnames = new String[generators.size()];
+        for (int i = 0; i < generators.size(); i++) {
+          genNnames[i] = generators.get(i).getName();
+          if (newtxt) {
+            String g = "<generator name=" + q + genNnames[i] + q + ">\n</generator>\n";
+            sb.insert(pos, g);
+            pos += g.length();
+            ArrayList<Integer> put = exprPos.put(genNnames[i], new ArrayList<>());
+          }
+        }
+        text = sb.toString();
+        generatorBox.setModel(new DefaultComboBoxModel<>(genNnames));
+        if (!generators.isEmpty()) {
+          generator = generators.get(0);
+          updateGenerator(generator);
+        }
+      }
+    } catch (Exception ex) {
+      Exceptions.printStackTrace(ex);
     }
+  }
 
-    public MathTopComponent(MathDataObject mdo) {
-        this();
-        init(mdo);
+  private void findSyntax(String text) throws Exception {
+    String q = String.valueOf('"');
+    Matcher matcher = Pattern.compile("syntax=" + q + "(.+)" + q).matcher(text);
+    if (matcher.find()) {
+      String path = matcher.group(1);
+      DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+      DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+      if (!path.isEmpty()) {
+        File syntaxFile = new File(path);
+        Document syxdoc = documentBuilder.parse(syntaxFile);
+        syntax = new Syntax(syxdoc);
+        syntax.addGenerators(syxdoc);
+      }
     }
+  }
 
-    /**
-     * lit le fichier des expressions en détectant les générateurs alimente la
-     * table mpos
-     *
-     * @param mdo l'objet contenant le fichier à analyser
-     */
-    private void init(MathDataObject mdo) {
-        this.mdo = mdo;
+  /**
+   * analyse le texte et charge les expressions correspondant au générateur
+   *
+   * @param text la chaîne à analyser
+   * @param generator
+   * @throws Exception
+   */
+  private void readExprs(String text, Generator generator) throws Exception {
+    exprNodes.clear();
+    String q = String.valueOf('"');
+    String g = "<generator name=" + q + generator.getName() + q + ">";
+    Pattern pattern = Pattern.compile(g + "(.+)</generator>", Pattern.DOTALL);
+    Matcher m = pattern.matcher(text);
+    if (m.find()) {
+      String txt = m.group(1);
+      ArrayList<Integer> ptpos = new ArrayList<>(); // positions des fins d'expressions
+      exprPos.put(generator.getName(), ptpos);
+      String attribs = "(|(\\s\\w+=" + q + ".+?" + q + ")+)";
+      String regex = "<expr" + attribs + ">(.+?)</expr>";
+      m = Pattern.compile(regex, Pattern.DOTALL).matcher(txt);
+      while (m.find()) { // boucle sur les expressions  (attribs = m.group(2);)
+        ArrayList<int[]> parents = new ArrayList<>();
+        ArrayList<Integer> childs = new ArrayList<>();
+        int end = m.end(); // position de la fin de l'expression dans txt
+        String etxt = m.group(3);
+        Matcher textmatcher = Pattern.compile("<text>(.+)</text>").matcher(etxt);
+        if (textmatcher.find()) {
+          Expression e = new Expression(textmatcher.group(1));
+          textmatcher = Pattern.compile("<parents>(.+)</parents>").matcher(etxt);
+          if (textmatcher.find()) {
+            String[] s = textmatcher.group(1).trim().split(" ");
+            for (String string : s) {
+              String[] si = string.split("-");
+              int[] p = new int[2];
+              if (si.length == 2) {
+                p[0] = Integer.parseInt(si[0]);
+                p[1] = Integer.parseInt(si[1]);
+                parents.add(p);
+              }
+            }
+          }
+          textmatcher = Pattern.compile("<children>(.+)</children>").matcher(etxt);
+          if (textmatcher.find()) {
+            String[] s = textmatcher.group(1).trim().split(" ");
+            for (String string : s) {
+              childs.add(Integer.parseInt(string));
+            }
+          }
+          ExprNode en = new ExprNode(e, childs, parents);
+          exprNodes.add(en);
+          ptpos.add(end); // position relative
+        }
+      }
+      updateEditor();
+    }
+  }
+
+  /**
+   * met texte à jour en insérant une liste d'expressions après l'expression de rang : index TODO :
+   * erreur si subList comprend plusieurs éléments
+   *
+   * @param subList
+   * @param range insère la liste après ce rang
+   * @throws Exception
+   */
+  private void insertToText(List<ExprNode> subList, int range) throws Exception {
+    StringBuilder adding = new StringBuilder();
+    if (range != -1) {
+      String g = "<generator name=" + '"' + generator.getName() + '"' + ">";
+      Pattern pattern = Pattern.compile(g + "(.+)</generator>", Pattern.DOTALL);
+      Matcher m = pattern.matcher(text);
+      if (m.find()) {
+        int startpos = m.start(1);
+        ArrayList<Integer> poslist = exprPos.get(generator.getName());
+        int shift = (range > 0 && range <= poslist.size()) ? poslist.get(range - 1) : 0;
+        int pos = startpos + shift;
+        int insertpos = pos;
+        int rg = exprNodes.size() - subList.size(); // taille précédente
+        int remainsize = rg - range; // de index+1 à rg
+        for (ExprNode en : subList) {
+          Expression e = en.getE();
+          rg++;
+          adding.append("\n<expr id=").append('"').append(rg).append('"').append(" type=");
+          adding.append('"').append(e.getType()).append('"').append("><![CDATA[");
+          adding.append(e.toString(syntaxWrite)).append("]]>\n<text>");
+          adding.append(e.toText()).append("</text>\n");
+          String parents = "", enfants = "";
+          for (int[] is : en.getParentList()) {
+            for (int i = 0; i < is.length; i++) {
+              String sep = (i == is.length - 1) ? " " : "-";
+              parents += is[i] + sep;
+            }
+          }
+          if (!parents.isEmpty()) {
+            adding.append("<parents>").append(parents).append("</parents>\n");
+          }
+          enfants = en.getChildList().stream().map((integer) -> integer + " ")
+                  .reduce(enfants, String::concat);
+          if (!enfants.isEmpty()) {
+            adding.append("<children>").append(enfants).append("</children>");
+          }
+          adding.append("</expr>");
+          pos += adding.length();
+          poslist.add(rg - 1, pos - startpos);
+          startpos = pos;
+        }
+        StringBuilder txt = new StringBuilder(text);
+        text = txt.insert(insertpos, adding).toString();
+        mdo.setContent(text);
+        List<Integer> subposlList = poslist.subList(range, range + remainsize);
+        subposlList.stream().forEach((Integer pt) -> {
+          pt += adding.length();
+        });
+      }
+    }
+  }
+
+  /**
+   * enlève la chaîne de caractères de text correspondant à l'expression de rang index
+   *
+   * @param index le rang de l'expression à retirer du texte
+   */
+  private void deleteText(int index) {
+    String g = "<generator name=" + '"' + generator.getName() + '"' + ">";
+    Pattern pattern = Pattern.compile(g + "(.+)</generator>", Pattern.DOTALL);
+    Matcher m = pattern.matcher(text);
+    if (m.find()) {
+      int startpos = m.start(1);
+      ArrayList<Integer> poslist = exprPos.get(generator.getName());
+      int endshift = poslist.get(index);
+      int endpos = endshift + startpos;
+      if (index > 0) { // chercher startpos
+        int startshift = 0;
+        for (Integer shift : poslist) {
+          if (shift > startshift && shift < endshift) {
+            startshift = shift;
+          }
+        }
+        startpos += startshift;
+      }
+      int size = endpos - startpos;
+      text = text.substring(0, startpos) + text.substring(endpos);
+      poslist.remove(index);
+      for (int i = 0; i < poslist.size(); i++) { // si shift > endshift, retrancher size
+        Integer shift = poslist.get(i);
+        if (shift > endshift) {
+          poslist.set(i, shift - size);
+        }
+      }
+    }
+  }
+
+  /**
+   * met à jour exprRange et editField
+   *
+   * @throws Exception
+   */
+  private void updateEditor() throws Exception {
+    int max = exprNodes.size();
+    int min = (max == 0) ? 0 : 1;
+    SpinnerNumberModel model = (SpinnerNumberModel) exprRange.getModel();
+    model.setValue(max);
+    model.setMaximum(max);
+    model.setMinimum(min);
+    try {
+      if (max > 0) {
+        ExprNode en = exprNodes.get(max - 1);
+        editField.setText(en.getE().toString(syntaxWrite));
+      } else {
+        editField.setText("");
+      }
+    } catch (Exception ex) {
+      Exceptions.printStackTrace(ex);
+    }
+  }
+
+  private void updateGenerator(Generator generator) throws Exception {
+    ArrayList<GenItem> genItems = generator.getGenItems();
+    String[] itemStrings = new String[genItems.size()];
+    for (int i = 0; i < itemStrings.length; i++) {
+      itemStrings[i] = genItems.get(i).getName();
+    }
+    readExprs(text, generator);
+    genItemBox.setModel(new DefaultComboBoxModel(itemStrings));
+    if (!genItems.isEmpty()) {
+      genItem = genItems.get(0);
+      updateGenItem(genItem, 1);
+    }
+    genItemBox.repaint();
+    resultSpinner.repaint();
+  }
+
+  private void updateGenItem(GenItem genItem, int range) {
+    resultTextField.setText("");
+    ArrayList<Result> resultExprs = genItem.getResultExprs();
+    resultSpinner.setModel(new SpinnerNumberModel(1, 1, 1, 0));
+    ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
+    int n = matchExprs.size();
+    HashMap<Expression, Expression> map = (n == 0) ? new HashMap() : matchExprs.get(0).getReplaceMap();
+    matchRange = 0;
+    fillTable(map);
+    listparents.clear();
+    for (int k = 0; k < varsTable.getRowCount(); k++) {
+      varsTable.setValueAt("", k, 0);
+      varsTable.setValueAt("", k, 1);
+      varsTable.setValueAt("", k, 2);
+    }
+    if (!resultExprs.isEmpty()) {
+      resultSpinner.setModel(new SpinnerNumberModel(range, 1, resultExprs.size(), 1));
+      updateResult(range, resultExprs, n);
+    }
+    valueTextField.setText("");
+    varsToExprs.clear();
+    resultReady = false;
+  }
+
+  private void updateResult(int range, ArrayList<Result> resultExprs, int n) {
+    if (range < resultExprs.size() + 1) {
+      String result = "";
+      result += resultExprs.get(range - 1);
+      resultTextField.setText(result);
+      if (n == 0) {
+        resultTextField.requestFocus();
+      } else {
+        valueTextField.requestFocus();
+      }
+    }
+  }
+
+  /**
+   * Mise à jour de la table des modèles
+   *
+   * @param map table des modèles et remplacements éventuels
+   */
+  private void fillTable(HashMap<Expression, Expression> map) {
+    int rows = patternTable.getRowCount();
+    Iterator<Expression> it = map.keySet().iterator();
+    for (int row = 0; row < rows; row++) {
+      String t0 = "", t1 = "";
+      if (it.hasNext()) {
+        Expression key = it.next();
+        Expression val = map.get(key);
         try {
-            text = mdo.getPrimaryFile().asText();
-            findSyntax(text);
-            int pos = text.indexOf("</expressions>"); // fin du texte 
-            boolean newtxt = !text.contains("generator") && pos != -1; // pas de générateur
-            String q = String.valueOf('"');
-            StringBuilder sb = new StringBuilder(text);
-            if (syntax != null) {
-                syntaxWrite = syntax.getSyntaxWrite();
-                generators = syntax.getGenerators();
-                String[] genNnames = new String[generators.size()];
-                for (int i = 0; i < generators.size(); i++) {
-                    genNnames[i] = generators.get(i).getName();
-                    if (newtxt) {
-                        String g = "<generator name=" + q + genNnames[i] + q + ">\n</generator>\n";
-                        sb.insert(pos, g);
-                        pos += g.length();
-                        ArrayList<Integer> put = exprPos.put(genNnames[i], new ArrayList<>());
-                    }
-                }
-                text = sb.toString();
-                generatorBox.setModel(new DefaultComboBoxModel<>(genNnames));
-                if (!generators.isEmpty()) {
-                    generator = generators.get(0);
-                    updateGenerator(generator);
-                }
-            }
-        } catch (Exception ex) {
-            Exceptions.printStackTrace(ex);
+          t0 = key.toString(syntaxWrite);
+          t1 = val.toString(syntaxWrite);
+        } catch (Exception exc) {
         }
+      }
+      patternTable.setValueAt(t0, row, 0);
+      patternTable.setValueAt(t1, row, 1);
     }
+  }
 
-    private void findSyntax(String text) throws Exception {
-        String q = String.valueOf('"');
-        Matcher matcher = Pattern.compile("syntax=" + q + "(.+)" + q).matcher(text);
-        if (matcher.find()) {
-            String path = matcher.group(1);
-            DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-            if (!path.isEmpty()) {
-                File syntaxFile = new File(path);
-                Document syxdoc = documentBuilder.parse(syntaxFile);
-                syntax = new Syntax(syxdoc);
-                syntax.addGenerators(syxdoc);
-            }
-        }
-    }
-
-    /**
-     * analyse le texte et charge les expressions correspondant au générateur
-     *
-     * @param text la chaîne à analyser
-     * @param generator
-     * @throws Exception
-     */
-    private void readExprs(String text, Generator generator) throws Exception {
-        exprNodes.clear();
-        String q = String.valueOf('"');
-        String g = "<generator name=" + q + generator.getName() + q + ">";
-        Pattern pattern = Pattern.compile(g + "(.+)</generator>", Pattern.DOTALL);
-        Matcher m = pattern.matcher(text);
-        if (m.find()) {
-            String txt = m.group(1);
-            ArrayList<Integer> ptpos = new ArrayList<>(); // positions des fins d'expressions
-            exprPos.put(generator.getName(), ptpos);
-            String attribs = "(|(\\s\\w+=" + q + ".+?" + q + ")+)";
-            String regex = "<expr" + attribs + ">(.+?)</expr>";
-            m = Pattern.compile(regex, Pattern.DOTALL).matcher(txt);
-            while (m.find()) { // boucle sur les expressions  (attribs = m.group(2);)
-                ArrayList<int[]> parents = new ArrayList<>();
-                ArrayList<Integer> childs = new ArrayList<>();
-                int end = m.end(); // position de la fin de l'expression dans txt
-                String etxt = m.group(3);
-                Matcher textmatcher = Pattern.compile("<text>(.+)</text>").matcher(etxt);
-                if (textmatcher.find()) {
-                    Expression e = new Expression(textmatcher.group(1));
-                    textmatcher = Pattern.compile("<parents>(.+)</parents>").matcher(etxt);
-                    if (textmatcher.find()) {
-                        String[] s = textmatcher.group(1).trim().split(" ");
-                        for (String string : s) {
-                            String[] si = string.split("-");
-                            int[] p = new int[2];
-                            if (si.length == 2) {
-                                p[0] = Integer.parseInt(si[0]);
-                                p[1] = Integer.parseInt(si[1]);
-                                parents.add(p);
-                            }
-                        }
-                    }
-                    textmatcher = Pattern.compile("<children>(.+)</children>").matcher(etxt);
-                    if (textmatcher.find()) {
-                        String[] s = textmatcher.group(1).trim().split(" ");
-                        for (String string : s) {
-                            childs.add(Integer.parseInt(string));
-                        }
-                    }
-                    ExprNode en = new ExprNode(e, childs, parents);
-                    exprNodes.add(en);
-                    ptpos.add(end); // position relative
-                }
-            }
-            updateEditor();
-        }
-    }
-
-    /**
-     * met texte à jour en insérant une liste d'expressions après l'expression
-     * de rang : index
-     * TODO : erreur si subList comprend plusieurs éléments
-     *
-     * @param subList
-     * @param range insère la liste après ce rang
-     * @throws Exception
-     */
-    private void insertToText(List<ExprNode> subList, int range) throws Exception {
-        StringBuilder adding = new StringBuilder();
-        if (range != -1) {
-            String g = "<generator name=" + '"' + generator.getName() + '"' + ">";
-            Pattern pattern = Pattern.compile(g + "(.+)</generator>", Pattern.DOTALL);
-            Matcher m = pattern.matcher(text);
-            if (m.find()) {
-                int startpos = m.start(1);
-                ArrayList<Integer> poslist = exprPos.get(generator.getName());
-                int shift = (range > 0 && range <= poslist.size()) ? poslist.get(range - 1) : 0;
-                int pos = startpos + shift;
-                int insertpos = pos;
-                int rg = exprNodes.size() - subList.size(); // taille précédente
-                int remainsize = rg - range; // de index+1 à rg
-                for (ExprNode en : subList) {
-                    Expression e = en.getE();
-                    rg++;
-                    adding.append("\n<expr id=").append('"').append(rg).append('"').append(" type=");
-                    adding.append('"').append(e.getType()).append('"').append("><![CDATA[");
-                    adding.append(e.toString(syntaxWrite)).append("]]>\n<text>");
-                    adding.append(e.toText()).append("</text>\n");
-                    String parents = "", enfants = "";
-                    for (int[] is : en.getParentList()) {
-                        for (int i = 0; i < is.length; i++) {
-                            String sep = (i == is.length - 1) ? " " : "-";
-                            parents += is[i] + sep;
-                        }
-                    }
-                    if (!parents.isEmpty()) {
-                        adding.append("<parents>").append(parents).append("</parents>\n");
-                    }
-                    enfants = en.getChildList().stream().map((integer) -> integer + " ")
-                            .reduce(enfants, String::concat);
-                    if (!enfants.isEmpty()) {
-                        adding.append("<children>").append(enfants).append("</children>");
-                    }
-                    adding.append("</expr>");
-                    pos += adding.length();
-                    poslist.add(rg - 1, pos - startpos);
-                    startpos = pos;
-                }
-                StringBuilder txt = new StringBuilder(text);
-                text = txt.insert(insertpos, adding).toString();
-                mdo.setContent(text);
-                List<Integer> subposlList = poslist.subList(range, range + remainsize);
-                subposlList.stream().forEach((Integer pt) -> {
-                    pt += adding.length();
-                });
-            }
-        }
-    }
-
-    /**
-     * enlève la chaîne de caractères de text correspondant à l'expression de
-     * rang index
-     *
-     * @param index le rang de l'expression à retirer du texte
-     */
-    private void deleteText(int index) {
-        String g = "<generator name=" + '"' + generator.getName() + '"' + ">";
-        Pattern pattern = Pattern.compile(g + "(.+)</generator>", Pattern.DOTALL);
-        Matcher m = pattern.matcher(text);
-        if (m.find()) {
-            int startpos = m.start(1);
-            ArrayList<Integer> poslist = exprPos.get(generator.getName());
-            int endshift = poslist.get(index);
-            int endpos = endshift + startpos;
-            if (index > 0) { // chercher startpos
-                int startshift = 0;
-                for (Integer shift : poslist) {
-                    if (shift > startshift && shift < endshift) {
-                        startshift = shift;
-                    }
-                }
-                startpos += startshift;
-            }
-            int size = endpos - startpos;
-            text = text.substring(0, startpos) + text.substring(endpos);
-            poslist.remove(index);
-            for (int i = 0; i < poslist.size(); i++) { // si shift > endshift, retrancher size
-                Integer shift = poslist.get(i);
-                if (shift > endshift) {
-                    poslist.set(i, shift - size);
-                }
-            }
-        }
-    }
-
-    /**
-     * met à jour exprRange et editField
-     *
-     * @throws Exception
-     */
-    private void updateEditor() throws Exception {
-        int max = exprNodes.size();
-        int min = (max == 0) ? 0 : 1;
-        SpinnerNumberModel model = (SpinnerNumberModel) exprRange.getModel();
-        model.setValue(max);
-        model.setMaximum(max);
-        model.setMinimum(min);
-        try {
-            if (max > 0) {
-                ExprNode en = exprNodes.get(max - 1);
-                editField.setText(en.getE().toString(syntaxWrite));
-            } else {
-                editField.setText("");
-            }
-        } catch (Exception ex) {
-            Exceptions.printStackTrace(ex);
-        }
-    }
-
-    private void updateGenerator(Generator generator) throws Exception {
-        ArrayList<GenItem> genItems = generator.getGenItems();
-        String[] itemStrings = new String[genItems.size()];
-        for (int i = 0; i < itemStrings.length; i++) {
-            itemStrings[i] = genItems.get(i).getName();
-        }
-        readExprs(text, generator);
-        genItemBox.setModel(new DefaultComboBoxModel(itemStrings));
-        if (!genItems.isEmpty()) {
-            genItem = genItems.get(0);
-            updateGenItem(genItem, 1);
-        }
-        genItemBox.repaint();
-        resultSpinner.repaint();
-    }
-
-    private void updateGenItem(GenItem genItem, int range) {
-        resultTextField.setText("");
-        ArrayList<Result> resultExprs = genItem.getResultExprs();
-        resultSpinner.setModel(new SpinnerNumberModel(1, 1, 1, 0));
-        ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
-        int n = matchExprs.size();
-        HashMap<Expression, Expression> map = (n == 0) ? new HashMap() : matchExprs.get(0).getReplaceMap();
-        matchRange = 0;
-        fillTable(map);
-        listparents.clear();
-        for (int k = 0; k < varsTable.getRowCount(); k++) {
-            varsTable.setValueAt("", k, 0);
-            varsTable.setValueAt("", k, 1);
-            varsTable.setValueAt("", k, 2);
-        }
-        if (!resultExprs.isEmpty()) {
-            resultSpinner.setModel(new SpinnerNumberModel(range, 1, resultExprs.size(), 1));
-            updateResult(range, resultExprs, n);
-        }
-        valueTextField.setText("");
-        varsToExprs.clear();
-        resultReady = false;
-    }
-
-    private void updateResult(int range, ArrayList<Result> resultExprs, int n) {
-        if (range < resultExprs.size() + 1) {
-            String result = "";
-            result += resultExprs.get(range - 1);
-            resultTextField.setText(result);
-            if (n == 0) {
-                resultTextField.requestFocus();
-            } else {
-                valueTextField.requestFocus();
-            }
-        }
-    }
-
-    /**
-     * Mise à jour de la table des modèles
-     *
-     * @param map table des modèles et remplacements éventuels
-     */
-    private void fillTable(HashMap<Expression, Expression> map) {
-        int rows = patternTable.getRowCount();
-        Iterator<Expression> it = map.keySet().iterator();
-        for (int row = 0; row < rows; row++) {
-            String t0 = "", t1 = "";
-            if (it.hasNext()) {
-                Expression key = it.next();
-                Expression val = map.get(key);
-                try {
-                    t0 = key.toString(syntaxWrite);
-                    t1 = val.toString(syntaxWrite);
-                } catch (Exception exc) {
-                }
-            }
-            patternTable.setValueAt(t0, row, 0);
-            patternTable.setValueAt(t1, row, 1);
-        }
-    }
-
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
+  /**
+   * This method is called from within the constructor to initialize the form. WARNING: Do NOT
+   * modify this code. The content of this method is always regenerated by the Form Editor.
+   */
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -732,254 +728,257 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     }// </editor-fold>//GEN-END:initComponents
 
     private void exprRangeStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_exprRangeStateChanged
-        Integer range = (Integer) exprRange.getValue();
-        try {
-            editField.setText(exprNodes.get(range - 1).getE().toString(syntaxWrite));
-        } catch (Exception ex) {
-            NotifyDescriptor error = new NotifyDescriptor.Message(ex);
-        }
+      Integer range = (Integer) exprRange.getValue();
+      try {
+        editField.setText(exprNodes.get(range - 1).getE().toString(syntaxWrite));
+      } catch (Exception ex) {
+        NotifyDescriptor error = new NotifyDescriptor.Message(ex);
+      }
     }//GEN-LAST:event_exprRangeStateChanged
 
     private void genItemBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_genItemBoxActionPerformed
-        int index = genItemBox.getSelectedIndex();
-        genItem = generator.getGenItems().get(index);
-        updateGenItem(genItem, 1);
+      int index = genItemBox.getSelectedIndex();
+      genItem = generator.getGenItems().get(index);
+      updateGenItem(genItem, 1);
     }//GEN-LAST:event_genItemBoxActionPerformed
 
     private void resultTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resultTextFieldActionPerformed
-        try {
-            String eText = resultTextField.getText().trim();
-            Expression e = null;
-            ArrayList<Integer> childList = new ArrayList<>();
-            ArrayList<int[]> parentList = new ArrayList<>();
-            if (genItem == null || genItem.getMatchExprs().isEmpty()) { // résultat direct
-                e = new Expression(eText, syntax);
-                if (genItem != null  && !genItem.getResultExprs().isEmpty()) {
-                    int index = (Integer) resultSpinner.getValue() - 1;
-                    Result result = genItem.getResultExprs().get(index);
-                    e.setType(result.getName());
-                }
-                ExprNode exprNode = new ExprNode(e, childList, parentList);
-                exprNodes.add(exprNode);
-            } else if (resultReady) {
-                e = exprNodes.get(exprNodes.size() - 1).getE();
-            }
-            if (e != null) {
-                int n = exprNodes.size();
-                Integer rg = (Integer) exprRange.getValue();
-                insertToText(exprNodes.subList(n - 1, n), rg); //avant rg : n - 1
-                exprRange.setModel(new SpinnerNumberModel(n, 1, n, 1));
-                editField.setText(e.toString(syntaxWrite));
-            }
-        } catch (Exception ex) {
-            NotifyDescriptor nd = new NotifyDescriptor(ex, "Expression error", 
-                    NotifyDescriptor.DEFAULT_OPTION, NotifyDescriptor.ERROR_MESSAGE, null, null);
-            DialogDisplayer.getDefault().notify(nd);
+      try {
+        String eText = resultTextField.getText().trim();
+        Expression e = null;
+        ArrayList<Integer> childList = new ArrayList<>();
+        ArrayList<int[]> parentList = new ArrayList<>();
+        if (genItem == null || genItem.getMatchExprs().isEmpty()) { // résultat direct
+          e = new Expression(eText, syntax);
+          if (genItem != null && !genItem.getResultExprs().isEmpty()) {
+            int index = (Integer) resultSpinner.getValue() - 1;
+            Result result = genItem.getResultExprs().get(index);
+            e.setType(result.getName());
+          }
+          ExprNode exprNode = new ExprNode(e, childList, parentList);
+          exprNodes.add(exprNode);
+        } else if (resultReady) {
+          e = exprNodes.get(exprNodes.size() - 1).getE();
         }
-        resultTextField.setText("");
+        if (e != null) {
+          int n = exprNodes.size();
+          Integer rg = (Integer) exprRange.getValue();
+          insertToText(exprNodes.subList(n - 1, n), rg); //avant rg : n - 1
+          exprRange.setModel(new SpinnerNumberModel(n, 1, n, 1));
+          editField.setText(e.toString(syntaxWrite));
+        }
+      } catch (Exception ex) {
+        displayMessage("Expression non valide", "Expression error");
+      }
+      resultTextField.setText("");
     }//GEN-LAST:event_resultTextFieldActionPerformed
 
     private void valueTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_valueTextFieldActionPerformed
-        String e = valueTextField.getText().trim();
-        if (genItem != null && !genItem.getResultExprs().isEmpty()) {
-            try {
-                MatchExpr matchExpr = genItem.getMatchExprs().get(matchRange);
-                Expression expr = new Expression(e, syntax);
-                ExprNode en = new ExprNode(expr, new ArrayList<>(), new ArrayList<>());
-                int i = exprNodes.indexOf(en);
-                if (i != -1) { // expression dans la liste
-                    en = exprNodes.get(i);
-                    listparents.add(en);
-                    en = en.copy();
-                    if (matchExpr.checkExpr(en.getE(), varsToExprs, genItem.getFreevars(),
-                            genItem.getListvars(), syntax)) {
-                        matchRange++;
-                        if (matchRange < genItem.getMatchExprs().size()) { // modèle suivant
-                            matchExpr = genItem.getMatchExprs().get(matchRange);
-                            fillTable(matchExpr.getReplaceMap());
-                            valueTextField.setText("");
-                            Expression t = varsToExprs.get(matchExpr.getGlobal());
-                            if (t != null) {
-                                valueTextField.setText(t.toString(syntaxWrite));
-                                valueTextField.requestFocus();
-                            }
-                        } else { // check results
-                            int index = (Integer) resultSpinner.getValue() - 1;
-                            Result result = genItem.getResultExprs().get(index);
-                            ExprNode en1 = result.addExpr(en, varsToExprs, genItem.getFreevars(),
-                                    genItem.getListvars(), syntax, exprNodes, null);
-                            ArrayList<int[]> parentList = new ArrayList<>();
-                            int psize = listparents.size();
-                            if (psize > 0) {
-                                int[] p = new int[psize];
-                                for (int k = 0; k < p.length; k++) {
-                                    p[k] = exprNodes.indexOf(listparents.get(k));
-                                }
-                                parentList.add(p);
-                            }
-                            en1.setParentList(parentList);
-                            resultTextField.setText(en1.getE().toString(syntaxWrite));
-                            resultTextField.requestFocus();
-                            resultReady = true;
-                            fillTable(new HashMap());
-                            valueTextField.setText("");
-                        }
-                        //if (manuelButton.isSelected()) { // remplit la table des variables
-                        int row = 0;
-                        for (Map.Entry<Expression, Expression> entry : varsToExprs.entrySet()) {
-                            String key = entry.getKey().toString(syntaxWrite);
-                            String val = entry.getValue().toString(syntaxWrite);
-                            String type = entry.getValue().getType();
-                            varsTable.setValueAt(key, row, 0);
-                            varsTable.setValueAt(val, row, 1);
-                            varsTable.setValueAt(type, row, 2);
-                            row++;
-                        }
-                    }
-                } else {
-                    //displayWarning(e + " n'est pas dans la liste", NotifyDescriptor.INFORMATION_MESSAGE);
+      String e = valueTextField.getText().trim();
+      if (genItem != null && !genItem.getMatchExprs().isEmpty()) {
+        try {
+          MatchExpr matchExpr = genItem.getMatchExprs().get(matchRange);
+          Expression expr = new Expression(e, syntax);
+          ExprNode en = new ExprNode(expr, new ArrayList<>(), new ArrayList<>());
+          int i = exprNodes.indexOf(en);
+          en = exprNodes.get(i);
+          listparents.add(en);
+          en = en.copy();
+          if (matchExpr.checkExpr(en.getE(), varsToExprs, genItem.getFreevars(),
+                  genItem.getListvars(), syntax)) { // expression conforme au modèle
+            matchRange++;
+            if (matchRange < genItem.getMatchExprs().size()) { // modèle suivant
+              matchExpr = genItem.getMatchExprs().get(matchRange);
+              fillTable(matchExpr.getReplaceMap());
+              valueTextField.setText("");
+              Expression t = varsToExprs.get(matchExpr.getGlobal());
+              if (t != null) {
+                valueTextField.setText(t.toString(syntaxWrite));
+                valueTextField.requestFocus();
+              }
+            } else { // modèles tous conformes, check results
+              int index = (Integer) resultSpinner.getValue() - 1;
+              Result result = genItem.getResultExprs().get(index);
+              ExprNode en1 = result.addExpr(en, varsToExprs, genItem.getFreevars(),
+                      genItem.getListvars(), syntax, exprNodes, null);
+              ArrayList<int[]> parentList = new ArrayList<>();
+              int psize = listparents.size();
+              if (psize > 0) {
+                int[] p = new int[psize];
+                for (int k = 0; k < p.length; k++) {
+                  p[k] = exprNodes.indexOf(listparents.get(k));
                 }
-            } catch (Exception ex) {
-                Exceptions.printStackTrace(ex);
+                parentList.add(p);
+              }
+              en1.setParentList(parentList);
+              resultTextField.setText(en1.getE().toString(syntaxWrite));
+              resultTextField.requestFocus();
+              resultReady = true;
+              fillTable(new HashMap());
+              valueTextField.setText("");
             }
-        } else {
-            resultTextField.setText(e);
-            resultTextField.requestFocus();
+            //if (manuelButton.isSelected()) { // remplit la table des variables
+            int row = 0;
+            for (Map.Entry<Expression, Expression> entry : varsToExprs.entrySet()) {
+              String key = entry.getKey().toString(syntaxWrite);
+              String val = entry.getValue().toString(syntaxWrite);
+              String type = entry.getValue().getType();
+              varsTable.setValueAt(key, row, 0);
+              varsTable.setValueAt(val, row, 1);
+              varsTable.setValueAt(type, row, 2);
+              row++;
+            }
+          }
+        } catch (Exception ex) {
+          Object message = ex;
+          if (ex instanceof IndexOutOfBoundsException) {
+            message = e + " n'est pas dans la liste";
+          }
+          displayMessage(message, "Expression error");
         }
+      } else { // écriture directe d'une expression quelconque
+        resultTextField.setText(e);
+        resultTextField.requestFocus();
+      }
     }//GEN-LAST:event_valueTextFieldActionPerformed
 
     private void toValButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_toValButtonActionPerformed
-        valueTextField.setText(editField.getText());
-        valueTextField.requestFocus();
+      valueTextField.setText(editField.getText());
+      valueTextField.requestFocus();
     }//GEN-LAST:event_toValButtonActionPerformed
 
     private void commentButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_commentButtonActionPerformed
-        int n = (int) exprRange.getValue();
-        ExprNode en = exprNodes.get(n - 1);
-        en.setComment(commentArea.getText());
-        mdo.setModified(true);
+      int n = (int) exprRange.getValue();
+      ExprNode en = exprNodes.get(n - 1);
+      en.setComment(commentArea.getText());
+      mdo.setModified(true);
     }//GEN-LAST:event_commentButtonActionPerformed
 
     private void autoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoButtonActionPerformed
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                int oldsize, s0;
-                //int limit = (int) cntResSpinner.getValue();
-                ArrayList<ExprNode> exprDiscards = new ArrayList<>();
-                boolean once = true;
-                do {
+      Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+          int oldsize, s0;
+          //int limit = (int) cntResSpinner.getValue();
+          ArrayList<ExprNode> exprDiscards = new ArrayList<>();
+          boolean once = true;
+          do {
+            oldsize = exprNodes.size();
+            s0 = oldsize;
+            for (GenItem genItem : generator.getGenItems()) {
+              ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
+              if (genItem.getResultExprs().isEmpty()) {
+                continue;
+              }
+              int matchsize = matchExprs.size();
+              int[] genpList = new int[matchsize];
+              HashMap<Expression, Expression> evars = new HashMap<>();
+              ArrayList<HashMap<Expression, Expression>> mvars = new ArrayList<>();
+              for (int i = 0; i < matchsize; i++) {
+                mvars.add(evars);
+              }
+              ArrayList<Integer> childList = new ArrayList<>();
+              ArrayList<int[]> parentList = new ArrayList<>();
+              parentList.add(genpList);
+              HashMap<Integer, Integer> rangsEN = new HashMap<>();
+              int m = 0, i = 0; // rangs de matchexpr et exprNodes
+              do {
+                try {
+                  ExprNode en = new ExprNode(null, childList, parentList);
+                  rangsEN.put(m, i);
+                  HashMap<Expression, Expression> vars = new HashMap<>();
+                  vars.putAll(evars);
+                  if (matchExprs.isEmpty() && once) {
+                    genItem.addResults(en, vars, syntax, level, exprNodes, exprDiscards);
+                    updateEditor();
+                    insertToText(exprNodes, 0);
                     oldsize = exprNodes.size();
-                    s0 = oldsize;
-                    for (GenItem genItem : generator.getGenItems()) {
-                        ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
-                        if (genItem.getResultExprs().isEmpty()) {
-                            continue;
-                        }
-                        int matchsize = matchExprs.size();
-                        int[] genpList = new int[matchsize];
-                        HashMap<Expression, Expression> evars = new HashMap<>();
-                        ArrayList<HashMap<Expression, Expression>> mvars = new ArrayList<>();
-                        for (int i = 0; i < matchsize; i++) {
-                            mvars.add(evars);                            
-                        }
-                        ArrayList<Integer> childList = new ArrayList<>();
-                        ArrayList<int[]> parentList = new ArrayList<>();
-                        parentList.add(genpList);
-                        HashMap<Integer, Integer> rangsEN = new HashMap<>();
-                        int m = 0, i = 0; // rangs de matchexpr et exprNodes
-                        do {
-                            try {
-                                ExprNode en = new ExprNode(null, childList, parentList);
-                                rangsEN.put(m, i);
-                                HashMap<Expression, Expression> vars = new HashMap<>();
-                                vars.putAll(evars);
-                                if (matchExprs.isEmpty() && once) {
-                                    genItem.addResults(en, vars, syntax, level, exprNodes, exprDiscards);
-                                    updateEditor();
-                                    insertToText(exprNodes, 0);
-                                    oldsize = exprNodes.size();
-                                    break;
-                                } else { // TODO : test sur rangsEN si m == matchsize - 1
-                                    en = genItem.genapply(level, m, i, syntax, en, vars, exprNodes);
-                                }
-                                if (m == matchsize - 1 || en == null) { // fin des tests
-                                    if (en != null) {
-                                        int n0 = exprNodes.size();
-                                        genItem.addResults(en, vars, syntax, level, exprNodes, exprDiscards);
-                                        updateEditor();
-                                        int n = exprNodes.size();
-                                        insertToText(exprNodes.subList(n0, n), n0);
-                                    }
-                                    while (i >= oldsize - 1 && m > -1) { // revenir en arrière
-                                        m--; // evars doit changer
-                                        if(m > -1) {
-                                            i = rangsEN.get(m);
-                                            evars = (m ==0 )? new HashMap<>() : mvars.get(m-1);
-                                        }
-                                    }
-                                    i++;
-                                } else { // match suivant
-                                    evars.putAll(vars);
-                                    mvars.set(m, evars);
-                                    m++;
-                                    i = 0;
-                               }
-                            } catch (Exception ex) {
-                                StringWriter sw = new StringWriter();
-                                PrintWriter pw = new PrintWriter(sw);
-                                ex.printStackTrace(pw);
-                                String s = sw.toString();
-                                NotifyDescriptor.Message d = new NotifyDescriptor.Message(s);
-                                DialogDisplayer.getDefault().notify(d);
-                                return;
-                            }
-                            if (Thread.interrupted()) {
-                                return;
-                            }
-                        } while (m > -1);
+                    break;
+                  } else { // TODO : test sur rangsEN si m == matchsize - 1
+                    en = genItem.genapply(level, m, i, syntax, en, vars, exprNodes);
+                  }
+                  if (m == matchsize - 1 || en == null) { // fin des tests
+                    if (en != null) {
+                      int n0 = exprNodes.size();
+                      genItem.addResults(en, vars, syntax, level, exprNodes, exprDiscards);
+                      updateEditor();
+                      int n = exprNodes.size();
+                      insertToText(exprNodes.subList(n0, n), n0);
                     }
-                    once = false;
-                } while (oldsize < exprNodes.size());
-                //System.out.println("sortie normale");
+                    while (i >= oldsize - 1 && m > -1) { // revenir en arrière
+                      m--; // evars doit changer
+                      if (m > -1) {
+                        i = rangsEN.get(m);
+                        evars = (m == 0) ? new HashMap<>() : mvars.get(m - 1);
+                      }
+                    }
+                    i++;
+                  } else { // match suivant
+                    evars.putAll(vars);
+                    mvars.set(m, evars);
+                    m++;
+                    i = 0;
+                  }
+                } catch (Exception ex) {
+                  StringWriter sw = new StringWriter();
+                  PrintWriter pw = new PrintWriter(sw);
+                  ex.printStackTrace(pw);
+                  String s = sw.toString();
+                  NotifyDescriptor.Message d = new NotifyDescriptor.Message(s);
+                  DialogDisplayer.getDefault().notify(d);
+                  return;
+                }
+                if (Thread.interrupted()) {
+                  return;
+                }
+              } while (m > -1);
             }
-        };
-        final RequestProcessor.Task theTask = RP.create(runnable);
-        final ProgressHandle ph = ProgressHandleFactory.createHandle("génération automatique", theTask);
-        theTask.addTaskListener((org.openide.util.Task task) -> {
-            ph.finish();
-        });
-        ph.start(); //start the progresshandle the progress UI will show 500s after        
-        theTask.schedule(0); //this actually start the task
+            once = false;
+          } while (oldsize < exprNodes.size());
+          //System.out.println("sortie normale");
+        }
+      };
+      final RequestProcessor.Task theTask = RP.create(runnable);
+      final ProgressHandle ph = ProgressHandleFactory.createHandle("génération automatique", theTask);
+      theTask.addTaskListener((org.openide.util.Task task) -> {
+        ph.finish();
+      });
+      ph.start(); //start the progresshandle the progress UI will show 500s after        
+      theTask.schedule(0); //this actually start the task
     }//GEN-LAST:event_autoButtonActionPerformed
 
-   
-    
-    
+
     private void levelSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_levelSpinnerStateChanged
-        level = (int) levelSpinner.getValue();
+      level = (int) levelSpinner.getValue();
     }//GEN-LAST:event_levelSpinnerStateChanged
 
     private void deleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteButtonActionPerformed
-        NotifyDescriptor d = new NotifyDescriptor.Confirmation("Really delete?", "Delete expression",
-                NotifyDescriptor.OK_CANCEL_OPTION);
-        if (DialogDisplayer.getDefault().notify(d) == NotifyDescriptor.OK_OPTION) {
-            int index = (Integer) exprRange.getValue() - 1;
-            ExprNode remove = exprNodes.remove(index);
-            try {
-                updateEditor();
-            } catch (Exception ex) {
-                Exceptions.printStackTrace(ex);
-            }
-            deleteText(index);
+      NotifyDescriptor d = new NotifyDescriptor.Confirmation("Really delete?", "Delete expression",
+              NotifyDescriptor.OK_CANCEL_OPTION);
+      if (DialogDisplayer.getDefault().notify(d) == NotifyDescriptor.OK_OPTION) {
+        int index = (Integer) exprRange.getValue() - 1;
+        ExprNode remove = exprNodes.remove(index);
+        try {
+          updateEditor();
+        } catch (Exception ex) {
+          Exceptions.printStackTrace(ex);
         }
+        deleteText(index);
+      }
     }//GEN-LAST:event_deleteButtonActionPerformed
 
     private void resultSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_resultSpinnerStateChanged
-        Integer range = (Integer) resultSpinner.getValue();
-        ArrayList<Result> results = genItem.getResultExprs();
-        updateResult(range, results, genItem.getMatchExprs().size());
+      Integer range = (Integer) resultSpinner.getValue();
+      ArrayList<Result> results = genItem.getResultExprs();
+      updateResult(range, results, genItem.getMatchExprs().size());
     }//GEN-LAST:event_resultSpinnerStateChanged
+
+  private static void displayMessage(Object message, String title) {
+    NotifyDescriptor nd = new NotifyDescriptor(message, title,
+            NotifyDescriptor.DEFAULT_OPTION, NotifyDescriptor.ERROR_MESSAGE, null, null);
+    DialogDisplayer.getDefault().notify(nd);
+  }
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton autoButton;
@@ -1013,88 +1012,88 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     private javax.swing.JTable varsTable;
     // End of variables declaration//GEN-END:variables
     @Override
-    public void componentOpened() {
-        // TODO add custom code on component opening
-    }
+  public void componentOpened() {
+    // TODO add custom code on component opening
+  }
 
-    @Override
-    public void componentClosed() {
-        // TODO add custom code on component closing
-    }
+  @Override
+  public void componentClosed() {
+    // TODO add custom code on component closing
+  }
 
-    void writeProperties(java.util.Properties p) {
-        // better to version settings since initial version as advocated at
-        // http://wiki.apidesign.org/wiki/PropertyFiles
-        p.setProperty("version", "1.0");
-        // TODO store your settings
-    }
+  void writeProperties(java.util.Properties p) {
+    // better to version settings since initial version as advocated at
+    // http://wiki.apidesign.org/wiki/PropertyFiles
+    p.setProperty("version", "1.0");
+    // TODO store your settings
+  }
 
-    void readProperties(java.util.Properties p) {
-        String version = p.getProperty("version");
-        // TODO read your settings according to their version
-    }
+  void readProperties(java.util.Properties p) {
+    String version = p.getProperty("version");
+    // TODO read your settings according to their version
+  }
 
-    @Override
-    public JComponent getVisualRepresentation() {
-        return this;
-    }
+  @Override
+  public JComponent getVisualRepresentation() {
+    return this;
+  }
 
-    @Override
-    public JComponent getToolbarRepresentation() {
-        return toolbar;
-    }
+  @Override
+  public JComponent getToolbarRepresentation() {
+    return toolbar;
+  }
 
-    @Override
-    public void setMultiViewCallback(MultiViewElementCallback callback) {
-        this.callback = callback;
-    }
+  @Override
+  public void setMultiViewCallback(MultiViewElementCallback callback) {
+    this.callback = callback;
+  }
 
-    @Override
-    public CloseOperationState canCloseElement() {
-        return (mdo.isModified()) ? createUnsafeCloseState("", null, null) : CloseOperationState.STATE_OK;
-    }
+  @Override
+  public CloseOperationState canCloseElement() {
+    return (mdo.isModified()) ? createUnsafeCloseState("", null, null) : CloseOperationState.STATE_OK;
+  }
 
-    @Override
-    public Action[] getActions() {
-        return new Action[0];
-    }
+  @Override
+  public Action[] getActions() {
+    return new Action[0];
+  }
 
-    @Override
-    public Lookup getLookup() {
-        return mdo.getLookup();
-    }
+  @Override
+  public Lookup getLookup() {
+    return mdo.getLookup();
+  }
 
-    @Override
-    public void componentShowing() {
-    }
+  @Override
+  public void componentShowing() {
+  }
 
-    @Override
-    public void componentHidden() {
-    }
+  @Override
+  public void componentHidden() {
+  }
 
-    @Override
-    public void componentActivated() {
-    }
+  @Override
+  public void componentActivated() {
+  }
 
-    @Override
-    public void componentDeactivated() {
-    }
+  @Override
+  public void componentDeactivated() {
+  }
 
-    @Override
-    public UndoRedo getUndoRedo() {
-        return UndoRedo.NONE;
-    }
+  @Override
+  public UndoRedo getUndoRedo() {
+    return UndoRedo.NONE;
+  }
 
-    ArrayList<ExprNode> getExprNodes() {
-        return exprNodes;
-    }
+  ArrayList<ExprNode> getExprNodes() {
+    return exprNodes;
+  }
 
-    public SyntaxWrite getSyntaxWrite() {
-        return syntaxWrite;
-    }
+  public SyntaxWrite getSyntaxWrite() {
+    return syntaxWrite;
+  }
 
-    public javax.swing.JSpinner getExprRange() {
-        return exprRange;
-    }
+  public javax.swing.JSpinner getExprRange() {
+    return exprRange;
+  }
 
 }

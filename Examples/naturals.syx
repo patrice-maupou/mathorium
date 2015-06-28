@@ -22,17 +22,17 @@
       <type name="cv"></type>
     </pattern>
   </rule>
-  <rule child="a,b" group="(®_*)">
+  <rule child="a,b">
     <pattern node="CONCAT"><![CDATA[ab]]>
       <type name="natural" subtypes="digit,nv,cv" value="natural,digit"></type>
     </pattern>
   </rule>
-  <rule child="a,b" group="(®_*)">
+  <rule child="a,b">
     <pattern node="ADD"><![CDATA[\(a\+b\)|a\+b]]>
       <type name="natural" value="natural,natural"></type>
     </pattern>
   </rule>
-  <rule child="a,b" group="(®_*)">
+  <rule child="a,b">
     <pattern node="EQU"><![CDATA[a=b]]>
       <type name="equality" value="natural,natural"></type>
     </pattern>

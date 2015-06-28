@@ -19,17 +19,17 @@
         <type name="propvar" subtypes="propthm"></type>
       </pattern>
     </rule>
-    <rule key="ENCLOSING" child="a" group="(®_*)">
+    <rule key="ENCLOSING" child="a">
       <pattern node="a"><![CDATA[\(a\)]]>
         <type name="inherit"  value="prop"></type>
       </pattern>
     </rule>
-    <rule key="NOT" child="A" group="(®_*)">
+    <rule key="NOT" child="A">
       <pattern node="NOT"><![CDATA[~A]]>
         <type name="prop" value="prop"></type>
       </pattern>
     </rule>
-    <rule key="IMPLIES" child="A,B" group="(®_*)">
+    <rule key="IMPLIES" child="A,B">
       <pattern node="IMPLIES"><![CDATA[A->B]]>
         <type name="prop" subtypes="thm,propvar,propthm" value="prop,prop"></type>
       </pattern>
