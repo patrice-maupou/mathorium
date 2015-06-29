@@ -321,7 +321,8 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         if (shift > endshift) {
           poslist.set(i, shift - size);
         }
-      }
+      }      
+      mdo.setContent(text);
     }
   }
 
@@ -375,10 +376,14 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     matchRange = 0;
     fillTable(map);
     listparents.clear();
+    ArrayList<Expression> vars = (n == 0)? new ArrayList<>() : matchExprs.get(0).getVars();
+    int m = vars.size();
     for (int k = 0; k < varsTable.getRowCount(); k++) {
-      varsTable.setValueAt("", k, 0);
+      String name = (k < m)? vars.get(k).toString() : "";
+      String type = (k < m)? vars.get(k).getType() : "";
+      varsTable.setValueAt(name, k, 0);
       varsTable.setValueAt("", k, 1);
-      varsTable.setValueAt("", k, 2);
+      varsTable.setValueAt(type, k, 2);
     }
     if (!resultExprs.isEmpty()) {
       resultSpinner.setModel(new SpinnerNumberModel(range, 1, resultExprs.size(), 1));
@@ -776,6 +781,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     private void valueTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_valueTextFieldActionPerformed
       String e = valueTextField.getText().trim();
       if (genItem != null && !genItem.getMatchExprs().isEmpty()) {
+        boolean incomplete;
         try {
           MatchExpr matchExpr = genItem.getMatchExprs().get(matchRange);
           Expression expr = new Expression(e, syntax);
@@ -787,7 +793,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           if (matchExpr.checkExpr(en.getE(), varsToExprs, genItem.getFreevars(),
                   genItem.getListvars(), syntax)) { // expression conforme au modèle
             matchRange++;
-            if (matchRange < genItem.getMatchExprs().size()) { // modèle suivant
+            if (incomplete = (matchRange < genItem.getMatchExprs().size())) { // modèle suivant
               matchExpr = genItem.getMatchExprs().get(matchRange);
               fillTable(matchExpr.getReplaceMap());
               valueTextField.setText("");
@@ -799,8 +805,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
             } else { // modèles tous conformes, check results
               int index = (Integer) resultSpinner.getValue() - 1;
               Result result = genItem.getResultExprs().get(index);
-              ExprNode en1 = result.addExpr(en, varsToExprs, genItem.getFreevars(),
-                      genItem.getListvars(), syntax, exprNodes, null);
+              Expression t = result.applyVars(en, varsToExprs, syntax);
               ArrayList<int[]> parentList = new ArrayList<>();
               int psize = listparents.size();
               if (psize > 0) {
@@ -810,14 +815,13 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                 }
                 parentList.add(p);
               }
-              en1.setParentList(parentList);
-              resultTextField.setText(en1.getE().toString(syntaxWrite));
+              en.setParentList(parentList); // en1 est null si déjà dans la liste
+              resultTextField.setText(t.toString(syntaxWrite));
               resultTextField.requestFocus();
               resultReady = true;
               fillTable(new HashMap());
               valueTextField.setText("");
             }
-            //if (manuelButton.isSelected()) { // remplit la table des variables
             int row = 0;
             for (Map.Entry<Expression, Expression> entry : varsToExprs.entrySet()) {
               String key = entry.getKey().toString(syntaxWrite);
@@ -827,6 +831,14 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
               varsTable.setValueAt(val, row, 1);
               varsTable.setValueAt(type, row, 2);
               row++;
+            }
+            if(incomplete) {
+              ArrayList<Expression> vars = matchExpr.getVars();
+              for (Expression var : vars) {
+                varsTable.setValueAt(var, row, 0);
+                varsTable.setValueAt(var.getType(), row, 2);
+              row++;
+              }
             }
           }
         } catch (Exception ex) {
