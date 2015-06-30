@@ -81,6 +81,7 @@ import org.w3c.dom.Document;
 public final class MathTopComponent extends JPanel implements MultiViewElement {
 
   private MathDataObject mdo;
+  private ExprNode toAdd;
   private ArrayList<ExprNode> exprNodes;
   private ArrayList<ExprNode> listparents;
   private HashMap<String, ArrayList<Integer>> exprPos; // nom du générateur -> positions des expressions
@@ -103,6 +104,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     initComponents();
     setName(Bundle.CTL_MathTopComponent());
     setToolTipText(Bundle.HINT_MathTopComponent());
+    toAdd = null;
     exprNodes = new ArrayList<>();
     varsToExprs = new HashMap<>();
     listparents = new ArrayList<>();
@@ -383,7 +385,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       String type = (k < m)? vars.get(k).getType() : "";
       varsTable.setValueAt(name, k, 0);
       varsTable.setValueAt("", k, 1);
-      varsTable.setValueAt(type, k, 2);
+      varsTable.setValueAt(genItem.getTypesMap().get(type), k, 2);
     }
     if (!resultExprs.isEmpty()) {
       resultSpinner.setModel(new SpinnerNumberModel(range, 1, resultExprs.size(), 1));
@@ -763,7 +765,9 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           ExprNode exprNode = new ExprNode(e, childList, parentList);
           exprNodes.add(exprNode);
         } else if (resultReady) {
+          exprNodes.add(toAdd);
           e = exprNodes.get(exprNodes.size() - 1).getE();
+          toAdd = null;
         }
         if (e != null) {
           int n = exprNodes.size();
@@ -787,12 +791,17 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           Expression expr = new Expression(e, syntax);
           ExprNode en = new ExprNode(expr, new ArrayList<>(), new ArrayList<>());
           int i = exprNodes.indexOf(en);
+          listparents.add(exprNodes.get(i));
+          //* modif
+          en = genItem.genapply(level, matchRange, i, syntax, en, varsToExprs, exprNodes);
+          if ( en!= null) {
+          /*/
           en = exprNodes.get(i);
           listparents.add(en);
           en = en.copy();
-          if (matchExpr.checkExpr(en.getE(), varsToExprs, genItem.getFreevars(),
-                  genItem.getListvars(), syntax)) { // expression conforme au modèle
-            matchRange++;
+          if (matchExpr.checkExpr(en.getE(), varsToExprs, genItem.getTypesMap(),
+                  genItem.getListvars(), syntax)) { //*/
+            matchRange++; // expression conforme au modèle
             if (incomplete = (matchRange < genItem.getMatchExprs().size())) { // modèle suivant
               matchExpr = genItem.getMatchExprs().get(matchRange);
               fillTable(matchExpr.getReplaceMap());
@@ -818,6 +827,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
               en.setParentList(parentList); // en1 est null si déjà dans la liste
               resultTextField.setText(t.toString(syntaxWrite));
               resultTextField.requestFocus();
+              toAdd = en;
               resultReady = true;
               fillTable(new HashMap());
               valueTextField.setText("");
@@ -836,7 +846,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
               ArrayList<Expression> vars = matchExpr.getVars();
               for (Expression var : vars) {
                 varsTable.setValueAt(var, row, 0);
-                varsTable.setValueAt(var.getType(), row, 2);
+                varsTable.setValueAt(genItem.getTypesMap().get(var.getType()), row, 2);
               row++;
               }
             }
@@ -969,9 +979,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
               NotifyDescriptor.OK_CANCEL_OPTION);
       if (DialogDisplayer.getDefault().notify(d) == NotifyDescriptor.OK_OPTION) {
         int index = (Integer) exprRange.getValue() - 1;
-        ExprNode remove = exprNodes.remove(index);
         try {
-          updateEditor();
+          if(exprNodes.remove(index) != null) {
+            updateEditor();
+          }
         } catch (Exception ex) {
           Exceptions.printStackTrace(ex);
         }

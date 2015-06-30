@@ -20,17 +20,9 @@ public class GenItem {
     private final ArrayList<MatchExpr> matchExprs;
     private final ArrayList<Result> resultExprs;
     private final HashMap<String, String> typesMap; //table de remplacement d'un type par un autre 
-    //(propvar->prop)
+    //ex : (propvar->prop)
     private final ArrayList<Expression> listvars; //  liste de référence des variables
-    private boolean local;
 
-    public HashMap<String, String> getFreevars() {
-        return typesMap;
-    }
-
-    public ArrayList<Expression> getListvars() {
-        return listvars;
-    }
 
     /**
      * constructeur
@@ -61,7 +53,7 @@ public class GenItem {
     }
 
     /**
-     *
+     * méthode utilisée dans la production automatique des résultats
      * @param level niveau à comparer à celui de genitem
      * @param matchrg rang de matchExpr
      * @param exprg rang de l'exprNode
@@ -69,7 +61,7 @@ public class GenItem {
      * @param en patron pour la liste parents-enfants
      * @param vars table de variables des modèles
      * @param exprNodes
-     * @return
+     * @return l'ExprNode transformée
      * @throws java.lang.Exception
      */
     public ExprNode genapply(int level, int matchrg, int exprg, Syntax syntax, ExprNode en,
@@ -80,14 +72,16 @@ public class GenItem {
             MatchExpr matchExpr = matchExprs.get(matchrg);
             Expression e = exprNodes.get(exprg).getE().copy();
             if (matchExpr.getGlobal() != null) {
-                Expression g = vars.get(matchExpr.getGlobal());
+                Expression g = vars.get(matchExpr.getGlobal()); // la variable t par exemple
                 e = (g == null) ? e : g;
             }
             if (matchExpr.checkExpr(e, vars, typesMap, listvars, syntax)) {
                 ArrayList<int[]> parentList = new ArrayList<>();
-                int[] p = Arrays.copyOf(en.getParentList().get(0),
-                        en.getParentList().get(0).length);
-                p[matchrg] = exprg;
+                int[] p = new int[] {exprg};
+                if(!en.getParentList().isEmpty()) {
+                  p = Arrays.copyOf(en.getParentList().get(0), en.getParentList().get(0).length);
+                  p[matchrg] = exprg;
+                }
                 parentList.add(p);
                 ret = new ExprNode(e, en.getChildList(), parentList);
             }
@@ -137,6 +131,14 @@ public class GenItem {
         }
         return ret;
     }
+    
+    public HashMap<String, String> getTypesMap() {
+        return typesMap;
+    }
+
+    public ArrayList<Expression> getListvars() {
+        return listvars;
+    }
 
     public String getName() {
         return name;
@@ -150,10 +152,4 @@ public class GenItem {
         return resultExprs;
     }
 
-    /**
-     * @return the local
-     */
-    public boolean isLocal() {
-        return local;
-    }
 }

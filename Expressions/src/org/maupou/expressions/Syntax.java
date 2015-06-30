@@ -14,7 +14,6 @@ public class Syntax {
   private final ArrayList<SyntaxRule> rules;
   private final HashMap<String, SyntaxWrite> syntaxWrites;
   private SyntaxWrite syntaxWrite;
-  private SyntaxRule atoms;
   private final HashMap<String, Set<String>> subtypes;
   private ArrayList<Generator> generators;
   private ArrayList<MatchExpr> discards;
@@ -26,7 +25,7 @@ public class Syntax {
     syntaxWrites = new HashMap<>();
     subtypes = new HashMap<>();
     Element syntax = document.getDocumentElement();
-    unused = syntax.getAttribute("unused");
+    unused = (syntax.hasAttribute("unused"))? syntax.getAttribute("unused") : "\u0000";
     if (unused.length() != 1) {
       throw new Exception("unused must be a one character string");
     } else {
@@ -89,15 +88,6 @@ public class Syntax {
   }
 
   /**
-   * liste des modèles de base sans descendants
-   *
-   * @return la liste
-   */
-  public SyntaxRule getAtoms() {
-    return atoms;
-  }
-
-  /**
    * liste des règles de composition
    *
    * @return la liste
@@ -131,7 +121,7 @@ public class Syntax {
 
   @Override
   public String toString() {
-    String ret = "RULES :\n" + atoms + "\n";
+    String ret = "RULES :\n";
     ret = rules.stream().map((rule) -> rule + "\n").reduce(ret, String::concat);
     ret += "\nTYPES :\n";
     for (Map.Entry<String, Set<String>> entry : subtypes.entrySet()) {

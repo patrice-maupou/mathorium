@@ -47,7 +47,7 @@ public class Result {
 
     /**
      * ajoute une ExprNode à la liste si elle est nouvelle et non de type
-     * discards TODO: en est-il utile ? (parents, enfants ?)
+     * discards 
      *
      * @param en ExprNode à ajouter
      * @param vars valeurs des variables à remplacer
@@ -63,12 +63,17 @@ public class Result {
             HashMap<String,String> freevars, ArrayList<Expression> listvars, 
             Syntax syntax, ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards) throws Exception {
         ExprNode ret = null;
+        //* modif
+        Expression e = applyVars(en, vars, syntax);
+        //*/
+        /* avant
         Expression e = new Expression(getResult(), syntax);
         e = e.replace(vars);
         if (!name.isEmpty()) {
             e.setType(name);
         }
         en.setE(e); // (A->B)->(A->((B->C)->((A->B)->(A->C)))) ne devrait pas passer, A->(B->T)
+        //*/
         boolean inlist = false;
         for (ExprNode exprNode : exprNodes) {
             Expression expr = exprNode.getE();
@@ -109,6 +114,26 @@ public class Result {
         }
         return ret;
     }
+    
+  /**
+   *
+   * @param en expression à transformer
+   * @param vars table des variables et remplacements
+   * @param syntax
+   * @return l'expression transformée
+   * @throws java.lang.Exception
+   */
+  public Expression applyVars(ExprNode en, HashMap<Expression, Expression> vars, Syntax syntax) 
+          throws Exception {
+      Expression e = new Expression(getResult(), syntax);
+        e = e.replace(vars);
+        if (!name.isEmpty()) {
+            e.setType(name);
+        }
+        en.setE(e);
+        return e;
+    }
+  
 
     @Override
     public String toString() {

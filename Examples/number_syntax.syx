@@ -2,12 +2,10 @@
 
 <!--DOCTYPE syntax SYSTEM "syntax.dtd"-->
 
-<!-- the one character string unused is mandatory and must not be used in any expression
-     the regex (®_*) stands for an already found subexpression
--->
+<!-- the one character string unused is mandatory and must not be used in any expression -->
 <syntax xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="syntaxSchema.xsd"
-        name="number_syntax" unused="®">
+        name="number_syntax">
 
   <!-- simple elements
     The rule identified by the key "SIMPLES" is mandatory to get the basic blocks of the expression.
@@ -98,11 +96,11 @@
         <result><![CDATA[t]]></result>
       </genrule>
       <genrule name="associative">
-          <match name="real"><![CDATA[t]]></match>
+        <!--match name="real"><![CDATA[t]]></match-->
         <match name="real" global="t" options="recursive=yes">
             <![CDATA[u+(v+w)]]><![CDATA[u+v+w]]>
         </match>
-        <result><![CDATA[t]]></result>
+        <!--result><![CDATA[t]]></result-->
       </genrule>
   </generators>
  

@@ -19,6 +19,7 @@ public class MatchExpr {
   private final String type;
   private Expression schema, global;
   private final HashMap<Expression, Expression> replaceMap;
+  private final ArrayList<Expression> vars;
   private final boolean recursive, bidir;
 
   /**
@@ -31,6 +32,7 @@ public class MatchExpr {
    */
   public MatchExpr(Element match, Syntax syntax, ArrayList<Expression> listvars) throws Exception {
     HashMap<String, String> options = new HashMap<>();
+    vars = new ArrayList<>();
     type = match.getAttribute("name");
     String s = match.getAttribute("global");
     if (!s.isEmpty()) {
@@ -48,18 +50,19 @@ public class MatchExpr {
     recursive = "yes".equals(options.get("recursive"));
     bidir = "yes".equals(options.get("bidirectional"));
 
-    // table de remplacement
+    // table de remplacement des expressions
     replaceMap = new HashMap<>();
     Node txtNode = match.getFirstChild();
     Expression key = null;
     int cnt = 0;
-    while (txtNode != null) {
+    while (txtNode != null) { // boucle des modèles
       if (txtNode.getNodeType() == Node.CDATA_SECTION_NODE) {
         if (key == null) {
           key = new Expression(txtNode.getTextContent(), syntax);
           replaceMap.put(key, null);
           if (cnt == 0) { // le premier élément est schema
             schema = key;
+            varsInExpression(key, vars, listvars);
           }
         } else {
           Expression value = new Expression(txtNode.getTextContent(), syntax);
@@ -83,9 +86,10 @@ public class MatchExpr {
   }
 
   /**
-   * match l'expression expr en tenant compte de la table vars (variables déjà attribuées). 1. si
-   * global == null, match direct de expr contre schema. 2. sinon, transformation de l'expression
-   * par la table replaceMap, résultat dans global
+   * match l'expression expr en tenant compte de la table vars (variables déjà attribuées). 
+   * 1. si global = null, match direct de expr contre schema. 
+   * 2. sinon, transformation de l'expression par la table replaceMap, résultat dans 
+   * la variable global
    *
    * @param expr l'expression examinée par rapport à schema, ex : ((A->B)->C)->(B->C)
    * @param typesMap table de remplacement d'un type par un autre (propse->prop)
@@ -147,6 +151,23 @@ public class MatchExpr {
     }
     return ret;
   }
+  
+  /**
+   * ajoute à la liste vars les variables de listvars qui composent l'expression e
+   * @param e
+   * @param vars
+   * @param listvars 
+   */
+  public static void varsInExpression(Expression e, ArrayList<Expression> vars, ArrayList<Expression> listvars) {
+    if (listvars.indexOf(e) == -1) {
+      if(e.getChildren() != null) {
+        e.getChildren().stream().forEach((child) -> {varsInExpression(child, vars, listvars);});
+      }
+    }
+    else {
+      vars.add(e);
+    }
+  }
 
   /**
    * ajoute à la table vars les variables de e déjà utilisées dans les valeurs de vars
@@ -185,6 +206,10 @@ public class MatchExpr {
 
   public Expression getGlobal() {
     return global;
+  }
+
+  public ArrayList<Expression> getVars() {
+    return vars;
   }
 
 

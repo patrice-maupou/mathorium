@@ -7,6 +7,7 @@
 package org.maupou.sampledataobject;
 
 import java.awt.Image;
+import java.io.Serializable;
 import org.netbeans.core.spi.multiview.MultiViewDescription;
 import org.netbeans.core.spi.multiview.MultiViewElement;
 import org.openide.util.HelpCtx;
@@ -16,7 +17,7 @@ import org.openide.windows.TopComponent;
  *
  * @author Patrice
  */
-public class MathVisualDescriptor implements MultiViewDescription {
+public class MathVisualDescriptor implements Serializable,  MultiViewDescription {
     
     private final MathEditorDescriptor mmvd;
 

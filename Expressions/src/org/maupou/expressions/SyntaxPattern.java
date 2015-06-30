@@ -18,10 +18,10 @@ public class SyntaxPattern {
   private final String patternText;
 
   /**
-   * TODO : numéroter les groupes correspondant aux variables childgroups avec patternText
-   * @param patternItem
-   * @param childs
-   * @param subtypes
+   * Crée un élément de syntaxe
+   * @param patternItem élément du document
+   * @param childs les variables utilisées
+   * @param subtypes map qui associe à un type ses sous-types
    * @param unused
    */
   public SyntaxPattern(Element patternItem, String[] childs, 

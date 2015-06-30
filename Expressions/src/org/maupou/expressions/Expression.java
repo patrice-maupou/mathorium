@@ -74,6 +74,7 @@ public class Expression {
   }
 
   /**
+   * Décriptage du texte d'une suite d'expressions (avec les types)
    * la fin est basée sur les valeurs possibles du dernier match "simple;childType" si le marqueur
    * est "):childType" on ajoute l'expression à list, on retourne. "," on ajoute l'expression à
    * list, on continue
@@ -128,7 +129,7 @@ public class Expression {
    * @param syntax
    * @return
    */
-  private Expression parse(String text, Syntax syntax) {
+  private static Expression parse(String text, Syntax syntax) {
     String unused = syntax.getUnused();
     String tokenvar = "____________________________________";
     StringBuilder buf = new StringBuilder();
