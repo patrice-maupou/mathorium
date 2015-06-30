@@ -22,5 +22,17 @@
 <expr id="6" type="equality"><![CDATA[5+1=6]]>
 <text>(EQU,(ADD,5:digit,1:digit):natural,6:digit):equality</text>
 </expr>
+<expr id="8" type="equality"><![CDATA[6+1=7]]>
+<text>(EQU,(ADD,6:digit,1:digit):natural,7:digit):equality</text>
+</expr>
+<expr id="9" type="equality"><![CDATA[7+1=8]]>
+<text>(EQU,(ADD,7:digit,1:digit):natural,8:digit):equality</text>
+</expr>
+<expr id="10" type="equality"><![CDATA[8+1=9]]>
+<text>(EQU,(ADD,8:digit,1:digit):natural,9:digit):equality</text>
+</expr>
+<expr id="11" type="equality"><![CDATA[9+1=10]]>
+<text>(EQU,(ADD,9:digit,1:digit):natural,(CONCAT,1:digit,0:digit):natural):equality</text>
+</expr>
 </generator>
 </expressions>

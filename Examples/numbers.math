@@ -8,5 +8,11 @@
 <text>(ADD,(ADD,1:natural,2:natural):real,3:natural):real</text>
 <parents>0-0 0-1 1-0 1-1</parents>
 </expr>
+<expr id="3" type="real"><![CDATA[2Ãƒâ€”(1+x)]]>
+<text>(MUL,2:natural,(ADD,1:natural,x:real):real):real</text>
+</expr>
+<expr id="5" type="real"><![CDATA[aÃ—(b+c)]]>
+<text>(MUL,a:real,(ADD,b:real,c:real):real):real</text>
+</expr>
 </generator>
 </expressions>
