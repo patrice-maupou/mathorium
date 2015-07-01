@@ -886,12 +886,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
             s0 = oldsize;
             for (GenItem genItem : generator.getGenItems()) {
               ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
-              /*
-              if (genItem.getResultExprs().isEmpty()) {
+              int matchsize = matchExprs.size();
+              if (matchsize == 0 && genItem.getResultExprs().isEmpty()) {
                 continue;
               }
-              //*/
-              int matchsize = matchExprs.size();
               int[] genpList = new int[matchsize];
               HashMap<Expression, Expression> evars = new HashMap<>();
               ArrayList<HashMap<Expression, Expression>> mvars = new ArrayList<>();
@@ -909,7 +907,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                   rangsEN.put(m, i);
                   HashMap<Expression, Expression> vars = new HashMap<>();
                   vars.putAll(evars);
-                  if (matchExprs.isEmpty() && !genItem.getResultExprs().isEmpty() && once) { 
+                  if (matchExprs.isEmpty() && once) { 
                   // résultats directs
                     genItem.addResults(en, vars, syntax, level, exprNodes, exprDiscards);
                     updateEditor();
