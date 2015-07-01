@@ -18,7 +18,7 @@ public class MatchExpr {
 
   private final String type;
   private Expression schema, global;
-  private final HashMap<Expression, Expression> replaceMap;
+  private final HashMap<Expression, Expression> replaceMap; // TODO : ArrayList<Result> à la place
   private final ArrayList<Expression> vars;
   private final boolean recursive, bidir;
 

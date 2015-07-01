@@ -86,14 +86,14 @@
       <variable type="real" name="realvar" list="t u v w z"></variable>
       <genrule name="init"></genrule>
       <genrule name="distribute">
-        <match name="real"><![CDATA[t]]></match>
+        <!--match name="real"><![CDATA[t]]></match-->
         <match name="real" global="t" options="recursive=yes">
             <![CDATA[u(v+w)]]><![CDATA[uv+uw]]>
             <![CDATA[(v+w)u]]><![CDATA[vu+wu]]>
             <![CDATA[u(v-w)]]><![CDATA[uv-uw]]>
             <![CDATA[(v-w)u]]><![CDATA[vu-wu]]>
         </match>
-        <result><![CDATA[t]]></result>
+        <!--result><![CDATA[t]]></result-->
       </genrule>
       <genrule name="associative">
         <!--match name="real"><![CDATA[t]]></match-->

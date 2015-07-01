@@ -71,10 +71,12 @@ public class GenItem {
         if (!matchExprs.isEmpty() && matchrg < matchExprs.size()) {
             MatchExpr matchExpr = matchExprs.get(matchrg);
             Expression e = exprNodes.get(exprg).getE().copy();
+            /* avant
             if (matchExpr.getGlobal() != null) {
                 Expression g = vars.get(matchExpr.getGlobal()); // la variable t par exemple
                 e = (g == null) ? e : g;
             }
+            //*/
             if (matchExpr.checkExpr(e, vars, typesMap, listvars, syntax)) {
                 ArrayList<int[]> parentList = new ArrayList<>();
                 int[] p = new int[] {exprg};
@@ -83,6 +85,12 @@ public class GenItem {
                   p[matchrg] = exprg;
                 }
                 parentList.add(p);
+                //* modif
+                if (matchExpr.getGlobal() != null) {
+                    Expression g = vars.get(matchExpr.getGlobal()); // la variable t par exemple
+                    e = (g == null) ? e : g;
+                }
+                //*/
                 ret = new ExprNode(e, en.getChildList(), parentList);
             }
         }
@@ -99,13 +107,19 @@ public class GenItem {
      * @param level
      * @param exprNodes liste d'expressions déjà obtenues
      * @param exprDiscards
-     * @return 
+     * @return le nombre de résultats ajoutés
      * @throws Exception
      */
     public int addResults(ExprNode en, HashMap<Expression, Expression> vars, Syntax syntax, 
             int level, ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards)
             throws Exception {
         int ret = 0;
+        if(resultExprs.isEmpty()) {
+          if(exprNodes.indexOf(en) == -1) {
+            exprNodes.add(en);
+            ret = 1;
+          }
+        }
         for (Result result : resultExprs) {
             if (result.getLevel() <= level) {
                 ExprNode en1 = en.copy();

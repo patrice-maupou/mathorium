@@ -46,7 +46,7 @@ public class Result {
     }
 
     /**
-     * ajoute une ExprNode à la liste si elle est nouvelle et non de type
+     * ajoute une ExprNode à la liste exprNodes si elle est nouvelle et non de type
      * discards 
      *
      * @param en ExprNode à ajouter

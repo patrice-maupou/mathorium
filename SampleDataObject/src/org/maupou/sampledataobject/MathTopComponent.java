@@ -362,16 +362,16 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     genItemBox.setModel(new DefaultComboBoxModel(itemStrings));
     if (!genItems.isEmpty()) {
       genItem = genItems.get(0);
-      updateGenItem(genItem, 1);
+      updateGenItem(genItem);
     }
     genItemBox.repaint();
     resultSpinner.repaint();
   }
 
-  private void updateGenItem(GenItem genItem, int range) {
+  private void updateGenItem(GenItem genItem) {
     resultTextField.setText("");
     ArrayList<Result> resultExprs = genItem.getResultExprs();
-    resultSpinner.setModel(new SpinnerNumberModel(1, 1, 1, 0));
+    resultSpinner.setModel(new SpinnerNumberModel(0, 0, 1, 0));
     ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
     int n = matchExprs.size();
     HashMap<Expression, Expression> map = (n == 0) ? new HashMap() : matchExprs.get(0).getReplaceMap();
@@ -388,8 +388,8 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       varsTable.setValueAt(genItem.getTypesMap().get(type), k, 2);
     }
     if (!resultExprs.isEmpty()) {
-      resultSpinner.setModel(new SpinnerNumberModel(range, 1, resultExprs.size(), 1));
-      updateResult(range, resultExprs, n);
+      resultSpinner.setModel(new SpinnerNumberModel(1, 1, resultExprs.size(), 1));
+      updateResult(1, resultExprs, n);
     }
     valueTextField.setText("");
     varsToExprs.clear();
@@ -746,7 +746,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     private void genItemBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_genItemBoxActionPerformed
       int index = genItemBox.getSelectedIndex();
       genItem = generator.getGenItems().get(index);
-      updateGenItem(genItem, 1);
+      updateGenItem(genItem);
     }//GEN-LAST:event_genItemBoxActionPerformed
 
     private void resultTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resultTextFieldActionPerformed
@@ -780,6 +780,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         displayMessage("Expression non valide", "Expression error");
       }
       resultTextField.setText("");
+      updateGenItem(genItem);
     }//GEN-LAST:event_resultTextFieldActionPerformed
 
     private void valueTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_valueTextFieldActionPerformed
@@ -792,15 +793,8 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           ExprNode en = new ExprNode(expr, new ArrayList<>(), new ArrayList<>());
           int i = exprNodes.indexOf(en);
           listparents.add(exprNodes.get(i));
-          //* modif
           en = genItem.genapply(level, matchRange, i, syntax, en, varsToExprs, exprNodes);
           if ( en!= null) {
-          /*/
-          en = exprNodes.get(i);
-          listparents.add(en);
-          en = en.copy();
-          if (matchExpr.checkExpr(en.getE(), varsToExprs, genItem.getTypesMap(),
-                  genItem.getListvars(), syntax)) { //*/
             matchRange++; // expression conforme au modèle
             if (incomplete = (matchRange < genItem.getMatchExprs().size())) { // modèle suivant
               matchExpr = genItem.getMatchExprs().get(matchRange);
@@ -813,8 +807,11 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
               }
             } else { // modèles tous conformes, check results
               int index = (Integer) resultSpinner.getValue() - 1;
-              Result result = genItem.getResultExprs().get(index);
-              Expression t = result.applyVars(en, varsToExprs, syntax);
+              Expression t = en.getE();
+              if(index != -1) {
+                Result result = genItem.getResultExprs().get(index);
+                t = result.applyVars(en, varsToExprs, syntax);
+              }
               ArrayList<int[]> parentList = new ArrayList<>();
               int psize = listparents.size();
               if (psize > 0) {
@@ -889,9 +886,11 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
             s0 = oldsize;
             for (GenItem genItem : generator.getGenItems()) {
               ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
+              /*
               if (genItem.getResultExprs().isEmpty()) {
                 continue;
               }
+              //*/
               int matchsize = matchExprs.size();
               int[] genpList = new int[matchsize];
               HashMap<Expression, Expression> evars = new HashMap<>();
@@ -910,7 +909,8 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                   rangsEN.put(m, i);
                   HashMap<Expression, Expression> vars = new HashMap<>();
                   vars.putAll(evars);
-                  if (matchExprs.isEmpty() && once) {
+                  if (matchExprs.isEmpty() && !genItem.getResultExprs().isEmpty() && once) { 
+                  // résultats directs
                     genItem.addResults(en, vars, syntax, level, exprNodes, exprDiscards);
                     updateEditor();
                     insertToText(exprNodes, 0);
@@ -922,10 +922,11 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                   if (m == matchsize - 1 || en == null) { // fin des tests
                     if (en != null) {
                       int n0 = exprNodes.size();
-                      genItem.addResults(en, vars, syntax, level, exprNodes, exprDiscards);
-                      updateEditor();
-                      int n = exprNodes.size();
-                      insertToText(exprNodes.subList(n0, n), n0);
+                      int n = genItem.addResults(en, vars, syntax, level, exprNodes, exprDiscards);
+                      if (n != 0) {
+                        updateEditor();
+                        insertToText(exprNodes.subList(n0, n0 + n), n0);
+                      }
                     }
                     while (i >= oldsize - 1 && m > -1) { // revenir en arrière
                       m--; // evars doit changer
