@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -25,6 +26,7 @@ import javax.swing.JToolBar;
 import javax.swing.SpinnerNumberModel;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.maupou.expressions.ExprNode;
 import org.maupou.expressions.Expression;
 import org.maupou.expressions.GenItem;
@@ -51,6 +53,10 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.util.RequestProcessor;
 import org.openide.windows.TopComponent;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  * Top component which displays something.
@@ -84,8 +90,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private ExprNode toAdd;
   private ArrayList<ExprNode> exprNodes;
   private ArrayList<ExprNode> listparents;
-  private HashMap<String, ArrayList<Integer>> exprPos; // nom du générateur -> positions des expressions
-  private String text; // texte de mdo
   private Syntax syntax;
   private SyntaxWrite syntaxWrite;
   private ArrayList<Generator> generators;
@@ -93,7 +97,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private GenItem genItem;
   private boolean resultReady = false;
   private int matchRange, level;
-  private int complete; // toutes les exprNodes ont été calculées jusqu'à cet entier
   private HashMap<Expression, Expression> varsToExprs;
   private MultiViewElementCallback callback;
   private final JToolBar toolbar = new JToolBar();
@@ -108,223 +111,29 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     exprNodes = new ArrayList<>();
     varsToExprs = new HashMap<>();
     listparents = new ArrayList<>();
-    exprPos = new HashMap<>();
     level = 1;
-    complete = -1;
     RP = new RequestProcessor("Generation of expressions", 1, true);
     log.setLevel(Level.INFO);
   }
 
   public MathTopComponent(MathDataObject mdo) {
     this();
-    init(mdo);
-  }
-
-  /**
-   * lit le fichier des expressions en détectant les générateurs alimente la table mpos
-   *
-   * @param mdo l'objet contenant le fichier à analyser
-   */
-  private void init(MathDataObject mdo) {
     this.mdo = mdo;
     try {
-      text = mdo.getPrimaryFile().asText();
-      findSyntax(text);
-      int pos = text.indexOf("</expressions>"); // fin du texte 
-      boolean newtxt = !text.contains("generator") && pos != -1; // pas de générateur
-      String q = String.valueOf('"');
-      StringBuilder sb = new StringBuilder(text);
-      if (syntax != null) {
-        syntaxWrite = syntax.getSyntaxWrite();
-        generators = syntax.getGenerators();
-        String[] genNnames = new String[generators.size()];
-        for (int i = 0; i < generators.size(); i++) {
-          genNnames[i] = generators.get(i).getName();
-          if (newtxt) {
-            String g = "<generator name=" + q + genNnames[i] + q + ">\n</generator>\n";
-            sb.insert(pos, g);
-            pos += g.length();
-            ArrayList<Integer> put = exprPos.put(genNnames[i], new ArrayList<>());
-          }
-        }
-        text = sb.toString();
-        generatorBox.setModel(new DefaultComboBoxModel<>(genNnames));
-        if (!generators.isEmpty()) {
-          generator = generators.get(0);
-          updateGenerator(generator);
-        }
+      syntax = mdo.setSyntax();
+      syntaxWrite = syntax.getSyntaxWrite();
+      generators = syntax.getGenerators();
+      ArrayList<String> names = new ArrayList<>();
+      generators.stream().forEach((gen) -> {
+        names.add(gen.getName());
+      });
+      generatorBox.setModel(new DefaultComboBoxModel<>(names.toArray()));
+      if (!generators.isEmpty()) {
+        generator = generators.get(0);
+        updateGenerator(generator);
       }
     } catch (Exception ex) {
-      Exceptions.printStackTrace(ex);
-    }
-  }
-
-  private void findSyntax(String text) throws Exception {
-    String q = String.valueOf('"');
-    Matcher matcher = Pattern.compile("syntax=" + q + "(.+)" + q).matcher(text);
-    if (matcher.find()) {
-      String path = matcher.group(1);
-      DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-      DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-      if (!path.isEmpty()) {
-        File syntaxFile = new File(path);
-        Document syxdoc = documentBuilder.parse(syntaxFile);
-        syntax = new Syntax(syxdoc);
-        syntax.addGenerators(syxdoc);
-      }
-    }
-  }
-
-  /**
-   * analyse le texte et charge les expressions correspondant au générateur
-   *
-   * @param text la chaîne à analyser
-   * @param generator
-   * @throws Exception
-   */
-  private void readExprs(String text, Generator generator) throws Exception {
-    exprNodes.clear();
-    String q = String.valueOf('"');
-    String g = "<generator name=" + q + generator.getName() + q + ">";
-    Pattern pattern = Pattern.compile(g + "(.+)</generator>", Pattern.DOTALL);
-    Matcher m = pattern.matcher(text);
-    if (m.find()) {
-      String txt = m.group(1);
-      ArrayList<Integer> ptpos = new ArrayList<>(); // positions des fins d'expressions
-      exprPos.put(generator.getName(), ptpos);
-      String attribs = "(|(\\s\\w+=" + q + ".+?" + q + ")+)";
-      String regex = "<expr" + attribs + ">(.+?)</expr>";
-      m = Pattern.compile(regex, Pattern.DOTALL).matcher(txt);
-      while (m.find()) { // boucle sur les expressions  (attribs = m.group(2);)
-        ArrayList<int[]> parents = new ArrayList<>();
-        ArrayList<Integer> childs = new ArrayList<>();
-        int end = m.end(); // position de la fin de l'expression dans txt
-        String etxt = m.group(3);
-        Matcher textmatcher = Pattern.compile("<text>(.+)</text>").matcher(etxt);
-        if (textmatcher.find()) {
-          Expression e = new Expression(textmatcher.group(1));
-          textmatcher = Pattern.compile("<parents>(.+)</parents>").matcher(etxt);
-          if (textmatcher.find()) {
-            String[] s = textmatcher.group(1).trim().split(" ");
-            for (String string : s) {
-              String[] si = string.split("-");
-              int[] p = new int[2];
-              if (si.length == 2) {
-                p[0] = Integer.parseInt(si[0]);
-                p[1] = Integer.parseInt(si[1]);
-                parents.add(p);
-              }
-            }
-          }
-          textmatcher = Pattern.compile("<children>(.+)</children>").matcher(etxt);
-          if (textmatcher.find()) {
-            String[] s = textmatcher.group(1).trim().split(" ");
-            for (String string : s) {
-              childs.add(Integer.parseInt(string));
-            }
-          }
-          ExprNode en = new ExprNode(e, childs, parents);
-          exprNodes.add(en);
-          ptpos.add(end); // position relative
-        }
-      }
-      updateEditor();
-    }
-  }
-
-  /**
-   * met texte à jour en insérant une liste d'expressions après l'expression de rang : index TODO :
-   * erreur si subList comprend plusieurs éléments
-   *
-   * @param subList
-   * @param range insère la liste après ce rang
-   * @throws Exception
-   */
-  private void insertToText(List<ExprNode> subList, int range) throws Exception {
-    StringBuilder adding = new StringBuilder();
-    if (range != -1) {
-      String g = "<generator name=" + '"' + generator.getName() + '"' + ">";
-      Pattern pattern = Pattern.compile(g + "(.+)</generator>", Pattern.DOTALL);
-      Matcher m = pattern.matcher(text);
-      if (m.find()) {
-        int startpos = m.start(1);
-        ArrayList<Integer> poslist = exprPos.get(generator.getName());
-        int shift = (range > 0 && range <= poslist.size()) ? poslist.get(range - 1) : 0;
-        int pos = startpos + shift;
-        int insertpos = pos;
-        int rg = exprNodes.size() - subList.size(); // taille précédente
-        int remainsize = rg - range; // de index+1 à rg
-        for (ExprNode en : subList) {
-          Expression e = en.getE();
-          rg++;
-          adding.append("\n<expr id=").append('"').append(rg).append('"').append(" type=");
-          adding.append('"').append(e.getType()).append('"').append("><![CDATA[");
-          adding.append(e.toString(syntaxWrite)).append("]]>\n<text>");
-          adding.append(e.toText()).append("</text>\n");
-          String parents = "", enfants = "";
-          for (int[] is : en.getParentList()) {
-            for (int i = 0; i < is.length; i++) {
-              String sep = (i == is.length - 1) ? " " : "-";
-              parents += is[i] + sep;
-            }
-          }
-          if (!parents.isEmpty()) {
-            adding.append("<parents>").append(parents).append("</parents>\n");
-          }
-          enfants = en.getChildList().stream().map((integer) -> integer + " ")
-                  .reduce(enfants, String::concat);
-          if (!enfants.isEmpty()) {
-            adding.append("<children>").append(enfants).append("</children>");
-          }
-          adding.append("</expr>");
-          pos += adding.length();
-          poslist.add(rg - 1, pos - startpos);
-          startpos = pos;
-        }
-        StringBuilder txt = new StringBuilder(text);
-        text = txt.insert(insertpos, adding).toString();
-        mdo.setContent(text);
-        List<Integer> subposlList = poslist.subList(range, range + remainsize);
-        subposlList.stream().forEach((Integer pt) -> {
-          pt += adding.length();
-        });
-      }
-    }
-  }
-
-  /**
-   * enlève la chaîne de caractères de text correspondant à l'expression de rang index
-   *
-   * @param index le rang de l'expression à retirer du texte
-   */
-  private void deleteText(int index) {
-    String g = "<generator name=" + '"' + generator.getName() + '"' + ">";
-    Pattern pattern = Pattern.compile(g + "(.+)</generator>", Pattern.DOTALL);
-    Matcher m = pattern.matcher(text);
-    if (m.find()) {
-      int startpos = m.start(1);
-      ArrayList<Integer> poslist = exprPos.get(generator.getName());
-      int endshift = poslist.get(index);
-      int endpos = endshift + startpos;
-      if (index > 0) { // chercher startpos
-        int startshift = 0;
-        for (Integer shift : poslist) {
-          if (shift > startshift && shift < endshift) {
-            startshift = shift;
-          }
-        }
-        startpos += startshift;
-      }
-      int size = endpos - startpos;
-      text = text.substring(0, startpos) + text.substring(endpos);
-      poslist.remove(index);
-      for (int i = 0; i < poslist.size(); i++) { // si shift > endshift, retrancher size
-        Integer shift = poslist.get(i);
-        if (shift > endshift) {
-          poslist.set(i, shift - size);
-        }
-      }      
-      mdo.setContent(text);
+      displayMessage("No syntax file available", "Error message");
     }
   }
 
@@ -333,7 +142,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
    *
    * @throws Exception
    */
-  private void updateEditor() throws Exception {
+  private void updateEditor() {
     int max = exprNodes.size();
     int min = (max == 0) ? 0 : 1;
     SpinnerNumberModel model = (SpinnerNumberModel) exprRange.getModel();
@@ -352,13 +161,23 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     }
   }
 
-  private void updateGenerator(Generator generator) throws Exception {
+  /**
+   * met à jour le generator et les expNodes correspondant
+   * @param generator
+   * @throws Exception 
+   */
+  private void updateGenerator(Generator generator) {
     ArrayList<GenItem> genItems = generator.getGenItems();
     String[] itemStrings = new String[genItems.size()];
     for (int i = 0; i < itemStrings.length; i++) {
       itemStrings[i] = genItems.get(i).getName();
     }
-    readExprs(text, generator);
+    try {
+      exprNodes = mdo.readExprNodes(generator);
+      updateEditor();
+    } catch (Exception ex) {
+      displayMessage("Error reading expressions", "Error message");
+    }
     genItemBox.setModel(new DefaultComboBoxModel(itemStrings));
     if (!genItems.isEmpty()) {
       genItem = genItems.get(0);
@@ -368,6 +187,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     resultSpinner.repaint();
   }
 
+  /**
+   * met à jour le genItem et les variables
+   * @param genItem 
+   */
   private void updateGenItem(GenItem genItem) {
     resultTextField.setText("");
     ArrayList<Result> resultExprs = genItem.getResultExprs();
@@ -378,11 +201,11 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     matchRange = 0;
     fillTable(map);
     listparents.clear();
-    ArrayList<Expression> vars = (n == 0)? new ArrayList<>() : matchExprs.get(0).getVars();
+    ArrayList<Expression> vars = (n == 0) ? new ArrayList<>() : matchExprs.get(0).getVars();
     int m = vars.size();
     for (int k = 0; k < varsTable.getRowCount(); k++) {
-      String name = (k < m)? vars.get(k).toString() : "";
-      String type = (k < m)? vars.get(k).getType() : "";
+      String name = (k < m) ? vars.get(k).toString() : "";
+      String type = (k < m) ? vars.get(k).getType() : "";
       varsTable.setValueAt(name, k, 0);
       varsTable.setValueAt("", k, 1);
       varsTable.setValueAt(genItem.getTypesMap().get(type), k, 2);
@@ -765,14 +588,21 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           ExprNode exprNode = new ExprNode(e, childList, parentList);
           exprNodes.add(exprNode);
         } else if (resultReady) {
+          int index = exprNodes.size();
+          toAdd.setRange(index);
           exprNodes.add(toAdd);
-          e = exprNodes.get(exprNodes.size() - 1).getE();
+          e = exprNodes.get(index).getE();
           toAdd = null;
         }
         if (e != null) {
           int n = exprNodes.size();
           Integer rg = (Integer) exprRange.getValue();
-          insertToText(exprNodes.subList(n - 1, n), rg); //avant rg : n - 1
+          /* avant
+          insert(exprNodes.subList(n - 1, n), rg);
+          //*/
+          //* modif
+          mdo.insert(exprNodes.subList(n - 1, n), rg, generator);
+          //*/
           exprRange.setModel(new SpinnerNumberModel(n, 1, n, 1));
           editField.setText(e.toString(syntaxWrite));
         }
@@ -792,9 +622,9 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           Expression expr = new Expression(e, syntax);
           ExprNode en = new ExprNode(expr, new ArrayList<>(), new ArrayList<>());
           int i = exprNodes.indexOf(en);
-          listparents.add(exprNodes.get(i));
           en = genItem.genapply(level, matchRange, i, syntax, en, varsToExprs, exprNodes);
-          if ( en!= null) {
+          if (en != null) {
+            listparents.add(exprNodes.get(i));
             matchRange++; // expression conforme au modèle
             if (incomplete = (matchRange < genItem.getMatchExprs().size())) { // modèle suivant
               matchExpr = genItem.getMatchExprs().get(matchRange);
@@ -808,7 +638,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
             } else { // modèles tous conformes, check results
               int index = (Integer) resultSpinner.getValue() - 1;
               Expression t = en.getE();
-              if(index != -1) {
+              if (index != -1) {
                 Result result = genItem.getResultExprs().get(index);
                 t = result.applyVars(en, varsToExprs, syntax);
               }
@@ -839,12 +669,12 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
               varsTable.setValueAt(type, row, 2);
               row++;
             }
-            if(incomplete) {
+            if (incomplete) {
               ArrayList<Expression> vars = matchExpr.getVars();
               for (Expression var : vars) {
                 varsTable.setValueAt(var, row, 0);
                 varsTable.setValueAt(genItem.getTypesMap().get(var.getType()), row, 2);
-              row++;
+                row++;
               }
             }
           }
@@ -877,13 +707,11 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       Runnable runnable = new Runnable() {
         @Override
         public void run() {
-          int oldsize, s0;
-          //int limit = (int) cntResSpinner.getValue();
+          int oldsize;
           ArrayList<ExprNode> exprDiscards = new ArrayList<>();
           boolean once = true;
           do {
             oldsize = exprNodes.size();
-            s0 = oldsize;
             for (GenItem genItem : generator.getGenItems()) {
               ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
               int matchsize = matchExprs.size();
@@ -907,11 +735,11 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                   rangsEN.put(m, i);
                   HashMap<Expression, Expression> vars = new HashMap<>();
                   vars.putAll(evars);
-                  if (matchExprs.isEmpty() && once) { 
-                  // résultats directs
+                  if (matchExprs.isEmpty() && once) {
+                    // résultats directs
                     genItem.addResults(en, vars, syntax, level, exprNodes, exprDiscards);
                     updateEditor();
-                    insertToText(exprNodes, 0);
+                    mdo.insert(exprNodes, 0, generator);
                     oldsize = exprNodes.size();
                     break;
                   } else { // TODO : test sur rangsEN si m == matchsize - 1
@@ -920,10 +748,15 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                   if (m == matchsize - 1 || en == null) { // fin des tests
                     if (en != null) {
                       int n0 = exprNodes.size();
+                      int[] p = new int[rangsEN.size()];
+                      for (int j = 0; j < p.length; j++) {
+                        p[j] = rangsEN.get(j);
+                      }
+                      parentList.add(p);
                       int n = genItem.addResults(en, vars, syntax, level, exprNodes, exprDiscards);
                       if (n != 0) {
                         updateEditor();
-                        insertToText(exprNodes.subList(n0, n0 + n), n0);
+                        mdo.insert(exprNodes.subList(n0, n0 + n), n0, generator);
                       }
                     }
                     while (i >= oldsize - 1 && m > -1) { // revenir en arrière
@@ -979,13 +812,13 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       if (DialogDisplayer.getDefault().notify(d) == NotifyDescriptor.OK_OPTION) {
         int index = (Integer) exprRange.getValue() - 1;
         try {
-          if(exprNodes.remove(index) != null) {
+          if (exprNodes.remove(index) != null) {
             updateEditor();
           }
         } catch (Exception ex) {
           Exceptions.printStackTrace(ex);
         }
-        deleteText(index);
+        mdo.delete(index, generator);
       }
     }//GEN-LAST:event_deleteButtonActionPerformed
 
@@ -1040,7 +873,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
 
   @Override
   public void componentClosed() {
-    // TODO add custom code on component closing
+    mdo.setModified(false);
   }
 
   void writeProperties(java.util.Properties p) {

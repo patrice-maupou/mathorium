@@ -15,11 +15,11 @@ import java.util.Objects;
 public class ExprNode {
 
     private Expression e;
+    private int range; // à utiliser dans une liste d'ExprNode
     private String comment;
     private ArrayList<Integer> childList;
     private ArrayList<int[]> parentList;
     private final ArrayList<Expression> exprs;
-    private boolean visible;
 
     /**
      *
@@ -32,7 +32,6 @@ public class ExprNode {
         this.childList = childList;
         this.parentList = parentList;
         exprs = new ArrayList<>();
-        visible = true;
         comment = "";
     }
 
@@ -40,16 +39,16 @@ public class ExprNode {
 
     public ExprNode copy() {
         ArrayList<int[]> parents = new ArrayList<>();
-        for (int[] p : parentList) {
-            parents.add(Arrays.copyOf(p, p.length));
-        }
+        parentList.stream().forEach((p) -> {
+          parents.add(Arrays.copyOf(p, p.length));
+      });
         ArrayList<Integer> childs = new ArrayList<>();
-        for (Integer integer : childList) {
-            childs.add(integer);
-        }
+        childList.stream().forEach((integer) -> {
+          childs.add(integer);
+      });
         Expression expr = (e == null) ? e : e.copy();
         ExprNode en = new ExprNode(expr, childs, parents);
-        en.setVisible(visible);
+        en.setRange(range);
         return en;
     }
 
@@ -83,6 +82,14 @@ public class ExprNode {
         this.e = e;
     }
 
+  public int getRange() {
+    return range;
+  }
+
+  public void setRange(int range) {
+    this.range = range;
+  }
+
     public String getComment() {
         return comment;
     }
@@ -111,11 +118,5 @@ public class ExprNode {
         return exprs;
     }
 
-    public boolean isVisible() {
-        return visible;
-    }
    
-    public void setVisible(boolean visible) {
-        this.visible = visible;
-    }
 }

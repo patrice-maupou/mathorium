@@ -52,34 +52,30 @@ public class MathOpenSupport extends OpenSupport implements OpenCookie, CloseCoo
     }
     
     private CloseOperationHandler createCloseOperationHandler(){
-        return new CloseOperationHandler() {
-
-            @Override
-            public boolean resolveCloseOperation(CloseOperationState[] elements) {
-                if(mdo.isModified()) {
-                    JButton saveOption = new JButton("Save");
-                    JButton discardOption = new JButton("Discard");
-                    discardOption.setMnemonic('D');
-                    NotifyDescriptor nd = new NotifyDescriptor(	"File is modified. Save ?", "Question", 
-                            NotifyDescriptor.YES_NO_CANCEL_OPTION, NotifyDescriptor.QUESTION_MESSAGE,
-                            new Object[] {saveOption, discardOption, NotifyDescriptor.CANCEL_OPTION},
-                            saveOption);
-                    Object ret = DialogDisplayer.getDefault().notify(nd);
-                    if (NotifyDescriptor.CANCEL_OPTION.equals(ret) || 
-                            NotifyDescriptor.CLOSED_OPTION.equals(ret)) {
-                        return false;
-                    }
-                    if (saveOption.equals(ret)) {
-                        SaveCookie saver = mdo.getLookup().lookup(SaveCookie.class);
-                        try {
-                            saver.save();
-                        } catch (IOException ex) {
-                            Exceptions.printStackTrace(ex);
-                        }
-                    }
-                }
-                return true;
+        return (CloseOperationState[] elements) -> {
+          if(mdo.isModified()) {
+            JButton saveOption = new JButton("Save");
+            JButton discardOption = new JButton("Discard");
+            discardOption.setMnemonic('D');
+            NotifyDescriptor nd = new NotifyDescriptor(	"File is modified. Save ?", "Question",
+                    NotifyDescriptor.YES_NO_CANCEL_OPTION, NotifyDescriptor.QUESTION_MESSAGE,
+                    new Object[] {saveOption, discardOption, NotifyDescriptor.CANCEL_OPTION},
+                    saveOption);
+            Object ret = DialogDisplayer.getDefault().notify(nd);
+            if (NotifyDescriptor.CANCEL_OPTION.equals(ret) ||
+                    NotifyDescriptor.CLOSED_OPTION.equals(ret)) {
+              return false;
             }
+            if (saveOption.equals(ret)) {
+              SaveCookie saver = mdo.getLookup().lookup(SaveCookie.class);
+              try {
+                saver.save();
+              } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+              }
+            }
+          }
+          return true;
         };
     }
 

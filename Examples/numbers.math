@@ -1,18 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <expressions syntax="C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples/number_syntax.syx">
 <generator name="develop">
-<expr id="0" type="natural"><![CDATA[1+(2+3)]]>
-<text>(ADD,1:natural,(ADD,2:natural,3:natural):natural):natural</text>
-</expr>
-<expr id="1" type="real"><![CDATA[1+2+3]]>
+<expr id="0" type="real">
 <text>(ADD,(ADD,1:natural,2:natural):real,3:natural):real</text>
-<parents>0-0 0-1 1-0 1-1</parents>
 </expr>
-<expr id="3" type="real"><![CDATA[2Ãƒâ€”(1+x)]]>
+<expr id="1" type="real">
 <text>(MUL,2:natural,(ADD,1:natural,x:real):real):real</text>
 </expr>
-<expr id="5" type="real"><![CDATA[aÃ—(b+c)]]>
+<expr id="2" type="real">
 <text>(MUL,a:real,(ADD,b:real,c:real):real):real</text>
+</expr>
+<expr id="4" type="real">
+<text>(ADD,(MUL,2:natural,1:natural):real,(MUL,2:natural,x:real):real):real</text>
+<parents>1</parents>
+</expr>
+<expr id="4" type="real">
+<text>(ADD,(MUL,a:real,b:real):real,(MUL,a:real,c:real):real):real</text>
+<parents>2</parents>
 </expr>
 </generator>
 </expressions>

@@ -63,17 +63,7 @@ public class Result {
             HashMap<String,String> freevars, ArrayList<Expression> listvars, 
             Syntax syntax, ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards) throws Exception {
         ExprNode ret = null;
-        //* modif
         Expression e = applyVars(en, vars, syntax);
-        //*/
-        /* avant
-        Expression e = new Expression(getResult(), syntax);
-        e = e.replace(vars);
-        if (!name.isEmpty()) {
-            e.setType(name);
-        }
-        en.setE(e); // (A->B)->(A->((B->C)->((A->B)->(A->C)))) ne devrait pas passer, A->(B->T)
-        //*/
         boolean inlist = false;
         for (ExprNode exprNode : exprNodes) {
             Expression expr = exprNode.getE();

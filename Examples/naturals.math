@@ -1,2 +1,314 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<expressions syntax="C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples/naturals.syx"/>
+<expressions syntax="C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples/naturals.syx">
+<generator name="addition_and_equality">
+<expr id="0" type="equality">
+<text>(EQU,(ADD,0:digit,0:digit):natural,0:digit):equality</text>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,0:digit,1:digit):natural,1:digit):equality</text>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,1:digit,1:digit):natural,2:digit):equality</text>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,2:digit,1:digit):natural,3:digit):equality</text>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,3:digit,1:digit):natural,4:digit):equality</text>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,4:digit,1:digit):natural,5:digit):equality</text>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,5:digit,1:digit):natural,6:digit):equality</text>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,6:digit,1:digit):natural,7:digit):equality</text>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,7:digit,1:digit):natural,8:digit):equality</text>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,8:digit,1:digit):natural,9:digit):equality</text>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,9:digit,1:digit):natural,(CONCAT,1:digit,0:digit):natural):equality</text>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,1:digit,0:digit):natural,1:digit):natural,(CONCAT,1:digit,1:digit):natural):equality</text>
+<parents>0-10</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,1:digit,1:digit):natural,1:digit):natural,(CONCAT,1:digit,2:digit):natural):equality</text>
+<parents>0-11</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,1:digit,2:digit):natural,1:digit):natural,(CONCAT,1:digit,3:digit):natural):equality</text>
+<parents>0-12</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,1:digit,3:digit):natural,1:digit):natural,(CONCAT,1:digit,4:digit):natural):equality</text>
+<parents>0-13</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,1:digit,4:digit):natural,1:digit):natural,(CONCAT,1:digit,5:digit):natural):equality</text>
+<parents>0-14</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,1:digit,5:digit):natural,1:digit):natural,(CONCAT,1:digit,6:digit):natural):equality</text>
+<parents>0-15</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,1:digit,6:digit):natural,1:digit):natural,(CONCAT,1:digit,7:digit):natural):equality</text>
+<parents>0-16</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,1:digit,7:digit):natural,1:digit):natural,(CONCAT,1:digit,8:digit):natural):equality</text>
+<parents>0-17</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,1:digit,8:digit):natural,1:digit):natural,(CONCAT,1:digit,9:digit):natural):equality</text>
+<parents>0-18</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,1:digit,9:digit):natural,1:digit):natural,(CONCAT,2:digit,0:digit):natural):equality</text>
+<parents>0-2</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,2:digit,0:digit):natural,1:digit):natural,(CONCAT,2:digit,1:digit):natural):equality</text>
+<parents>0-20</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,2:digit,1:digit):natural,1:digit):natural,(CONCAT,2:digit,2:digit):natural):equality</text>
+<parents>0-21</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,2:digit,2:digit):natural,1:digit):natural,(CONCAT,2:digit,3:digit):natural):equality</text>
+<parents>0-22</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,2:digit,3:digit):natural,1:digit):natural,(CONCAT,2:digit,4:digit):natural):equality</text>
+<parents>0-23</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,2:digit,4:digit):natural,1:digit):natural,(CONCAT,2:digit,5:digit):natural):equality</text>
+<parents>0-24</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,2:digit,5:digit):natural,1:digit):natural,(CONCAT,2:digit,6:digit):natural):equality</text>
+<parents>0-25</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,2:digit,6:digit):natural,1:digit):natural,(CONCAT,2:digit,7:digit):natural):equality</text>
+<parents>0-26</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,2:digit,7:digit):natural,1:digit):natural,(CONCAT,2:digit,8:digit):natural):equality</text>
+<parents>0-27</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,2:digit,8:digit):natural,1:digit):natural,(CONCAT,2:digit,9:digit):natural):equality</text>
+<parents>0-28</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,2:digit,9:digit):natural,1:digit):natural,(CONCAT,3:digit,0:digit):natural):equality</text>
+<parents>0-3</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,3:digit,0:digit):natural,1:digit):natural,(CONCAT,3:digit,1:digit):natural):equality</text>
+<parents>0-30</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,3:digit,1:digit):natural,1:digit):natural,(CONCAT,3:digit,2:digit):natural):equality</text>
+<parents>0-31</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,3:digit,2:digit):natural,1:digit):natural,(CONCAT,3:digit,3:digit):natural):equality</text>
+<parents>0-32</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,3:digit,3:digit):natural,1:digit):natural,(CONCAT,3:digit,4:digit):natural):equality</text>
+<parents>0-33</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,3:digit,4:digit):natural,1:digit):natural,(CONCAT,3:digit,5:digit):natural):equality</text>
+<parents>0-34</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,3:digit,5:digit):natural,1:digit):natural,(CONCAT,3:digit,6:digit):natural):equality</text>
+<parents>0-35</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,3:digit,6:digit):natural,1:digit):natural,(CONCAT,3:digit,7:digit):natural):equality</text>
+<parents>0-36</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,3:digit,7:digit):natural,1:digit):natural,(CONCAT,3:digit,8:digit):natural):equality</text>
+<parents>0-37</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,3:digit,8:digit):natural,1:digit):natural,(CONCAT,3:digit,9:digit):natural):equality</text>
+<parents>0-38</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,3:digit,9:digit):natural,1:digit):natural,(CONCAT,4:digit,0:digit):natural):equality</text>
+<parents>0-4</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,4:digit,0:digit):natural,1:digit):natural,(CONCAT,4:digit,1:digit):natural):equality</text>
+<parents>0-40</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,4:digit,1:digit):natural,1:digit):natural,(CONCAT,4:digit,2:digit):natural):equality</text>
+<parents>0-41</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,4:digit,2:digit):natural,1:digit):natural,(CONCAT,4:digit,3:digit):natural):equality</text>
+<parents>0-42</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,4:digit,3:digit):natural,1:digit):natural,(CONCAT,4:digit,4:digit):natural):equality</text>
+<parents>0-43</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,4:digit,4:digit):natural,1:digit):natural,(CONCAT,4:digit,5:digit):natural):equality</text>
+<parents>0-44</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,4:digit,5:digit):natural,1:digit):natural,(CONCAT,4:digit,6:digit):natural):equality</text>
+<parents>0-45</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,4:digit,6:digit):natural,1:digit):natural,(CONCAT,4:digit,7:digit):natural):equality</text>
+<parents>0-46</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,4:digit,7:digit):natural,1:digit):natural,(CONCAT,4:digit,8:digit):natural):equality</text>
+<parents>0-47</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,4:digit,8:digit):natural,1:digit):natural,(CONCAT,4:digit,9:digit):natural):equality</text>
+<parents>0-48</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,4:digit,9:digit):natural,1:digit):natural,(CONCAT,5:digit,0:digit):natural):equality</text>
+<parents>0-5</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,5:digit,0:digit):natural,1:digit):natural,(CONCAT,5:digit,1:digit):natural):equality</text>
+<parents>0-50</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,5:digit,1:digit):natural,1:digit):natural,(CONCAT,5:digit,2:digit):natural):equality</text>
+<parents>0-51</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,5:digit,2:digit):natural,1:digit):natural,(CONCAT,5:digit,3:digit):natural):equality</text>
+<parents>0-52</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,5:digit,3:digit):natural,1:digit):natural,(CONCAT,5:digit,4:digit):natural):equality</text>
+<parents>0-53</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,5:digit,4:digit):natural,1:digit):natural,(CONCAT,5:digit,5:digit):natural):equality</text>
+<parents>0-54</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,5:digit,5:digit):natural,1:digit):natural,(CONCAT,5:digit,6:digit):natural):equality</text>
+<parents>0-55</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,5:digit,6:digit):natural,1:digit):natural,(CONCAT,5:digit,7:digit):natural):equality</text>
+<parents>0-56</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,5:digit,7:digit):natural,1:digit):natural,(CONCAT,5:digit,8:digit):natural):equality</text>
+<parents>0-57</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,5:digit,8:digit):natural,1:digit):natural,(CONCAT,5:digit,9:digit):natural):equality</text>
+<parents>0-58</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,5:digit,9:digit):natural,1:digit):natural,(CONCAT,6:digit,0:digit):natural):equality</text>
+<parents>0-6</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,6:digit,0:digit):natural,1:digit):natural,(CONCAT,6:digit,1:digit):natural):equality</text>
+<parents>0-60</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,6:digit,1:digit):natural,1:digit):natural,(CONCAT,6:digit,2:digit):natural):equality</text>
+<parents>0-61</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,6:digit,2:digit):natural,1:digit):natural,(CONCAT,6:digit,3:digit):natural):equality</text>
+<parents>0-62</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,6:digit,3:digit):natural,1:digit):natural,(CONCAT,6:digit,4:digit):natural):equality</text>
+<parents>0-63</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,6:digit,4:digit):natural,1:digit):natural,(CONCAT,6:digit,5:digit):natural):equality</text>
+<parents>0-64</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,6:digit,5:digit):natural,1:digit):natural,(CONCAT,6:digit,6:digit):natural):equality</text>
+<parents>0-65</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,6:digit,6:digit):natural,1:digit):natural,(CONCAT,6:digit,7:digit):natural):equality</text>
+<parents>0-66</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,6:digit,7:digit):natural,1:digit):natural,(CONCAT,6:digit,8:digit):natural):equality</text>
+<parents>0-67</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,6:digit,8:digit):natural,1:digit):natural,(CONCAT,6:digit,9:digit):natural):equality</text>
+<parents>0-68</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,6:digit,9:digit):natural,1:digit):natural,(CONCAT,7:digit,0:digit):natural):equality</text>
+<parents>0-7</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,7:digit,0:digit):natural,1:digit):natural,(CONCAT,7:digit,1:digit):natural):equality</text>
+<parents>0-70</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,7:digit,1:digit):natural,1:digit):natural,(CONCAT,7:digit,2:digit):natural):equality</text>
+<parents>0-71</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,7:digit,2:digit):natural,1:digit):natural,(CONCAT,7:digit,3:digit):natural):equality</text>
+<parents>0-72</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,7:digit,3:digit):natural,1:digit):natural,(CONCAT,7:digit,4:digit):natural):equality</text>
+<parents>0-73</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,7:digit,4:digit):natural,1:digit):natural,(CONCAT,7:digit,5:digit):natural):equality</text>
+<parents>0-74</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,7:digit,5:digit):natural,1:digit):natural,(CONCAT,7:digit,6:digit):natural):equality</text>
+<parents>0-75</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,7:digit,6:digit):natural,1:digit):natural,(CONCAT,7:digit,7:digit):natural):equality</text>
+<parents>0-76</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,7:digit,7:digit):natural,1:digit):natural,(CONCAT,7:digit,8:digit):natural):equality</text>
+<parents>0-77</parents>
+</expr>
+<expr id="0" type="equality">
+<text>(EQU,(ADD,(CONCAT,7:digit,8:digit):natural,1:digit):natural,(CONCAT,7:digit,9:digit):natural):equality</text>
+<parents>0-78</parents>
+</expr>
+</generator>
+</expressions>
