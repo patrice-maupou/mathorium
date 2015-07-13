@@ -5,34 +5,28 @@
  */
 package org.maupou.sampledataobject;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.swing.Action;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
 import javax.swing.SpinnerNumberModel;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
 import org.maupou.expressions.ExprNode;
 import org.maupou.expressions.Expression;
 import org.maupou.expressions.GenItem;
 import org.maupou.expressions.Generator;
 import org.maupou.expressions.MatchExpr;
 import org.maupou.expressions.Result;
+import org.maupou.expressions.Schema;
 import org.maupou.expressions.Syntax;
 import org.maupou.expressions.SyntaxWrite;
 import org.netbeans.api.progress.ProgressHandle;
@@ -52,11 +46,6 @@ import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.RequestProcessor;
 import org.openide.windows.TopComponent;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 /**
  * Top component which displays something.
@@ -95,6 +84,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private ArrayList<Generator> generators;
   private Generator generator;
   private GenItem genItem;
+  private ArrayList<? extends Schema> schemas;
   private boolean resultReady = false;
   private int matchRange, level;
   private HashMap<Expression, Expression> varsToExprs;
@@ -102,9 +92,12 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private final JToolBar toolbar = new JToolBar();
   private static RequestProcessor RP;
   private static final Logger log = Logger.getLogger(MathTopComponent.class.getName());
+  private GenTree genTree;  
 
   public MathTopComponent() {
     initComponents();
+    genTree = (GenTree) treeGenItem;
+    schemas = new ArrayList<>();
     setName(Bundle.CTL_MathTopComponent());
     setToolTipText(Bundle.HINT_MathTopComponent());
     toAdd = null;
@@ -122,6 +115,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     try {
       syntax = mdo.setSyntax();
       syntaxWrite = syntax.getSyntaxWrite();
+      genTree.setSw(syntaxWrite);
       generators = syntax.getGenerators();
       ArrayList<String> names = new ArrayList<>();
       generators.stream().forEach((gen) -> {
@@ -133,7 +127,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         updateGenerator(generator);
       }
     } catch (Exception ex) {
-      displayMessage("No syntax file available", "Error message");
+      displayMessage("No syntax file available :\n" + ex.getMessage(), "Error message");
     }
   }
 
@@ -166,7 +160,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
    * @param generator
    * @throws Exception 
    */
-  private void updateGenerator(Generator generator) {
+  private void updateGenerator(Generator generator) throws Exception {
     ArrayList<GenItem> genItems = generator.getGenItems();
     String[] itemStrings = new String[genItems.size()];
     for (int i = 0; i < itemStrings.length; i++) {
@@ -191,17 +185,23 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
    * met à jour le genItem et les variables
    * @param genItem 
    */
-  private void updateGenItem(GenItem genItem) {
+  private void updateGenItem(GenItem genItem) throws Exception {
     resultTextField.setText("");
     ArrayList<Result> resultExprs = genItem.getResultExprs();
     resultSpinner.setModel(new SpinnerNumberModel(0, 0, 1, 0));
-    ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
-    int n = matchExprs.size();
-    HashMap<Expression, Expression> map = (n == 0) ? new HashMap() : matchExprs.get(0).getReplaceMap();
+    schemas = genItem.getMatchExprs();
+    genTree.setTree(schemas);
+    int n = schemas.size();
+    /*
+    try {
+      fillPatternTable(matchExprs, resultExprs);
+    } catch (Exception ex) {
+      displayMessage("table non remplie : " + ex.getMessage(), "Error message");
+    }
+    //*/
     matchRange = 0;
-    fillTable(map);
     listparents.clear();
-    ArrayList<Expression> vars = (n == 0) ? new ArrayList<>() : matchExprs.get(0).getVars();
+    ArrayList<Expression> vars = (n == 0) ? new ArrayList<>() : genItem.getMatchExprs().get(0).getVars();
     int m = vars.size();
     for (int k = 0; k < varsTable.getRowCount(); k++) {
       String name = (k < m) ? vars.get(k).toString() : "";
@@ -212,47 +212,24 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     }
     if (!resultExprs.isEmpty()) {
       resultSpinner.setModel(new SpinnerNumberModel(1, 1, resultExprs.size(), 1));
-      updateResult(1, resultExprs, n);
     }
     valueTextField.setText("");
     varsToExprs.clear();
     resultReady = false;
   }
-
-  private void updateResult(int range, ArrayList<Result> resultExprs, int n) {
-    if (range < resultExprs.size() + 1) {
-      String result = "";
-      result += resultExprs.get(range - 1);
-      resultTextField.setText(result);
-      if (n == 0) {
-        resultTextField.requestFocus();
-      } else {
-        valueTextField.requestFocus();
-      }
+  
+  
+  private void fillPatternTable(ArrayList<MatchExpr> matchExprs, ArrayList<Result> resultExprs) 
+          throws Exception {
+    for (int i = 0; i < matchExprs.size(); i++) {
+      patternTable.setValueAt(matchExprs.get(i).getPattern().toString(syntaxWrite), i, 0);
     }
-  }
-
-  /**
-   * Mise à jour de la table des modèles
-   *
-   * @param map table des modèles et remplacements éventuels
-   */
-  private void fillTable(HashMap<Expression, Expression> map) {
-    int rows = patternTable.getRowCount();
-    Iterator<Expression> it = map.keySet().iterator();
-    for (int row = 0; row < rows; row++) {
-      String t0 = "", t1 = "";
-      if (it.hasNext()) {
-        Expression key = it.next();
-        Expression val = map.get(key);
-        try {
-          t0 = key.toString(syntaxWrite);
-          t1 = val.toString(syntaxWrite);
-        } catch (Exception exc) {
-        }
+    if (matchExprs.size() > 0) {
+      for (int i = 0; i < resultExprs.size(); i++) {
+        patternTable.setValueAt(resultExprs.get(i).getPattern().toString(syntaxWrite), i, 1);
       }
-      patternTable.setValueAt(t0, row, 0);
-      patternTable.setValueAt(t1, row, 1);
+      patternTable.setColumnSelectionInterval(0, 0);
+      patternTable.setRowSelectionInterval(0, 0);
     }
   }
 
@@ -260,302 +237,313 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
    * This method is called from within the constructor to initialize the form. WARNING: Do NOT
    * modify this code. The content of this method is always regenerated by the Form Editor.
    */
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
+  // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+  private void initComponents() {
 
-        editField = new javax.swing.JTextField();
-        exprRange = new javax.swing.JSpinner();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        commentArea = new javax.swing.JTextArea();
-        commentLabel = new javax.swing.JLabel();
-        editLabel = new javax.swing.JLabel();
-        generatorLabel = new javax.swing.JLabel();
-        generatorBox = new javax.swing.JComboBox();
-        itemLabel = new javax.swing.JLabel();
-        genItemBox = new javax.swing.JComboBox();
-        rangeResultLabel = new javax.swing.JLabel();
-        resultSpinner = new javax.swing.JSpinner();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        patternTable = new javax.swing.JTable();
-        jLabel1 = new javax.swing.JLabel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        varsTable = new javax.swing.JTable();
-        valueLabel = new javax.swing.JLabel();
-        valueTextField = new javax.swing.JTextField();
-        resultLabel = new javax.swing.JLabel();
-        resultTextField = new javax.swing.JTextField();
-        toValButton = new javax.swing.JButton();
-        cntResultsLabel = new javax.swing.JLabel();
-        cntResSpinner = new javax.swing.JSpinner();
-        levelLabel = new javax.swing.JLabel();
-        levelSpinner = new javax.swing.JSpinner();
-        autoButton = new javax.swing.JButton();
-        commentButton = new javax.swing.JButton();
-        deleteButton = new javax.swing.JButton();
+    editField = new javax.swing.JTextField();
+    exprRange = new javax.swing.JSpinner();
+    jScrollPane1 = new javax.swing.JScrollPane();
+    commentArea = new javax.swing.JTextArea();
+    commentLabel = new javax.swing.JLabel();
+    editLabel = new javax.swing.JLabel();
+    generatorLabel = new javax.swing.JLabel();
+    generatorBox = new javax.swing.JComboBox();
+    itemLabel = new javax.swing.JLabel();
+    genItemBox = new javax.swing.JComboBox();
+    rangeResultLabel = new javax.swing.JLabel();
+    resultSpinner = new javax.swing.JSpinner();
+    jScrollPane2 = new javax.swing.JScrollPane();
+    patternTable = new javax.swing.JTable();
+    jScrollPane3 = new javax.swing.JScrollPane();
+    varsTable = new javax.swing.JTable();
+    valueLabel = new javax.swing.JLabel();
+    valueTextField = new javax.swing.JTextField();
+    resultLabel = new javax.swing.JLabel();
+    resultTextField = new javax.swing.JTextField();
+    toValButton = new javax.swing.JButton();
+    cntResultsLabel = new javax.swing.JLabel();
+    cntResSpinner = new javax.swing.JSpinner();
+    levelLabel = new javax.swing.JLabel();
+    levelSpinner = new javax.swing.JSpinner();
+    autoButton = new javax.swing.JButton();
+    commentButton = new javax.swing.JButton();
+    deleteButton = new javax.swing.JButton();
+    treeScrollPane = new javax.swing.JScrollPane();
+    treeGenItem = new GenTree();
 
-        editField.setEditable(false);
-        editField.setText(org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.editField.text")); // NOI18N
+    editField.setEditable(false);
+    editField.setText(org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.editField.text")); // NOI18N
 
-        exprRange.setModel(new javax.swing.SpinnerNumberModel(0, 0, 0, 1));
-        exprRange.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                exprRangeStateChanged(evt);
-            }
-        });
+    exprRange.setModel(new javax.swing.SpinnerNumberModel(0, 0, 0, 1));
+    exprRange.addChangeListener(new javax.swing.event.ChangeListener() {
+      public void stateChanged(javax.swing.event.ChangeEvent evt) {
+        exprRangeStateChanged(evt);
+      }
+    });
 
-        commentArea.setColumns(20);
-        commentArea.setRows(5);
-        jScrollPane1.setViewportView(commentArea);
+    commentArea.setColumns(20);
+    commentArea.setRows(5);
+    jScrollPane1.setViewportView(commentArea);
 
-        org.openide.awt.Mnemonics.setLocalizedText(commentLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.commentLabel.text")); // NOI18N
+    org.openide.awt.Mnemonics.setLocalizedText(commentLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.commentLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(editLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.editLabel.text")); // NOI18N
+    org.openide.awt.Mnemonics.setLocalizedText(editLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.editLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(generatorLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.generatorLabel.text")); // NOI18N
+    org.openide.awt.Mnemonics.setLocalizedText(generatorLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.generatorLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(itemLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.itemLabel.text")); // NOI18N
+    org.openide.awt.Mnemonics.setLocalizedText(itemLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.itemLabel.text")); // NOI18N
 
-        genItemBox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                genItemBoxActionPerformed(evt);
-            }
-        });
+    genItemBox.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        genItemBoxActionPerformed(evt);
+      }
+    });
 
-        org.openide.awt.Mnemonics.setLocalizedText(rangeResultLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.rangeResultLabel.text")); // NOI18N
+    org.openide.awt.Mnemonics.setLocalizedText(rangeResultLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.rangeResultLabel.text")); // NOI18N
 
-        resultSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                resultSpinnerStateChanged(evt);
-            }
-        });
+    resultSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+      public void stateChanged(javax.swing.event.ChangeEvent evt) {
+        resultSpinnerStateChanged(evt);
+      }
+    });
 
-        patternTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null}
-            },
-            new String [] {
-                "Modèle", "Remplacement"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class
-            };
+    patternTable.setModel(new javax.swing.table.DefaultTableModel(
+      new Object [][] {
+        {null, null},
+        {null, null},
+        {null, null},
+        {null, null},
+        {null, null},
+        {null, null},
+        {null, null},
+        {null, null}
+      },
+      new String [] {
+        "Modèles", "Remplacements"
+      }
+    ) {
+      Class[] types = new Class [] {
+        java.lang.String.class, java.lang.String.class
+      };
 
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-        });
-        jScrollPane2.setViewportView(patternTable);
+      public Class getColumnClass(int columnIndex) {
+        return types [columnIndex];
+      }
+    });
+    patternTable.setColumnSelectionAllowed(true);
+    jScrollPane2.setViewportView(patternTable);
 
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.jLabel1.text")); // NOI18N
+    varsTable.setModel(new javax.swing.table.DefaultTableModel(
+      new Object [][] {
+        {null, null, null},
+        {null, null, null},
+        {null, null, null},
+        {null, null, null},
+        {null, null, null},
+        {null, null, null},
+        {null, null, null},
+        {null, null, null}
+      },
+      new String [] {
+        "Variable", "Valeur", "Type"
+      }
+    ) {
+      Class[] types = new Class [] {
+        java.lang.String.class, java.lang.String.class, java.lang.String.class
+      };
 
-        varsTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null}
-            },
-            new String [] {
-                "Nom", "Valeur", "Type"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class
-            };
+      public Class getColumnClass(int columnIndex) {
+        return types [columnIndex];
+      }
+    });
+    jScrollPane3.setViewportView(varsTable);
 
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-        });
-        jScrollPane3.setViewportView(varsTable);
+    org.openide.awt.Mnemonics.setLocalizedText(valueLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.valueLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(valueLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.valueLabel.text")); // NOI18N
+    valueTextField.setText(org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.valueTextField.text")); // NOI18N
+    valueTextField.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        valueTextFieldActionPerformed(evt);
+      }
+    });
 
-        valueTextField.setText(org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.valueTextField.text")); // NOI18N
-        valueTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                valueTextFieldActionPerformed(evt);
-            }
-        });
+    org.openide.awt.Mnemonics.setLocalizedText(resultLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.resultLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(resultLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.resultLabel.text")); // NOI18N
+    resultTextField.setText(org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.resultTextField.text")); // NOI18N
+    resultTextField.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        resultTextFieldActionPerformed(evt);
+      }
+    });
 
-        resultTextField.setText(org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.resultTextField.text")); // NOI18N
-        resultTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                resultTextFieldActionPerformed(evt);
-            }
-        });
+    org.openide.awt.Mnemonics.setLocalizedText(toValButton, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.toValButton.text")); // NOI18N
+    toValButton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        toValButtonActionPerformed(evt);
+      }
+    });
 
-        org.openide.awt.Mnemonics.setLocalizedText(toValButton, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.toValButton.text")); // NOI18N
-        toValButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                toValButtonActionPerformed(evt);
-            }
-        });
+    org.openide.awt.Mnemonics.setLocalizedText(cntResultsLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.cntResultsLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(cntResultsLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.cntResultsLabel.text")); // NOI18N
+    cntResSpinner.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(20), null, null, Integer.valueOf(1)));
 
-        cntResSpinner.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(20), null, null, Integer.valueOf(1)));
+    org.openide.awt.Mnemonics.setLocalizedText(levelLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.levelLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(levelLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.levelLabel.text")); // NOI18N
+    levelSpinner.setModel(new javax.swing.SpinnerNumberModel());
+    levelSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+      public void stateChanged(javax.swing.event.ChangeEvent evt) {
+        levelSpinnerStateChanged(evt);
+      }
+    });
 
-        levelSpinner.setModel(new javax.swing.SpinnerNumberModel());
-        levelSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                levelSpinnerStateChanged(evt);
-            }
-        });
+    org.openide.awt.Mnemonics.setLocalizedText(autoButton, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.autoButton.text")); // NOI18N
+    autoButton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        autoButtonActionPerformed(evt);
+      }
+    });
 
-        org.openide.awt.Mnemonics.setLocalizedText(autoButton, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.autoButton.text")); // NOI18N
-        autoButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                autoButtonActionPerformed(evt);
-            }
-        });
+    org.openide.awt.Mnemonics.setLocalizedText(commentButton, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.commentButton.text")); // NOI18N
+    commentButton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        commentButtonActionPerformed(evt);
+      }
+    });
 
-        org.openide.awt.Mnemonics.setLocalizedText(commentButton, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.commentButton.text")); // NOI18N
-        commentButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                commentButtonActionPerformed(evt);
-            }
-        });
+    org.openide.awt.Mnemonics.setLocalizedText(deleteButton, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.deleteButton.text")); // NOI18N
+    deleteButton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        deleteButtonActionPerformed(evt);
+      }
+    });
 
-        org.openide.awt.Mnemonics.setLocalizedText(deleteButton, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.deleteButton.text")); // NOI18N
-        deleteButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                deleteButtonActionPerformed(evt);
-            }
-        });
+    treeGenItem.setModel(treeGenItem.getModel());
+    treeGenItem.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
+      public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
+        treeGenItemValueChanged(evt);
+      }
+    });
+    treeScrollPane.setViewportView(treeGenItem);
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
+    javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+    this.setLayout(layout);
+    layout.setHorizontalGroup(
+      layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+      .addGroup(layout.createSequentialGroup()
+        .addContainerGap()
+        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+          .addGroup(layout.createSequentialGroup()
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+              .addComponent(exprRange, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+              .addComponent(valueLabel)
+              .addComponent(resultLabel)
+              .addComponent(itemLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
+              .addComponent(commentButton)
+              .addComponent(commentLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+              .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(generatorLabel)
-                                .addGap(330, 330, 330))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(editLabel)
-                                .addGap(342, 342, 342))))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(exprRange, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(commentLabel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(jLabel1)
-                            .addComponent(valueLabel)
-                            .addComponent(resultLabel)
-                            .addComponent(itemLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(commentButton))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(deleteButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(toValButton)
-                                .addGap(319, 319, 319))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 586, Short.MAX_VALUE)
-                                    .addComponent(generatorBox, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.CENTER)
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                        .addComponent(genItemBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addGap(18, 18, 18)
-                                        .addComponent(rangeResultLabel)
-                                        .addGap(18, 18, 18)
-                                        .addComponent(resultSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addComponent(editField, javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addComponent(jScrollPane3)
-                                    .addComponent(valueTextField)
-                                    .addComponent(resultTextField)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGap(1, 1, 1)
-                                        .addComponent(cntResultsLabel)
-                                        .addGap(18, 18, 18)
-                                        .addComponent(cntResSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(78, 78, 78)
-                                        .addComponent(levelLabel)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(levelSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(autoButton, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGap(38, 38, 38))))))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(editLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(editField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(exprRange, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(toValButton)
-                    .addComponent(deleteButton))
-                .addGap(16, 16, 16)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(commentLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(commentButton))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(31, 31, 31)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(cntResSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(cntResultsLabel)
-                        .addComponent(levelLabel)
-                        .addComponent(levelSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(autoButton, javax.swing.GroupLayout.Alignment.TRAILING))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(generatorLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(generatorBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(itemLabel)
-                    .addComponent(genItemBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                  .addComponent(generatorBox, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                  .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.CENTER)
+                  .addComponent(editField, javax.swing.GroupLayout.Alignment.TRAILING)
+                  .addComponent(valueTextField)
+                  .addComponent(resultTextField)
+                  .addGroup(layout.createSequentialGroup()
+                    .addGap(1, 1, 1)
+                    .addComponent(cntResultsLabel)
+                    .addGap(18, 18, 18)
+                    .addComponent(cntResSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(78, 78, 78)
+                    .addComponent(levelLabel)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(levelSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 182, Short.MAX_VALUE)
+                    .addComponent(autoButton, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE))
+                  .addGroup(layout.createSequentialGroup()
+                    .addComponent(genItemBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGap(13, 13, 13)
                     .addComponent(rangeResultLabel)
-                    .addComponent(resultSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(30, 30, 30)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(28, 28, 28)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel1)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(35, 35, 35)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(valueLabel)
-                    .addComponent(valueTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(31, 31, 31)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(resultLabel)
-                    .addComponent(resultTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(72, Short.MAX_VALUE))
-        );
-    }// </editor-fold>//GEN-END:initComponents
+                    .addGap(18, 18, 18)
+                    .addComponent(resultSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(38, 38, 38))
+              .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                  .addComponent(treeScrollPane, javax.swing.GroupLayout.Alignment.LEADING)
+                  .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING)
+                  .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 608, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+          .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGap(0, 0, Short.MAX_VALUE)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+              .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addComponent(generatorLabel)
+                .addGap(330, 330, 330))
+              .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addComponent(deleteButton)
+                .addGap(174, 174, 174)
+                .addComponent(toValButton)
+                .addGap(231, 231, 231))))))
+      .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        .addComponent(editLabel)
+        .addGap(351, 351, 351))
+    );
+    layout.setVerticalGroup(
+      layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+      .addGroup(layout.createSequentialGroup()
+        .addGap(18, 18, 18)
+        .addComponent(editLabel)
+        .addGap(18, 18, 18)
+        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+          .addComponent(editField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+          .addComponent(exprRange, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+          .addComponent(toValButton)
+          .addComponent(deleteButton))
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+          .addGroup(layout.createSequentialGroup()
+            .addComponent(commentLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+            .addComponent(commentButton))
+          .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+        .addGap(10, 10, 10)
+        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+          .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+            .addComponent(cntResSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(cntResultsLabel)
+            .addComponent(levelLabel)
+            .addComponent(levelSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+          .addComponent(autoButton, javax.swing.GroupLayout.Alignment.TRAILING))
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+        .addComponent(generatorLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+        .addComponent(generatorBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+          .addComponent(itemLabel)
+          .addComponent(genItemBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+          .addComponent(rangeResultLabel)
+          .addComponent(resultSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+        .addGap(20, 20, 20)
+        .addComponent(treeScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addGap(25, 25, 25)
+        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+          .addComponent(valueTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+          .addComponent(valueLabel))
+        .addGap(10, 10, 10)
+        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+          .addComponent(resultLabel)
+          .addComponent(resultTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+    );
+  }// </editor-fold>//GEN-END:initComponents
 
     private void exprRangeStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_exprRangeStateChanged
       Integer range = (Integer) exprRange.getValue();
@@ -569,7 +557,11 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     private void genItemBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_genItemBoxActionPerformed
       int index = genItemBox.getSelectedIndex();
       genItem = generator.getGenItems().get(index);
+    try {
       updateGenItem(genItem);
+    } catch (Exception ex) {
+      displayMessage("Ne peut afficher l'item : " + genItem.getName(), "Error message");
+    }
     }//GEN-LAST:event_genItemBoxActionPerformed
 
     private void resultTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resultTextFieldActionPerformed
@@ -583,7 +575,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           if (genItem != null && !genItem.getResultExprs().isEmpty()) {
             int index = (Integer) resultSpinner.getValue() - 1;
             Result result = genItem.getResultExprs().get(index);
-            e.setType(result.getName());
+            e.setType(result.getPattern().getType());
           }
           ExprNode exprNode = new ExprNode(e, childList, parentList);
           exprNodes.add(exprNode);
@@ -597,24 +589,24 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         if (e != null) {
           int n = exprNodes.size();
           Integer rg = (Integer) exprRange.getValue();
-          /* avant
-          insert(exprNodes.subList(n - 1, n), rg);
-          //*/
-          //* modif
           mdo.insert(exprNodes.subList(n - 1, n), rg, generator);
-          //*/
           exprRange.setModel(new SpinnerNumberModel(n, 1, n, 1));
           editField.setText(e.toString(syntaxWrite));
         }
       } catch (Exception ex) {
-        displayMessage("Expression non valide", "Expression error");
+        displayMessage("Expression non valide : " + ex.getMessage(), "Expression error");
       }
       resultTextField.setText("");
+    try {
       updateGenItem(genItem);
+    } catch (Exception ex) {
+      Exceptions.printStackTrace(ex);
+    }
     }//GEN-LAST:event_resultTextFieldActionPerformed
 
     private void valueTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_valueTextFieldActionPerformed
       String e = valueTextField.getText().trim();
+      //* avant
       if (genItem != null && !genItem.getMatchExprs().isEmpty()) {
         boolean incomplete;
         try {
@@ -627,8 +619,9 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
             listparents.add(exprNodes.get(i));
             matchRange++; // expression conforme au modèle
             if (incomplete = (matchRange < genItem.getMatchExprs().size())) { // modèle suivant
+              patternTable.setColumnSelectionInterval(0, 0);
+              patternTable.setRowSelectionInterval(matchRange, matchRange);
               matchExpr = genItem.getMatchExprs().get(matchRange);
-              fillTable(matchExpr.getReplaceMap());
               valueTextField.setText("");
               Expression t = varsToExprs.get(matchExpr.getGlobal());
               if (t != null) {
@@ -637,10 +630,13 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
               }
             } else { // modèles tous conformes, check results
               int index = (Integer) resultSpinner.getValue() - 1;
+              patternTable.setColumnSelectionInterval(1, 1);
+              patternTable.setRowSelectionInterval(index, index);
               Expression t = en.getE();
               if (index != -1) {
                 Result result = genItem.getResultExprs().get(index);
-                t = result.applyVars(en, varsToExprs, syntax);
+                t = result.getPattern().copy().replace(varsToExprs);
+                en.setE(t);
               }
               ArrayList<int[]> parentList = new ArrayList<>();
               int psize = listparents.size();
@@ -656,7 +652,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
               resultTextField.requestFocus();
               toAdd = en;
               resultReady = true;
-              fillTable(new HashMap());
               valueTextField.setText("");
             }
             int row = 0;
@@ -689,6 +684,17 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         resultTextField.setText(e);
         resultTextField.requestFocus();
       }
+      //*/
+      /* modif
+      for (Schema schema : schemas) {
+        if(schema instanceof MatchExpr) {
+          
+        }
+        else if(schema instanceof Result) {
+          
+        }
+      }
+      //*/
     }//GEN-LAST:event_valueTextFieldActionPerformed
 
     private void toValButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_toValButtonActionPerformed
@@ -825,8 +831,20 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     private void resultSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_resultSpinnerStateChanged
       Integer range = (Integer) resultSpinner.getValue();
       ArrayList<Result> results = genItem.getResultExprs();
+      /* inutile ?
       updateResult(range, results, genItem.getMatchExprs().size());
+      //*/
     }//GEN-LAST:event_resultSpinnerStateChanged
+
+  private void treeGenItemValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treeGenItemValueChanged
+    // TODO add your handling code here:
+    TreePath newLeadSelectionPath = evt.getNewLeadSelectionPath();
+    TreePath oldLeadSelectionPath = evt.getOldLeadSelectionPath();
+    DefaultMutableTreeNode node = (DefaultMutableTreeNode) genTree.getLastSelectedPathComponent();
+    if(node != null) {
+      Object nodeInfo = node.getUserObject();
+    }
+  }//GEN-LAST:event_treeGenItemValueChanged
 
   private static void displayMessage(Object message, String title) {
     NotifyDescriptor nd = new NotifyDescriptor(message, title,
@@ -835,37 +853,38 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   }
 
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton autoButton;
-    private javax.swing.JSpinner cntResSpinner;
-    private javax.swing.JLabel cntResultsLabel;
-    private javax.swing.JTextArea commentArea;
-    private javax.swing.JButton commentButton;
-    private javax.swing.JLabel commentLabel;
-    private javax.swing.JButton deleteButton;
-    private javax.swing.JTextField editField;
-    private javax.swing.JLabel editLabel;
-    private javax.swing.JSpinner exprRange;
-    private javax.swing.JComboBox genItemBox;
-    private javax.swing.JComboBox generatorBox;
-    private javax.swing.JLabel generatorLabel;
-    private javax.swing.JLabel itemLabel;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JLabel levelLabel;
-    private javax.swing.JSpinner levelSpinner;
-    private javax.swing.JTable patternTable;
-    private javax.swing.JLabel rangeResultLabel;
-    private javax.swing.JLabel resultLabel;
-    private javax.swing.JSpinner resultSpinner;
-    private javax.swing.JTextField resultTextField;
-    private javax.swing.JButton toValButton;
-    private javax.swing.JLabel valueLabel;
-    private javax.swing.JTextField valueTextField;
-    private javax.swing.JTable varsTable;
-    // End of variables declaration//GEN-END:variables
+  // Variables declaration - do not modify//GEN-BEGIN:variables
+  private javax.swing.JButton autoButton;
+  private javax.swing.JSpinner cntResSpinner;
+  private javax.swing.JLabel cntResultsLabel;
+  private javax.swing.JTextArea commentArea;
+  private javax.swing.JButton commentButton;
+  private javax.swing.JLabel commentLabel;
+  private javax.swing.JButton deleteButton;
+  private javax.swing.JTextField editField;
+  private javax.swing.JLabel editLabel;
+  private javax.swing.JSpinner exprRange;
+  private javax.swing.JComboBox genItemBox;
+  private javax.swing.JComboBox generatorBox;
+  private javax.swing.JLabel generatorLabel;
+  private javax.swing.JLabel itemLabel;
+  private javax.swing.JScrollPane jScrollPane1;
+  private javax.swing.JScrollPane jScrollPane2;
+  private javax.swing.JScrollPane jScrollPane3;
+  private javax.swing.JLabel levelLabel;
+  private javax.swing.JSpinner levelSpinner;
+  private javax.swing.JTable patternTable;
+  private javax.swing.JLabel rangeResultLabel;
+  private javax.swing.JLabel resultLabel;
+  private javax.swing.JSpinner resultSpinner;
+  private javax.swing.JTextField resultTextField;
+  private javax.swing.JButton toValButton;
+  private javax.swing.JTree treeGenItem;
+  private javax.swing.JScrollPane treeScrollPane;
+  private javax.swing.JLabel valueLabel;
+  private javax.swing.JTextField valueTextField;
+  private javax.swing.JTable varsTable;
+  // End of variables declaration//GEN-END:variables
     @Override
   public void componentOpened() {
     // TODO add custom code on component opening
@@ -950,5 +969,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   public javax.swing.JSpinner getExprRange() {
     return exprRange;
   }
+
 
 }

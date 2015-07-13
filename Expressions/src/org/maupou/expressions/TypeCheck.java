@@ -7,13 +7,13 @@ import java.util.Set;
 import org.w3c.dom.Element;
 
 /**
- *
+ * établit un lien entre un type et ceux d'une liste de noms de variables
  * @author Patrice Maupou
  */
 public class TypeCheck {
 
-  private String type;
-  private HashMap<String, String> childtypes; // map : variable -> type
+  private final String type;
+  private final HashMap<String, String> childtypes; // map : variable -> type
 
   /**
    *

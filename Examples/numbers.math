@@ -1,22 +1,48 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <expressions syntax="C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples/number_syntax.syx">
-<generator name="develop">
-<expr id="0" type="real">
-<text>(ADD,(ADD,1:natural,2:natural):real,3:natural):real</text>
-</expr>
-<expr id="1" type="real">
-<text>(MUL,2:natural,(ADD,1:natural,x:real):real):real</text>
-</expr>
-<expr id="2" type="real">
-<text>(MUL,a:real,(ADD,b:real,c:real):real):real</text>
-</expr>
-<expr id="4" type="real">
-<text>(ADD,(MUL,2:natural,1:natural):real,(MUL,2:natural,x:real):real):real</text>
-<parents>1</parents>
-</expr>
-<expr id="4" type="real">
-<text>(ADD,(MUL,a:real,b:real):real,(MUL,a:real,c:real):real):real</text>
-<parents>2</parents>
-</expr>
-</generator>
+  <generator name="develop">
+    <variable list="t u v w z" name="realvar" type="real">    
+    </variable>
+    <genrule name="distribute">
+      <match options="recursive=yes">
+        <pattern>(MUL,u:realvar,ADD(v:realvar,w:realvar):real):real</pattern>
+        <result>(ADD,MUL(u:realvar,v:realvar):real,MUL(u:realvar,w:realvar):real):real</result>
+      </match>
+      <match options="recursive=yes">
+        <pattern>(MUL,ADD(v:realvar,w:realvar):real,u:realvar):real</pattern>
+        <result>(ADD,MUL(v:realvar,u:realvar):real,MUL(w:realvar,u:realvar):real):real</result>
+      </match>
+      <match options="recursive=yes">
+        <pattern>(MUL,u:realvar,SUB(v:realvar,w:realvar):real):real</pattern>
+        <result>(SUB,MUL(u:realvar,v:realvar):real,MUL(u:realvar,w:realvar):real):real</result>
+      </match>
+      <match options="recursive=yes">
+        <pattern>(MUL,SUB(v:realvar,w:realvar):real,u:realvar):real</pattern>
+        <result>(SUB,MUL(v:realvar,u:realvar):real,MUL(w:realvar,u:realvar):real):real</result>
+      </match>
+    </genrule>
+    <genrule name="associative">
+      <match options="recursive=yes">
+        <pattern>(ADD,u:realvar,ADD(v:realvar,w:realvar):real):real</pattern>
+        <result>(ADD,ADD(u:realvar,v:realvar):real,w:realvar):real</result>
+      </match>
+    </genrule>
+    <expr id="0">
+      <text>(ADD,(ADD,1:natural,2:natural):real,3:natural):real</text>
+    </expr>
+    <expr id="1">
+      <text>(MUL,2:natural,(ADD,1:natural,x:real):real):real</text>
+    </expr>
+    <expr id="2">
+      <text>(MUL,a:real,(ADD,b:real,c:real):real):real</text>
+    </expr>
+    <expr id="3">
+      <text>(ADD,(MUL,2:natural,1:natural):real,(MUL,2:natural,x:real):real):real</text>
+      <parents>1</parents>
+    </expr>
+    <expr id="4">
+      <text>(ADD,(MUL,a:real,b:real):real,(MUL,a:real,c:real):real):real</text>
+      <parents>2</parents>
+    </expr>
+  </generator>
 </expressions>

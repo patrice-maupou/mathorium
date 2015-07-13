@@ -32,8 +32,6 @@ public class Generator {
     this.name = name;
     genItems = new ArrayList<>();
     discards = new ArrayList<>();
-    // remplir la table map
-    TreeMap<String,String> map = new TreeMap<>();
     NodeList nodesVariables = elem.getElementsByTagName("variable");
     HashMap<String, String> freevars = new HashMap<>(); // remplacement type de variable = type à remplacer
     ArrayList<Expression> listvars = new ArrayList<>(); // liste des variables
@@ -92,8 +90,5 @@ public class Generator {
     public ArrayList<GenItem> getDiscards() {
         return discards;
     }
-
-
-
 
 }

@@ -9,34 +9,43 @@ import java.util.HashMap;
 import java.util.Map;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  *
  * @author Patrice Maupou
  */
-public class MatchExpr {
+public class MatchExpr extends Schema {
 
-  private final String type;
-  private Expression schema, global;
-  private final HashMap<Expression, Expression> replaceMap; // TODO : ArrayList<Result> à la place
+  private final Expression global;
+  private final HashMap<Expression, Expression> replaceMap; // doit devenir inutile
   private final ArrayList<Expression> vars;
   private final boolean recursive, bidir;
 
-  /**
-   * Définition des paramètres à partir de l'élément
-   *
-   * @param match élément de référence
-   * @param syntax
-   * @param listvars
-   * @throws Exception
-   */
-  public MatchExpr(Element match, Syntax syntax, ArrayList<Expression> listvars) throws Exception {
+  
+  public MatchExpr(Element match, ArrayList<Expression> listvars) throws Exception {
+    replaceMap = null;
+    global = null;
     HashMap<String, String> options = new HashMap<>();
     vars = new ArrayList<>();
-    type = match.getAttribute("name");
-    String s = match.getAttribute("global");
-    if (!s.isEmpty()) {
-      global = new Expression(s, type, null, true);
+    NodeList patterns = match.getElementsByTagName("pattern");
+    if (patterns.getLength() == 0) {
+      setPattern(match);
+    }
+    else {
+      setPattern((Element) patterns.item(0));
+    }
+    varsInExpression(getPattern(), vars, listvars);
+    patterns = match.getElementsByTagName("match");
+    for (int i = 0; i < patterns.getLength(); i++) {
+      getSchemas().add(new MatchExpr((Element) patterns.item(i), listvars));
+    }
+    if (patterns.getLength() == 0) { // plus rien à vérifier, il ne reste que les résultats
+      NodeList nl = match.getElementsByTagName("result");
+      for (int i = 0; i < nl.getLength(); i++) {
+        Element result = (Element) nl.item(i);
+        getSchemas().add(new Result(result));
+      }
     }
     String[] listopts = match.getAttribute("options").split(",");
     for (String option : listopts) {
@@ -49,49 +58,14 @@ public class MatchExpr {
     }
     recursive = "yes".equals(options.get("recursive"));
     bidir = "yes".equals(options.get("bidirectional"));
-
-    // table de remplacement des expressions
-    replaceMap = new HashMap<>();
-    Node txtNode = match.getFirstChild();
-    Expression key = null;
-    int cnt = 0;
-    while (txtNode != null) { // boucle des modèles
-      if (txtNode.getNodeType() == Node.CDATA_SECTION_NODE) {
-        if (key == null) {
-          key = new Expression(txtNode.getTextContent(), syntax);
-          replaceMap.put(key, null);
-          if (cnt == 0) { // le premier élément est schema
-            schema = key;
-            varsInExpression(key, vars, listvars);
-          }
-        } else {
-          Expression value = new Expression(txtNode.getTextContent(), syntax);
-          key = replaceMap.put(key, value);
-        }
-        cnt++;
-      }
-      txtNode = txtNode.getNextSibling();
-    }
-    //
-    String types = match.getAttribute("types");
-    if (!types.isEmpty()) {
-      String[] couples = types.split(",");
-      for (String couple : couples) {
-        String[] typeOf = couple.split(":");
-        Expression e = new Expression(typeOf[0], syntax);
-        e.setType(typeOf[1]);
-        schema.updateType(e);
-      }
-    }
   }
 
   /**
-   * match l'expression expr en tenant compte de la table vars (variables déjà attribuées). 
-   * 1. si global = null, match direct de expr contre schema. 
-   * 2. sinon, transformation de l'expression par la table replaceMap, résultat dans 
-   * la variable global
+   * match l'expression expr en tenant compte de la table vars des variables déjà attribuées). 
+ 1. si global = null, match direct de expr contre pattern. 
+ 2. sinon, transformation de l'expression par la table replaceMap, résultat dans la variable global
    *
-   * @param expr l'expression examinée par rapport à schema, ex : ((A->B)->C)->(B->C)
+   * @param expr l'expression examinée par rapport à pattern, ex : ((A->B)->C)->(B->C)
    * @param typesMap table de remplacement d'un type par un autre (propse->prop)
    * @param listvars liste des symboles à remplacer
    * @param vars table des variables déjà connues, ex: {A:=(A->B)->A}
@@ -103,13 +77,13 @@ public class MatchExpr {
           HashMap<String, String> typesMap, ArrayList<Expression> listvars, Syntax syntax)
           throws Exception {
     boolean ret = true;
-    if (expr != null) { // schema : A->B type: prop
+    if (expr != null) { // pattern : A->B type: prop
       HashMap<Expression, Expression> svars = new HashMap<>(), evars = new HashMap<>();
       if (global == null) {
         if (bidir) {
-          ret = expr.matchBoth(schema, typesMap, listvars, evars, svars, syntax.getSubtypes());
+          ret = expr.matchBoth(getPattern(), typesMap, listvars, evars, svars, syntax.getSubtypes());
         } else {
-          ret = expr.match(schema, typesMap, listvars, svars, syntax.getSubtypes());
+          ret = expr.match(getPattern(), typesMap, listvars, svars, syntax.getSubtypes());
         }
         if (vars.isEmpty()) { // ajouter les nouvelles variables à la table vars
           vars.putAll(svars);
@@ -127,10 +101,16 @@ public class MatchExpr {
           }
           if (ret) {
             // renomme certaines variables
-            svars.values().stream().forEach((e) -> {extendMap(e, nsvars, listvars);});
+            svars.values().stream().forEach((e) -> {
+              extendMap(e, nsvars, listvars);
+            });
             // corrige vars avec svars
-            vars.keySet().stream().forEach((var) -> {vars.put(var, vars.get(var).replace(nvars));});
-            svars.keySet().stream().forEach((svar) -> {svars.put(svar, svars.get(svar).replace(nsvars));});
+            vars.keySet().stream().forEach((var) -> {
+              vars.put(var, vars.get(var).replace(nvars));
+            });
+            svars.keySet().stream().forEach((svar) -> {
+              svars.put(svar, svars.get(svar).replace(nsvars));
+            });
             vars.putAll(svars);
           }
         }
@@ -146,25 +126,27 @@ public class MatchExpr {
         vars.put(global, e);
       }
     } else { // expr est nulle : vérifier si le schéma correspond au type
-      Expression e = schema.replace(vars);
-      ret = type.equals(e.getType());
+      Expression e = getPattern().replace(vars);
+      ret = getPattern().getType().equals(e.getType());
     }
     return ret;
   }
-  
+
   /**
    * ajoute à la liste vars les variables de listvars qui composent l'expression e
+   *
    * @param e
    * @param vars
-   * @param listvars 
+   * @param listvars
    */
   public static void varsInExpression(Expression e, ArrayList<Expression> vars, ArrayList<Expression> listvars) {
     if (listvars.indexOf(e) == -1) {
-      if(e.getChildren() != null) {
-        e.getChildren().stream().forEach((child) -> {varsInExpression(child, vars, listvars);});
+      if (e.getChildren() != null) {
+        e.getChildren().stream().forEach((child) -> {
+          varsInExpression(child, vars, listvars);
+        });
       }
-    }
-    else {
+    } else {
       vars.add(e);
     }
   }
@@ -199,10 +181,9 @@ public class MatchExpr {
 
   @Override
   public String toString() {
-    String ret = replaceMap.toString();
+    String ret = "match : " + getPattern().toString() + "  vars : " + vars;
     return ret;
   }
-
 
   public Expression getGlobal() {
     return global;
@@ -211,7 +192,6 @@ public class MatchExpr {
   public ArrayList<Expression> getVars() {
     return vars;
   }
-
 
   public HashMap<Expression, Expression> getReplaceMap() {
     return replaceMap;

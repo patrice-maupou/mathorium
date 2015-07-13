@@ -119,11 +119,18 @@ public class MathDataObject extends MultiDataObject {
   public MathDataObject(FileObject pf, MultiFileLoader loader)
           throws DataObjectExistsException, IOException {
     super(pf, loader);
+    getCookieSet().add((Node.Cookie) new MathOpenSupport(getPrimaryEntry()));
+  }
+  
+  /**
+   * lit mathdoc à partir du fichier principal
+   * @throws IOException
+   */
+  public final void setMathdoc() throws IOException {
     try {
-      getCookieSet().add((Node.Cookie) new MathOpenSupport(getPrimaryEntry()));
       DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
       DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-      mathdoc = documentBuilder.parse(pf.getInputStream());
+      mathdoc = documentBuilder.parse(getPrimaryFile().getInputStream());
     } catch (ParserConfigurationException | SAXException ex) {
       Exceptions.printStackTrace(ex);
     }
@@ -222,7 +229,7 @@ public class MathDataObject extends MultiDataObject {
           Expression e = expr.getE();
           Element elem = (Element) gen.insertBefore(mathdoc.createElement("expr"), next);
           elem.setAttribute("id", "" + expr.getRange());
-          elem.setAttribute("type", e.getType());
+          //elem.setAttribute("type", e.getType());
           org.w3c.dom.Node ntxt = elem.appendChild(mathdoc.createElement("text"));
           ntxt.setTextContent(e.toText());
           String txt = "";
@@ -292,6 +299,7 @@ public class MathDataObject extends MultiDataObject {
         Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.METHOD, "xml");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount","2");
         DOMSource source = new DOMSource(doc);
         StreamResult result = new StreamResult(file);
         transformer.transform(source, result);

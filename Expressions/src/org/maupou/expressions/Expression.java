@@ -56,12 +56,12 @@ public class Expression {
    * inverse de toText()
    *
    * @param text texte complet avec les types
-   * @throws Exception
+   * @throws Exception si text n'est pas valide
    */
   public Expression(String text) throws Exception {
     symbol = false;
     ArrayList<Expression> list = new ArrayList<>();
-    String[] ret = scanExpr(text, list);
+    String[] ret = scanExpr(text.trim(), list);
     if (list.size() == 1 && ret[1].isEmpty()) {
       name = list.get(0).getName();
       type = list.get(0).getType();
@@ -249,7 +249,7 @@ public class Expression {
     if (e == null) {
       if (children != null) {
         ArrayList<Expression> echilds = new ArrayList<>();
-        children.stream().forEach((children1) -> {echilds.add(children1.replace(map));});
+        children.stream().forEach((child) -> {echilds.add(child.replace(map));});
         e = new Expression(name, type, echilds, isSymbol());
       } else {
         e = new Expression(name, type, null, isSymbol());
@@ -511,29 +511,33 @@ public class Expression {
     if (children != null) {
       String unused = syntaxWrite.getUnused();
       NodeWrite node;
-      for (int i = 0; i < syntaxWrite.getNodeWrites().size(); i++) {
-        node = syntaxWrite.getNodeWrites().get(i);
-        String nodename = node.getName();
-        if (name.matches(nodename)) {
-          ret = node.getValue();
-          if (!node.getVar().isEmpty()) {
-            ret = ret.replace(node.getVar(), name);
+      try {
+        for (int i = 0; i < syntaxWrite.getNodeWrites().size(); i++) {
+          node = syntaxWrite.getNodeWrites().get(i);
+          String nodename = node.getName();
+          if (name.matches(nodename)) {
+            ret = node.getValue();
+            if (!node.getVar().isEmpty()) {
+              ret = ret.replace(node.getVar(), name);
+            }
+            TreeMap<Integer, ChildReplace> childmap = node.getMapreplace();
+            for (Map.Entry<Integer, ChildReplace> entry : childmap.entrySet()) {
+              Integer j = entry.getKey();
+              ChildReplace childReplace = entry.getValue();
+              String childname = childReplace.getName();
+              String replace = childReplace.getReplacement();
+              List<String> conditions = childReplace.getConditions();
+              Expression e = children.get(j);
+              String ewr = e.toString(syntaxWrite);
+              replace = (conditions.contains(e.getName())) ? replace.replace(childname, ewr) : ewr;
+              int pos = ret.indexOf(unused);
+              ret = ret.substring(0, pos) + replace + ret.substring(pos + unused.length());
+            }
+            break;
           }
-          TreeMap<Integer, ChildReplace> childmap = node.getMapreplace();
-          for (Map.Entry<Integer, ChildReplace> entry : childmap.entrySet()) {
-            Integer j = entry.getKey();
-            ChildReplace childReplace = entry.getValue();
-            String childname = childReplace.getName();
-            String replace = childReplace.getReplacement();
-            List<String> conditions = childReplace.getConditions();
-            Expression e = children.get(j);
-            String ewr = e.toString(syntaxWrite);
-            replace = (conditions.contains(e.getName())) ? replace.replace(childname, ewr) : ewr;
-            int pos = ret.indexOf(unused);
-            ret = ret.substring(0, pos) + replace + ret.substring(pos + unused.length());
-          }
-          break;
         }
+      } catch (Exception ex) {
+        throw new Exception("fichier d'écriture absent : " + ex.getMessage());
       }
     }
     return ret;

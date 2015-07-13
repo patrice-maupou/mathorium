@@ -44,24 +44,35 @@
 <generators name="theorems">
   <variable type="prop" name="propvar" list="A B C D E F G H"/>
   <variable type="thm" name="propthm" list="S T U V W X Y Z"/>
-  <genrule name="axiomes">
-    <result level="1" name="thm" ref="dummy"><![CDATA[A->(B->A)]]></result>
-    <result level="1" name="thm" ref="distr"><![CDATA[(A->(B->C))->((A->B)->(A->C))]]></result>
-    <result level="1" name="thm" ref="simpl"><![CDATA[((A->B)->C)->(B->C)]]></result>
-    <result level="3" name="thm" ref="contra"><![CDATA[(~A->~B)->(B->A)]]></result>
+  <genrule name="axiomes"> 
+    <result level="1" ref="dummy">(IMPLIES,A:propvar,(IMPLIES,B:propvar,A:propvar):prop):thm</result>
+    <result level="1" ref="distr">(IMPLIES,(IMPLIES,A:propvar,(IMPLIES,B:propvar,C:propvar):prop):prop,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,C:propvar):prop):prop):thm
+    </result>
+    <result level="1" ref="simpl">(IMPLIES,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,C:propvar):prop,(IMPLIES,B:propvar,C:propvar):prop):thm
+    </result>
+    <result level="3" ref="contra">(IMPLIES,(IMPLIES,(NOT,A:propvar):prop,(NOT,B:propvar):prop):prop,(IMPLIES,B:propvar,A:propvar):prop):thm
+    </result>
   </genrule>
   <genrule name="modus ponens">
-    <match name="thm"><![CDATA[A]]></match>
-    <match name="thm"><![CDATA[A->B]]></match>
-    <result level="1" name="thm" ref="mp"><![CDATA[B]]></result>
+    <match name="thm">
+      <pattern>A:propvar</pattern>
+    </match>
+    <match name="thm">
+      <pattern>(IMPLIES,A:propvar,B:propvar):thm</pattern>
+    </match>
+    <result level="1" ref="mp">B:thm</result>
   </genrule>
   <discard name="thm" scope="right">
-      <match name="thm"><![CDATA[T]]></match>
-      <result name="thm"><![CDATA[A->T]]></result>
+    <match name="thm">
+      <pattern>T:propthm</pattern>
+    </match>
+    <result>(IMPLIES,A:prop,T:thm):thm</result>
   </discard>
   <discard>
-      <match name="thm"><![CDATA[B->C]]></match>
-      <result name="thm"><![CDATA[(A->B)->(A->C)]]></result>
+    <match name="thm">
+      <pattern>(IMPLIES,B:propvar,C:propvar):thm</pattern>
+    </match>
+    <result>(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,C:propvar):prop):thm</result>
   </discard>
 </generators>
 

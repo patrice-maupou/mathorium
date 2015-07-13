@@ -42,6 +42,11 @@ public class MathOpenSupport extends OpenSupport implements OpenCookie, CloseCoo
     @Override
     protected CloneableTopComponent createCloneableTopComponent() {
         mdo = (MathDataObject) entry.getDataObject();
+      try {
+        mdo.setMathdoc();
+      } catch (IOException ex) {
+        Exceptions.printStackTrace(ex);
+      }
         MathEditorDescriptor mathDescriptor = new MathEditorDescriptor(mdo);
         MathVisualDescriptor visualDescriptor = new MathVisualDescriptor(mathDescriptor);
         MultiViewDescription[] descArry = { mathDescriptor , visualDescriptor };
