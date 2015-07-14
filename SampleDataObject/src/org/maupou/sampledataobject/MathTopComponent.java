@@ -699,8 +699,36 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     }//GEN-LAST:event_valueTextFieldActionPerformed
 
     private void toValButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_toValButtonActionPerformed
-      valueTextField.setText(editField.getText());
-      valueTextField.requestFocus();
+      if(!resultReady && !exprNodes.isEmpty() && curSchema instanceof MatchExpr) {
+        try {
+          MatchExpr matchExpr = (MatchExpr) curSchema;
+          int index = (int) getExprRange().getValue() - 1;
+          ExprNode en = exprNodes.get(index);
+          Expression e = en.getE().copy();
+          if (matchExpr.checkExpr(e, varsToExprs, genItem.getTypesMap(), genItem.getListvars(), syntax)) {
+            resultReady = true;            
+            valueTextField.setText(editField.getText());
+            int row = 0;
+            for (Map.Entry<Expression, Expression> entry : varsToExprs.entrySet()) {
+              String key = entry.getKey().toString(syntaxWrite);
+              String val = entry.getValue().toString(syntaxWrite);
+              String type = entry.getValue().getType();
+              varsTable.setValueAt(key, row, 0);
+              varsTable.setValueAt(val, row, 1);
+              varsTable.setValueAt(type, row, 2);
+              row++;
+            }
+            TreePath path = genTree.getSelectionModel().getLeadSelectionPath();
+            genTree.expandPath(path);            
+          }
+          else {
+            valueTextField.setText("L'expression choisie ne convient pas.");
+            resultReady = false;
+          }
+        } catch (Exception ex) {
+          displayMessage(ex.getMessage(), "Error message");
+        }
+      }
     }//GEN-LAST:event_toValButtonActionPerformed
 
     private void commentButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_commentButtonActionPerformed
@@ -853,7 +881,13 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                   + "au modèle et cliquer sur valeur");
         }
         else if(curSchema instanceof Result) {
-          
+          Expression e = curSchema.getPattern().copy().replace(varsToExprs);
+          toAdd = new ExprNode(e, new ArrayList<>(), new ArrayList<>());
+          try {
+            resultTextField.setText(e.toString(syntaxWrite));
+          } catch (Exception ex) {
+            displayMessage(ex.getMessage(),"Error message");
+          }
         }
       } else {
         displayMessage("sélection incorrecte", "Error message");
