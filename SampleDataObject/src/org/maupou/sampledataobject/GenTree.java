@@ -8,6 +8,7 @@ package org.maupou.sampledataobject;
 import java.util.ArrayList;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
@@ -33,6 +34,12 @@ public class GenTree extends JTree {
     setModel(m);
     setRootVisible(false);
     getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+    setShowsRootHandles(true);
+    DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
+    renderer.setClosedIcon(null);
+    renderer.setOpenIcon(null);
+    renderer.setLeafIcon(null);
+    setCellRenderer(renderer);
   }
 
   /**

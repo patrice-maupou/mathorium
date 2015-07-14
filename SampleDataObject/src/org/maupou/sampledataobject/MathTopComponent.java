@@ -85,7 +85,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private Generator generator;
   private GenItem genItem;
   private ArrayList<? extends Schema> schemas;
-  private boolean resultReady = false;
+  private boolean resultReady;
   private int matchRange, level;
   private HashMap<Expression, Expression> varsToExprs;
   private MultiViewElementCallback callback;
@@ -93,6 +93,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private static RequestProcessor RP;
   private static final Logger log = Logger.getLogger(MathTopComponent.class.getName());
   private GenTree genTree;  
+  private Schema curSchema;
 
   public MathTopComponent() {
     initComponents();
@@ -837,12 +838,26 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     }//GEN-LAST:event_resultSpinnerStateChanged
 
   private void treeGenItemValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treeGenItemValueChanged
-    // TODO add your handling code here:
-    TreePath newLeadSelectionPath = evt.getNewLeadSelectionPath();
-    TreePath oldLeadSelectionPath = evt.getOldLeadSelectionPath();
     DefaultMutableTreeNode node = (DefaultMutableTreeNode) genTree.getLastSelectedPathComponent();
-    if(node != null) {
-      Object nodeInfo = node.getUserObject();
+    if (node != null) {
+      Object nodeObj = node.getUserObject();
+      DefaultMutableTreeNode pre = (DefaultMutableTreeNode) node.getParent();
+      boolean ok = (nodeObj instanceof Schema);
+      ok &= node.getParent().equals(genTree.getRoot())
+              || (resultReady && pre.getUserObject().equals(curSchema));
+      if (ok) {
+        curSchema = (Schema) nodeObj;
+        resultReady = false;
+        if (curSchema instanceof MatchExpr) {
+          valueTextField.setText("Choisir une expression de la liste conforme "
+                  + "au modèle et cliquer sur valeur");
+        }
+        else if(curSchema instanceof Result) {
+          
+        }
+      } else {
+        displayMessage("sélection incorrecte", "Error message");
+      }
     }
   }//GEN-LAST:event_treeGenItemValueChanged
 
