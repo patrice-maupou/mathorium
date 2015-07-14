@@ -6,17 +6,12 @@
 package org.maupou.sampledataobject;
 
 import java.util.ArrayList;
-import java.util.Enumeration;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.MutableTreeNode;
-import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
-import org.maupou.expressions.GenItem;
 import org.maupou.expressions.MatchExpr;
-import org.maupou.expressions.Result;
 import org.maupou.expressions.Schema;
 import org.maupou.expressions.SyntaxWrite;
 import org.openide.util.Exceptions;
@@ -26,41 +21,39 @@ import org.openide.util.Exceptions;
  * @author Patrice
  */
 public class GenTree extends JTree {
-  
+
   private DefaultMutableTreeNode root;
+  private final DefaultTreeModel m;
   private SyntaxWrite sw;
-  
 
   public GenTree() {
     root = new DefaultMutableTreeNode("genItem");
     sw = null;
-    setModel(new DefaultTreeModel(root));
+    m = new DefaultTreeModel(root);
+    setModel(m);
     setRootVisible(false);
     getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
   }
-  
+
   /**
    *
    * @param schemas
    * @param node
    * @throws java.lang.Exception
    */
-  public void setNode(ArrayList<? extends Schema> schemas, DefaultMutableTreeNode node) 
+  public void setNode(ArrayList<? extends Schema> schemas, DefaultMutableTreeNode node)
           throws Exception {
     if (schemas != null) {
       for (Schema schema : schemas) {
-        if (schema instanceof MatchExpr) {
-          DefaultMutableTreeNode SchNode = new DefaultMutableTreeNode(schema);
-          node.add(SchNode);
-          setNode(schema.getSchemas(), SchNode);
-        }
+        DefaultMutableTreeNode SchNode = new DefaultMutableTreeNode(schema);
+        setNode(schema.getSchemas(), SchNode);
+        node.add(SchNode);
       }
     }
-}
-  
+  }
+
   public void setTree(ArrayList<? extends Schema> schemas) throws Exception {
     root.removeAllChildren();
-    DefaultTreeModel m = (DefaultTreeModel)getModel();
     m.reload(root);
     setNode(schemas, root);
     expandPath(new TreePath(root));
@@ -68,12 +61,12 @@ public class GenTree extends JTree {
 
   @Override
   public String convertValueToText(Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-    String ret = value.toString();    
-    
-    if(((DefaultMutableTreeNode)value).getUserObject() instanceof Schema) {
-      Schema schema = (Schema) ((DefaultMutableTreeNode)value).getUserObject();
+    String ret = value.toString();
+
+    if (((DefaultMutableTreeNode) value).getUserObject() instanceof Schema) {
+      Schema schema = (Schema) ((DefaultMutableTreeNode) value).getUserObject();
       try {
-        ret = (schema instanceof MatchExpr)? "modèle : " : "résultat : ";
+        ret = (schema instanceof MatchExpr) ? "modèle : " : "résultat : ";
         ret += schema.getPattern().toString(sw);
       } catch (Exception ex) {
         Exceptions.printStackTrace(ex);
@@ -81,12 +74,10 @@ public class GenTree extends JTree {
     }
     return ret;
   }
-  
-  
 
   public DefaultMutableTreeNode getRoot() {
     return root;
-  } 
+  }
 
   public void setRoot(DefaultMutableTreeNode root) {
     this.root = root;
@@ -95,6 +86,5 @@ public class GenTree extends JTree {
   public void setSw(SyntaxWrite sw) {
     this.sw = sw;
   }
-  
-  
+
 }
