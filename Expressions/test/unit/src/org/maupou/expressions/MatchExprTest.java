@@ -30,10 +30,10 @@ import org.w3c.dom.Element;
 public class MatchExprTest {
 
   private Syntax syntax;
-  private ArrayList<MatchExpr> matchExprs;
   private HashMap<String, String> freevars;
   ArrayList<Expression> listvars;
   private String[] entries;
+  private ArrayList<Schema> schemas;
 
   public MatchExprTest() {
   }
@@ -64,7 +64,7 @@ public class MatchExprTest {
         listvars = genItems.get(0).getListvars();
         for (GenItem genItem : genItems) {
           if (genItem.getName().equals("modus ponens")) {
-            matchExprs = genItem.getMatchExprs();
+            schemas = genItem.getSchemas();
             break;
           }
         }
@@ -102,15 +102,8 @@ public class MatchExprTest {
         varsExpected.put(new Expression(v[0], syntax), new Expression(v[1], syntax));
       }
     }
-    boolean result = matchExprs.get(0).checkExpr(es.get(0), vars, freevars, listvars, syntax);
-    System.out.println(es.get(0).toString(syntax.getSyntaxWrite()));
-    printVars(vars, syntax);
-    if (result) {
-      matchExprs.get(1).checkExpr(es.get(1), vars, freevars, listvars, syntax);
-    }
-    System.out.println(es.get(1).toString(syntax.getSyntaxWrite()));
-    printVars(vars, syntax);
-    assertEquals(varsExpected, vars);
+    MatchExpr matchExpr = (MatchExpr) schemas.get(0);
+    
   }
 
   private static void printVars(HashMap<Expression, Expression> vars, Syntax syntax)

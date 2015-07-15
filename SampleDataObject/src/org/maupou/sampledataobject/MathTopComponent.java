@@ -188,13 +188,12 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
    */
   private void updateGenItem(GenItem genItem) throws Exception {
     resultTextField.setText("");
-    schemas = genItem.getMatchExprs();
+    schemas = genItem.getSchemas();
     int depth = genTree.setTree(schemas) - 1;
     p = (depth > -1)?  new int[depth] : null;
-    int n = schemas.size();
     matchDepth = 0;
     listparents.clear(); 
-    ArrayList<Expression> vars = (n == 0) ? new ArrayList<>() : genItem.getMatchExprs().get(0).getVars();
+    ArrayList<Expression> vars = schemas.get(0).getVars();
     int m = vars.size();
     for (int k = 0; k < varsTable.getRowCount(); k++) {
       String name = (k < m) ? vars.get(k).toString() : "";
@@ -229,7 +228,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     genItemBox = new javax.swing.JComboBox();
     jScrollPane3 = new javax.swing.JScrollPane();
     varsTable = new javax.swing.JTable();
-    valueLabel = new javax.swing.JLabel();
+    hintLabel = new javax.swing.JLabel();
     valueTextField = new javax.swing.JTextField();
     resultLabel = new javax.swing.JLabel();
     resultTextField = new javax.swing.JTextField();
@@ -297,7 +296,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     });
     jScrollPane3.setViewportView(varsTable);
 
-    org.openide.awt.Mnemonics.setLocalizedText(valueLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.valueLabel.text")); // NOI18N
+    org.openide.awt.Mnemonics.setLocalizedText(hintLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.hintLabel.text")); // NOI18N
 
     valueTextField.setText(org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.valueTextField.text")); // NOI18N
 
@@ -369,7 +368,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           .addGroup(layout.createSequentialGroup()
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
               .addComponent(exprRange, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
-              .addComponent(valueLabel)
+              .addComponent(hintLabel)
               .addComponent(resultLabel)
               .addComponent(commentLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
               .addComponent(itemLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -458,7 +457,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         .addGap(25, 25, 25)
         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
           .addComponent(valueTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-          .addComponent(valueLabel))
+          .addComponent(hintLabel))
         .addGap(10, 10, 10)
         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
           .addComponent(resultLabel)
@@ -701,6 +700,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           }
           try {
             resultTextField.setText(e.toString(syntaxWrite));
+            resultTextField.requestFocus();
           } catch (Exception ex) {
             displayMessage(ex.getMessage(),"Error message");
           }
@@ -732,6 +732,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private javax.swing.JComboBox genItemBox;
   private javax.swing.JComboBox generatorBox;
   private javax.swing.JLabel generatorLabel;
+  private javax.swing.JLabel hintLabel;
   private javax.swing.JLabel itemLabel;
   private javax.swing.JScrollPane jScrollPane1;
   private javax.swing.JScrollPane jScrollPane3;
@@ -742,7 +743,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private javax.swing.JButton toValButton;
   private javax.swing.JTree treeGenItem;
   private javax.swing.JScrollPane treeScrollPane;
-  private javax.swing.JLabel valueLabel;
   private javax.swing.JTextField valueTextField;
   private javax.swing.JTable varsTable;
   // End of variables declaration//GEN-END:variables

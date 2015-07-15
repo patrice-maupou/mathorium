@@ -22,7 +22,7 @@
                   <Group type="102" alignment="0" attributes="0">
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="exprRange" min="-2" pref="73" max="-2" attributes="0"/>
-                          <Component id="valueLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="hintLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="resultLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="commentLabel" alignment="0" min="-2" pref="73" max="-2" attributes="0"/>
                           <Component id="itemLabel" min="-2" pref="63" max="-2" attributes="0"/>
@@ -132,7 +132,7 @@
               <EmptySpace min="-2" pref="25" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="valueTextField" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="valueLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="hintLabel" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
@@ -243,10 +243,10 @@
         </Component>
       </SubComponents>
     </Container>
-    <Component class="javax.swing.JLabel" name="valueLabel">
+    <Component class="javax.swing.JLabel" name="hintLabel">
       <Properties>
         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-          <ResourceString bundle="org/maupou/sampledataobject/Bundle.properties" key="MathTopComponent.valueLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+          <ResourceString bundle="org/maupou/sampledataobject/Bundle.properties" key="MathTopComponent.hintLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
         </Property>
       </Properties>
     </Component>

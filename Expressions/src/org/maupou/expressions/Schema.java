@@ -6,6 +6,7 @@
 package org.maupou.expressions;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import org.w3c.dom.Element;
 
 /**
@@ -16,9 +17,11 @@ public class Schema {
   
   private Expression pattern;
   private final ArrayList<Schema> schemas;
+  private final ArrayList<Expression> vars;
   
   public Schema() {
     schemas = new ArrayList<>();
+    vars = new ArrayList<>();
   }
   
   public void setPattern(Element elem) throws Exception {
@@ -42,5 +45,10 @@ public class Schema {
   public ArrayList<Schema> getSchemas() {
     return schemas;
   }
+
+  public ArrayList<Expression> getVars() {
+    return vars;
+  }
+
  
 }

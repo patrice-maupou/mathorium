@@ -19,6 +19,7 @@ public class GenItem {
   private final String name;
   private final ArrayList<MatchExpr> matchExprs;
   private final ArrayList<Result> resultExprs;
+  private final ArrayList<Schema> schemas;
   private final HashMap<String, String> typesMap; //table de remplacement d'un type par un autre 
   //ex : (propvar->prop)
   private final ArrayList<Expression> listvars; //  liste de référence des variables
@@ -37,19 +38,24 @@ public class GenItem {
     name = e.getAttribute("name");
     this.typesMap = typesMap;
     this.listvars = listvars;
+    schemas = new ArrayList<>();
     matchExprs = new ArrayList<>();
     NodeList nodelist = e.getElementsByTagName("match");
     for (int i = 0; i < nodelist.getLength(); i++) {
       if (e.isEqualNode(nodelist.item(i).getParentNode())) {
         MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), listvars);
         matchExprs.add(matchExpr);
+        schemas.add(matchExpr);
       }
     }
     resultExprs = new ArrayList<>();
-    nodelist = e.getElementsByTagName("result");
-    for (int i = 0; i < nodelist.getLength(); i++) {
-      Result result = new Result((Element) nodelist.item(i));
-      resultExprs.add(result);
+    if (nodelist.getLength() == 0) {
+      nodelist = e.getElementsByTagName("result");
+      for (int i = 0; i < nodelist.getLength(); i++) {
+        Result result = new Result((Element) nodelist.item(i));
+        resultExprs.add(result);
+        schemas.add(result);
+      }
     }
   }
 
@@ -158,6 +164,10 @@ public class GenItem {
 
   public ArrayList<MatchExpr> getMatchExprs() {
     return matchExprs;
+  }
+
+  public ArrayList<Schema> getSchemas() {
+    return schemas;
   }
 
   public ArrayList<Result> getResultExprs() {

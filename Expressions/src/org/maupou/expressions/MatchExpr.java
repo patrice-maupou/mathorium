@@ -19,7 +19,6 @@ public class MatchExpr extends Schema {
 
   private final Expression global;
   private final HashMap<Expression, Expression> replaceMap; // doit devenir inutile
-  private final ArrayList<Expression> vars;
   private final boolean recursive, bidir;
 
   
@@ -27,7 +26,6 @@ public class MatchExpr extends Schema {
     replaceMap = null;
     global = null;
     HashMap<String, String> options = new HashMap<>();
-    vars = new ArrayList<>();
     NodeList patterns = match.getElementsByTagName("pattern");
     if (patterns.getLength() == 0) {
       setPattern(match);
@@ -35,7 +33,7 @@ public class MatchExpr extends Schema {
     else {
       setPattern((Element) patterns.item(0));
     }
-    varsInExpression(getPattern(), vars, listvars);   
+    varsInExpression(getPattern(), getVars(), listvars);   
     NodeList nl = match.getElementsByTagName("match"); 
     for (int i = 0; i < nl.getLength(); i++) {
       if (match.isEqualNode(nl.item(i).getParentNode())) {
@@ -183,7 +181,7 @@ public class MatchExpr extends Schema {
 
   @Override
   public String toString() {
-    String ret = "match : " + getPattern().toString() + "  vars : " + vars;
+    String ret = "match : " + getPattern().toString() + "  vars : " + getVars();
     return ret;
   }
 
@@ -191,9 +189,6 @@ public class MatchExpr extends Schema {
     return global;
   }
 
-  public ArrayList<Expression> getVars() {
-    return vars;
-  }
 
   public HashMap<Expression, Expression> getReplaceMap() {
     return replaceMap;
