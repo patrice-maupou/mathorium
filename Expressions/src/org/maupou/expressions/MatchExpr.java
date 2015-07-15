@@ -35,13 +35,15 @@ public class MatchExpr extends Schema {
     else {
       setPattern((Element) patterns.item(0));
     }
-    varsInExpression(getPattern(), vars, listvars);
-    patterns = match.getElementsByTagName("match");
-    for (int i = 0; i < patterns.getLength(); i++) {
-      getSchemas().add(new MatchExpr((Element) patterns.item(i), listvars));
+    varsInExpression(getPattern(), vars, listvars);   
+    NodeList nl = match.getElementsByTagName("match"); 
+    for (int i = 0; i < nl.getLength(); i++) {
+      if (match.isEqualNode(nl.item(i).getParentNode())) {
+        getSchemas().add(new MatchExpr((Element) nl.item(i), listvars));
+      }
     }
-    if (patterns.getLength() == 0) { // plus rien à vérifier, il ne reste que les résultats
-      NodeList nl = match.getElementsByTagName("result");
+    if (nl.getLength() == 0) { // plus rien à vérifier, il ne reste que les résultats
+      nl = match.getElementsByTagName("result");
       for (int i = 0; i < nl.getLength(); i++) {
         Element result = (Element) nl.item(i);
         getSchemas().add(new Result(result));

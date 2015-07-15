@@ -40,13 +40,10 @@ public class GenItem {
     matchExprs = new ArrayList<>();
     NodeList nodelist = e.getElementsByTagName("match");
     for (int i = 0; i < nodelist.getLength(); i++) {
-      /* avant
-      MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), syntax, listvars);
-      //*/
-      //* modif
-      MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), listvars);
-      //*/
-      matchExprs.add(matchExpr);
+      if (e.isEqualNode(nodelist.item(i).getParentNode())) {
+        MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), listvars);
+        matchExprs.add(matchExpr);
+      }
     }
     resultExprs = new ArrayList<>();
     nodelist = e.getElementsByTagName("result");
