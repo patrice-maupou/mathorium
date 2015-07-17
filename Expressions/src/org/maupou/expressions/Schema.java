@@ -6,6 +6,7 @@
 package org.maupou.expressions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import org.w3c.dom.Element;
 
@@ -17,11 +18,14 @@ public class Schema {
   
   private Expression pattern;
   private final ArrayList<Schema> schemas;
-  private final ArrayList<Expression> vars;
+  private final ArrayList<Expression> vars; // liste des variables
+  protected final HashMap<Expression, Expression> varMap; // pour les valeurs des variables
+  protected int[] enRgs;
   
   public Schema() {
     schemas = new ArrayList<>();
     vars = new ArrayList<>();
+    varMap = new HashMap<>();
   }
   
   public void setPattern(Element elem) throws Exception {
@@ -37,6 +41,17 @@ public class Schema {
     }
     pattern = p;
   }
+  
+  /**
+   * transmet les rangs des expressions utilisées précédemment
+   * @param range le rang de l'ExprNode correspondant à ce modèle
+   */
+  public void updateEnRgs(int range) {
+    enRgs[enRgs.length - 1] = range;
+    schemas.stream().forEach((schema) -> {
+      schema.enRgs = Arrays.copyOf(enRgs, schema.enRgs.length);
+    });
+  }
    
   public Expression getPattern() {
     return pattern;
@@ -48,6 +63,14 @@ public class Schema {
 
   public ArrayList<Expression> getVars() {
     return vars;
+  }
+
+  public HashMap<Expression, Expression> getVarMap() {
+    return varMap;
+  }
+
+  public int[] getEnRgs() {
+    return enRgs;
   }
 
  

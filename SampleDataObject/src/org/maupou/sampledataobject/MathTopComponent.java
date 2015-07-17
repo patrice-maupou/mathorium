@@ -84,9 +84,8 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private ArrayList<Generator> generators;
   private Generator generator;
   private GenItem genItem;
-  private ArrayList<? extends Schema> schemas;
   private boolean resultReady;
-  private int matchDepth, level;
+  private int level;
   private HashMap<Expression, Expression> varsToExprs;
   private MultiViewElementCallback callback;
   private final JToolBar toolbar = new JToolBar();
@@ -94,12 +93,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private static final Logger log = Logger.getLogger(MathTopComponent.class.getName());
   private GenTree genTree;  
   private Schema curSchema;
-  private int[] p;
 
   public MathTopComponent() {
     initComponents();
     genTree = (GenTree) treeGenItem;
-    schemas = new ArrayList<>();
     setName(Bundle.CTL_MathTopComponent());
     setToolTipText(Bundle.HINT_MathTopComponent());
     toAdd = null;
@@ -188,23 +185,23 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
    */
   private void updateGenItem(GenItem genItem) throws Exception {
     resultTextField.setText("");
-    schemas = genItem.getSchemas();
-    int depth = genTree.setTree(schemas) - 1;
-    p = (depth > -1)?  new int[depth] : null;
-    matchDepth = 0;
+    genTree.setTree(genItem.getSchemas());
     listparents.clear(); 
-    ArrayList<Expression> vars = schemas.get(0).getVars();
-    int m = vars.size();
-    for (int k = 0; k < varsTable.getRowCount(); k++) {
-      String name = (k < m) ? vars.get(k).toString() : "";
-      String type = (k < m) ? vars.get(k).getType() : "";
-      varsTable.setValueAt(name, k, 0);
-      varsTable.setValueAt("", k, 1);
-      varsTable.setValueAt(genItem.getTypesMap().get(type), k, 2);
+    if (!genItem.getSchemas().isEmpty()) {
+      ArrayList<Expression> vars = genItem.getSchemas().get(0).getVars();
+      int m = vars.size();
+      for (int k = 0; k < varsTable.getRowCount(); k++) {
+        String name = (k < m) ? vars.get(k).toString() : "";
+        String type = (k < m) ? vars.get(k).getType() : "";
+        varsTable.setValueAt(name, k, 0);
+        varsTable.setValueAt("", k, 1);
+        varsTable.setValueAt(genItem.getTypesMap().get(type), k, 2);
+      }
     }
-    valueTextField.setText("");
+    valueTextField.setText("Sélectionner un modèle ou un résultat");
     varsToExprs.clear();
     resultReady = false;
+    curSchema = null;
   }
   
   
@@ -509,17 +506,18 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     }//GEN-LAST:event_resultTextFieldActionPerformed
 
     private void toValButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_toValButtonActionPerformed
-      if(!resultReady && !exprNodes.isEmpty() && curSchema instanceof MatchExpr) {
+      if(!resultReady && curSchema instanceof MatchExpr) {
         try {
           MatchExpr matchExpr = (MatchExpr) curSchema;
           int index = (int) getExprRange().getValue() - 1;
           ExprNode en = exprNodes.get(index);
           Expression e = en.getE().copy();
-          if (matchExpr.checkExpr(e, varsToExprs, genItem.getTypesMap(), genItem.getListvars(), syntax)) {
+          if (matchExpr.checkExpr(e, curSchema.getVarMap(), genItem.getTypesMap(), 
+                  genItem.getListvars(), syntax)) {
             resultReady = true;            
             valueTextField.setText(editField.getText());
             int row = 0;
-            for (Map.Entry<Expression, Expression> entry : varsToExprs.entrySet()) {
+            for (Map.Entry<Expression, Expression> entry : curSchema.getVarMap().entrySet()) {
               String key = entry.getKey().toString(syntaxWrite);
               String val = entry.getValue().toString(syntaxWrite);
               String type = entry.getValue().getType();
@@ -528,10 +526,11 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
               varsTable.setValueAt(type, row, 2);
               row++;
             }
+            //* modif
+            curSchema.updateEnRgs(index);
+            //*/
             TreePath path = genTree.getSelectionModel().getLeadSelectionPath();
             genTree.expandPath(path);
-            p[matchDepth] = index;
-            matchDepth++;
           }
           else {
             valueTextField.setText("L'expression choisie ne convient pas.");
@@ -678,23 +677,28 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       ok &= node.getParent().equals(genTree.getRoot())
               || (resultReady && pre.getUserObject().equals(curSchema));
       if (ok) {
+        HashMap<Expression, Expression> varMap = (curSchema == null)? new HashMap<>(): curSchema.getVarMap();
         curSchema = (Schema) nodeObj;
+        curSchema.getVarMap().clear();
+        curSchema.getVarMap().putAll(varMap);
         resultReady = false;
         if (curSchema instanceof MatchExpr) {
           valueTextField.setText("Choisir une expression de la liste conforme "
                   + "au modèle et cliquer sur valeur");
         }
         else if(curSchema instanceof Result) {
-          Expression e = curSchema.getPattern().copy().replace(varsToExprs);
+          Expression e = curSchema.getPattern().copy().replace(curSchema.getVarMap());
           ArrayList<int[]> parents = new ArrayList<>();
-          parents.add(p);
+          if (curSchema.getEnRgs().length > 0) {
+            parents.add(curSchema.getEnRgs());
+          }
           toAdd = new ExprNode(e, new ArrayList<>(), parents);
           int index = exprNodes.indexOf(toAdd);
           if(index != -1) {
             ExprNode en = exprNodes.get(index);
-            index = en.getParentList().indexOf(p);
+            index = en.getParentList().indexOf(curSchema.getEnRgs());
             if(index != -1) {
-              en.getParentList().add(p);
+              en.getParentList().add(curSchema.getEnRgs());
             }
             toAdd = null;
           }

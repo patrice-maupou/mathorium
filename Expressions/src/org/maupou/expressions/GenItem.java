@@ -43,7 +43,7 @@ public class GenItem {
     NodeList nodelist = e.getElementsByTagName("match");
     for (int i = 0; i < nodelist.getLength(); i++) {
       if (e.isEqualNode(nodelist.item(i).getParentNode())) {
-        MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), listvars);
+        MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), 1, listvars);
         matchExprs.add(matchExpr);
         schemas.add(matchExpr);
       }
@@ -53,6 +53,7 @@ public class GenItem {
       nodelist = e.getElementsByTagName("result");
       for (int i = 0; i < nodelist.getLength(); i++) {
         Result result = new Result((Element) nodelist.item(i));
+        result.enRgs = new int[0];
         resultExprs.add(result);
         schemas.add(result);
       }
@@ -69,7 +70,7 @@ public class GenItem {
    * @param matchrg rang de matchExpr
    * @param exprg rang de l'exprNode à tester
    * @param syntax
-   * @param en patron pour la liste parents-enfants
+   * @param en patron pour la liste enRgs-enfants
    * @param vars table de variables des modèles
    * @param exprNodes
    * @return l'ExprNode transformée

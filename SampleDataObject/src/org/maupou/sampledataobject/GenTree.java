@@ -59,12 +59,11 @@ public class GenTree extends JTree {
     }
   }
 
-  public int setTree(ArrayList<? extends Schema> schemas) throws Exception {
+  public void setTree(ArrayList<? extends Schema> schemas) throws Exception {
     root.removeAllChildren();
     m.reload(root);
     setNode(schemas, root);
     expandPath(new TreePath(root));
-    return root.getDepth();
   }
 
   @Override
