@@ -17,9 +17,11 @@ public class Result extends Schema {
   /**
    *
    * @param result élément de document définissant l'instance pattern
+   * @param sw
    * @throws Exception
    */
-  public Result (Element result) throws Exception {
+  public Result (Element result, SyntaxWrite sw) throws Exception {
+    allowsChildren = false;
     int l = 0;
     try {
       l = Integer.parseInt(result.getAttribute("level"));
@@ -37,6 +39,7 @@ public class Result extends Schema {
       }
     }
     setPattern(result);
+    setUserObject("résultat : " + getPattern().toString(sw));
   }
 
   /**

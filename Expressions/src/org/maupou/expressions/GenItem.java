@@ -14,12 +14,11 @@ import org.w3c.dom.NodeList;
  *
  * @author Patrice Maupou
  */
-public class GenItem {
+public class GenItem extends Schema {
 
   private final String name;
   private final ArrayList<MatchExpr> matchExprs;
   private final ArrayList<Result> resultExprs;
-  private final ArrayList<Schema> schemas;
   private final HashMap<String, String> typesMap; //table de remplacement d'un type par un autre 
   //ex : (propvar->prop)
   private final ArrayList<Expression> listvars; //  liste de référence des variables
@@ -36,26 +35,58 @@ public class GenItem {
   public GenItem(Element e, Syntax syntax, HashMap<String, String> typesMap,
           ArrayList<Expression> listvars) throws Exception {
     name = e.getAttribute("name");
+    setUserObject(name);
+    allowsChildren = true;
+    SyntaxWrite sw = syntax.getSyntaxWrite();
     this.typesMap = typesMap;
     this.listvars = listvars;
-    schemas = new ArrayList<>();
     matchExprs = new ArrayList<>();
     NodeList nodelist = e.getElementsByTagName("match");
     for (int i = 0; i < nodelist.getLength(); i++) {
       if (e.isEqualNode(nodelist.item(i).getParentNode())) {
-        MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), 1, listvars);
+        MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), 1, listvars, sw);
+        matchExprTree(matchExpr, 1, (Element) nodelist.item(i), sw);
         matchExprs.add(matchExpr);
-        schemas.add(matchExpr);
+        add(matchExpr);
       }
     }
     resultExprs = new ArrayList<>();
     if (nodelist.getLength() == 0) {
       nodelist = e.getElementsByTagName("result");
       for (int i = 0; i < nodelist.getLength(); i++) {
-        Result result = new Result((Element) nodelist.item(i));
+        Result result = new Result((Element) nodelist.item(i), sw);
         result.enRgs = new int[0];
         resultExprs.add(result);
-        schemas.add(result);
+        add(result);
+      }
+    }
+    setParent(null);    
+  }
+  
+  /**
+   * 
+   * @param matchExpr racine de l'arbre
+   * @param depth indice de profondeur
+   * @param e élément DOM
+   * @throws Exception 
+   */
+  private void matchExprTree(MatchExpr matchExpr, int depth, Element e, SyntaxWrite sw) 
+          throws Exception {
+    NodeList nodelist = e.getElementsByTagName("match");
+    for (int i = 0; i < nodelist.getLength(); i++) {
+      if (e.isEqualNode(nodelist.item(i).getParentNode())) { // niveau immédiatement inférieur
+        Element echild = (Element) nodelist.item(i);
+        MatchExpr matchChild = new MatchExpr(echild, depth + 1, listvars, sw);
+        matchExprTree(matchChild, depth + 1, echild, sw);
+        matchExpr.add(matchChild);
+      }      
+    }
+    if(nodelist.getLength() == 0) {
+      nodelist = e.getElementsByTagName("result");
+      for (int i = 0; i < nodelist.getLength(); i++) {
+        Result result = new Result((Element) nodelist.item(i), sw);
+        result.enRgs = new int[depth];
+        matchExpr.add(result);
       }
     }
   }
@@ -165,10 +196,6 @@ public class GenItem {
 
   public ArrayList<MatchExpr> getMatchExprs() {
     return matchExprs;
-  }
-
-  public ArrayList<Schema> getSchemas() {
-    return schemas;
   }
 
   public ArrayList<Result> getResultExprs() {

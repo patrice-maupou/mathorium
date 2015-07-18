@@ -20,8 +20,10 @@ public class MatchExpr extends Schema {
   private final Expression global;
   private final boolean recursive, bidir;
 
-  public MatchExpr(Element match, int depth, ArrayList<Expression> listvars) throws Exception {
+  public MatchExpr(Element match, int depth, ArrayList<Expression> listvars, SyntaxWrite sw) 
+          throws Exception {
     global = null;
+    allowsChildren = true;
     enRgs = new int[depth];
     HashMap<String, String> options = new HashMap<>();
     NodeList patterns = match.getElementsByTagName("pattern");
@@ -30,21 +32,8 @@ public class MatchExpr extends Schema {
     } else {
       setPattern((Element) patterns.item(0));
     }
+    setUserObject("modèle : " + getPattern().toString(sw));
     varsInExpression(getPattern(), getVars(), listvars);
-    NodeList nl = match.getElementsByTagName("match");
-    for (int i = 0; i < nl.getLength(); i++) {
-      if (match.isEqualNode(nl.item(i).getParentNode())) {
-        getSchemas().add(new MatchExpr((Element) nl.item(i), depth + 1, listvars));
-      }
-    }
-    if (nl.getLength() == 0) { // plus rien à vérifier, il ne reste que les résultats
-      nl = match.getElementsByTagName("result");
-      for (int i = 0; i < nl.getLength(); i++) {
-        Result result = new Result((Element) nl.item(i));
-        result.enRgs = new int[enRgs.length];
-        getSchemas().add(result);
-      }
-    }
     String[] listopts = match.getAttribute("options").split(",");
     for (String option : listopts) {
       if (!option.isEmpty()) {

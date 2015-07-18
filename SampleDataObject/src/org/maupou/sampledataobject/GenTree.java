@@ -5,17 +5,11 @@
  */
 package org.maupou.sampledataobject;
 
-import java.util.ArrayList;
 import javax.swing.JTree;
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
+import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeSelectionModel;
-import org.maupou.expressions.MatchExpr;
 import org.maupou.expressions.Schema;
-import org.maupou.expressions.SyntaxWrite;
-import org.openide.util.Exceptions;
 
 /**
  *
@@ -23,16 +17,10 @@ import org.openide.util.Exceptions;
  */
 public class GenTree extends JTree {
 
-  private DefaultMutableTreeNode root;
-  private final DefaultTreeModel m;
-  private SyntaxWrite sw;
+  
 
   public GenTree() {
-    root = new DefaultMutableTreeNode("genItem");
-    sw = null;
-    m = new DefaultTreeModel(root);
-    setModel(m);
-    setRootVisible(false);
+    setRootVisible(true);
     getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
     setShowsRootHandles(true);
     DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
@@ -42,56 +30,30 @@ public class GenTree extends JTree {
     setCellRenderer(renderer);
   }
 
+  
   /**
-   *
-   * @param schemas
-   * @param node
-   * @throws java.lang.Exception
+   * 
+   * @param value
+   * @param selected
+   * @param expanded
+   * @param leaf
+   * @param row
+   * @param hasFocus
+   * @return 
    */
-  public void setNode(ArrayList<? extends Schema> schemas, DefaultMutableTreeNode node)
-          throws Exception {
-    if (schemas != null) {
-      for (Schema schema : schemas) {
-        DefaultMutableTreeNode SchNode = new DefaultMutableTreeNode(schema);
-        setNode(schema.getSchemas(), SchNode);
-        node.add(SchNode);
-      }
-    }
-  }
-
-  public void setTree(ArrayList<? extends Schema> schemas) throws Exception {
-    root.removeAllChildren();
-    m.reload(root);
-    setNode(schemas, root);
-    expandPath(new TreePath(root));
-  }
-
   @Override
-  public String convertValueToText(Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+  public String convertValueToText(Object value, boolean selected, boolean expanded, 
+          boolean leaf, int row, boolean hasFocus) {
     String ret = value.toString();
-
-    if (((DefaultMutableTreeNode) value).getUserObject() instanceof Schema) {
-      Schema schema = (Schema) ((DefaultMutableTreeNode) value).getUserObject();
-      try {
-        ret = (schema instanceof MatchExpr) ? "modèle : " : "résultat : ";
-        ret += schema.getPattern().toString(sw);
-      } catch (Exception ex) {
-        Exceptions.printStackTrace(ex);
-      }
+    if(value instanceof Schema) {
+      ret = ((Schema)value).getDescr();
     }
     return ret;
   }
-
-  public DefaultMutableTreeNode getRoot() {
-    return root;
+  
+  public MutableTreeNode getRoot() {
+    return (MutableTreeNode) getModel().getRoot();
   }
 
-  public void setRoot(DefaultMutableTreeNode root) {
-    this.root = root;
-  }
-
-  public void setSw(SyntaxWrite sw) {
-    this.sw = sw;
-  }
 
 }

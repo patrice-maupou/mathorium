@@ -19,6 +19,8 @@ import javax.swing.JPanel;
 import javax.swing.JToolBar;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import org.maupou.expressions.ExprNode;
 import org.maupou.expressions.Expression;
@@ -114,7 +116,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     try {
       syntax = mdo.setSyntax();
       syntaxWrite = syntax.getSyntaxWrite();
-      genTree.setSw(syntaxWrite);
+      //genTree.setSw(syntaxWrite);
       generators = syntax.getGenerators();
       ArrayList<String> names = new ArrayList<>();
       generators.stream().forEach((gen) -> {
@@ -185,7 +187,16 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
    */
   private void updateGenItem(GenItem genItem) throws Exception {
     resultTextField.setText("");
+    /* avant
+    genTree.getRoot().setUserObject(genItem.getName());
     genTree.setTree(genItem.getSchemas());
+    //*/
+    //* modif
+    DefaultTreeModel model = (DefaultTreeModel) genTree.getModel();
+    model.setRoot(genItem);    
+    model.reload();
+    genTree.expandPath(new TreePath(genItem));
+    //*/
     listparents.clear(); 
     if (!genItem.getSchemas().isEmpty()) {
       ArrayList<Expression> vars = genItem.getSchemas().get(0).getVars();
@@ -669,16 +680,15 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     }//GEN-LAST:event_deleteButtonActionPerformed
 
   private void treeGenItemValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treeGenItemValueChanged
-    DefaultMutableTreeNode node = (DefaultMutableTreeNode) genTree.getLastSelectedPathComponent();
-    if (node != null) {
-      Object nodeObj = node.getUserObject();
-      DefaultMutableTreeNode pre = (DefaultMutableTreeNode) node.getParent();
-      boolean ok = (nodeObj instanceof Schema);
-      ok &= node.getParent().equals(genTree.getRoot())
-              || (resultReady && pre.getUserObject().equals(curSchema));
+    Object node = genTree.getLastSelectedPathComponent();
+    if (node != null && (node instanceof Schema)) {
+      Schema schema = (Schema) node;
+      TreeNode pre = (Schema) schema.getParent();
+      boolean ok = (pre instanceof Schema);
+      ok &= (schema.getParent() instanceof GenItem) || (resultReady && pre.equals(curSchema));
       if (ok) {
         HashMap<Expression, Expression> varMap = (curSchema == null)? new HashMap<>(): curSchema.getVarMap();
-        curSchema = (Schema) nodeObj;
+        curSchema = schema;
         curSchema.getVarMap().clear();
         curSchema.getVarMap().putAll(varMap);
         resultReady = false;
