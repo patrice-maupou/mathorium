@@ -684,8 +684,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     if (node != null && (node instanceof Schema)) {
       Schema schema = (Schema) node;
       TreeNode pre = (Schema) schema.getParent();
-      boolean ok = (pre instanceof Schema);
-      ok &= (schema.getParent() instanceof GenItem) || (resultReady && pre.equals(curSchema));
+      boolean ok = (pre != null) && ((pre instanceof GenItem)|| (resultReady && pre.equals(curSchema)));
       if (ok) {
         HashMap<Expression, Expression> varMap = (curSchema == null)? new HashMap<>(): curSchema.getVarMap();
         curSchema = schema;
