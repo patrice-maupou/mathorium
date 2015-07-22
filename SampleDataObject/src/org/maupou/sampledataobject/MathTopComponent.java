@@ -569,24 +569,24 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       Runnable runnable = new Runnable() {
         @Override
         public void run() {
-          int oldsize;
+          int oldsize, inf = 0;
           ArrayList<ExprNode> exprDiscards = new ArrayList<>();
           do {
             oldsize = exprNodes.size();
             for (GenItem genItem : generator.getGenItems()) {
+              if(!genItem.isReady()) continue;
               Schema schema = genItem, child;
               HashMap<String, String> typesMap = genItem.getTypesMap();
               ArrayList<Expression> listvars = genItem.getListvars();
-              int lastmatch = 0;
               loop:
-              do { // on suppose que schema est vérifié
+              do { // examen des childs
                 int cnt = schema.getChildCount() - 1;              
-                for (int m = lastmatch; m <= cnt; m++) { // 
+                for (int m = 0; m <= cnt; m++) { // liste child
                   child = (Schema) schema.getChildAt(m);
                   System.arraycopy(schema.getRgs(), 0, child.getRgs(), 0, schema.getRgs().length);
+                  child.setReady(schema.isReady()); // transmission
                   int last = child.getRgs().length - 1;
-                  if (child instanceof Result) {
-                    Expression e = child.getPattern().copy().replace(schema.getVarMap());
+                  if (child instanceof Result && child.isReady()) {
                     ExprNode en = new ExprNode(null, null, new ArrayList<>());
                     if (schema.getRgs().length > 0) {
                       en.getParentList().add(schema.getRgs());
@@ -594,29 +594,37 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                     toAdd = ((Result)child).newExpr(en, schema.getVarMap(), typesMap, listvars, syntax, 
                             exprNodes, exprDiscards);
                     addExprNode();
+                    if (m == cnt) {
+                      schema.setReady(false);
+                    }
                   } 
                   else if (child instanceof MatchExpr) {
                     MatchExpr matchExpr = (MatchExpr) child;
+                    if(!child.isReady()) {
+                      child.setReady(child.getRgs()[last] > inf);
+                    }
                     for (int i = child.getRgs()[last]; i < oldsize; i++) { // parcours de la liste
+                      child.getRgs()[last] = i + 1;
                       matchExpr.getVarMap().clear();
                       if (schema instanceof MatchExpr) {
                         matchExpr.getVarMap().putAll(((MatchExpr) schema).getVarMap());
                       }
                       Expression e = exprNodes.get(i).getE();
                       if (matchExpr.checkExpr(e, matchExpr.getVarMap(), typesMap, listvars, syntax)) {
-                        child.getRgs()[last] = i + 1;
                         schema = child;
                         continue loop;
-                      }                      
-                      if (Thread.interrupted()) {
-                        return;
-                      }
+                      }  
                     } // plus d'expressions
+                    child.getRgs()[last] = 0; // seul le dernier est pris en compte
                   }
-                } // fin boucle child                
+                } // fin boucle child                       
+                if (Thread.interrupted()) {
+                  return;
+                }             
                 schema = (Schema) schema.getParent();
-              } while (schema != null && !schema.equals(genItem)); // (si child of Result ou child = MatchExpr
+              } while (schema != null && (schema instanceof MatchExpr)); //on remonte
             } // boucle genItem
+            inf = exprNodes.size();
           } while (oldsize < exprNodes.size());
         }
       };

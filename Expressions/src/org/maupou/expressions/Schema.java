@@ -29,6 +29,7 @@ public class Schema implements MutableTreeNode {
   private final ArrayList<Expression> vars; // liste des variables
   protected final HashMap<Expression, Expression> varMap; // pour les valeurs des variables
   private int[] rgs;
+  private boolean ready;
   
   public Schema() {
     schemas = new ArrayList<>();
@@ -36,6 +37,7 @@ public class Schema implements MutableTreeNode {
     varMap = new HashMap<>();
     parent = null;
     rgs = new int[0];
+    ready = true;
   }
  
   
@@ -188,6 +190,14 @@ public class Schema implements MutableTreeNode {
     if(newParent instanceof Schema) {
      parent = (Schema)newParent;
     }
+  }
+
+  public boolean isReady() {
+    return ready;
+  }
+
+  public void setReady(boolean ready) {
+    this.ready = ready;
   }
   
   
