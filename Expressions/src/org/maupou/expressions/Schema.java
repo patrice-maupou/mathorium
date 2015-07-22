@@ -28,13 +28,14 @@ public class Schema implements MutableTreeNode {
   protected final ArrayList<Schema> schemas;
   private final ArrayList<Expression> vars; // liste des variables
   protected final HashMap<Expression, Expression> varMap; // pour les valeurs des variables
-  protected int[] enRgs;
+  private int[] rgs;
   
   public Schema() {
     schemas = new ArrayList<>();
     vars = new ArrayList<>();
     varMap = new HashMap<>();
     parent = null;
+    rgs = new int[0];
   }
  
   
@@ -56,11 +57,15 @@ public class Schema implements MutableTreeNode {
    * transmet les rangs des expressions utilisées précédemment
    * @param range le rang de l'ExprNode correspondant à ce modèle
    */
-  public void updateEnRgs(int range) {
-    enRgs[enRgs.length - 1] = range;
-    schemas.stream().forEach((schema) -> {
-      schema.enRgs = Arrays.copyOf(enRgs, schema.enRgs.length);
-    });
+  public void updateRgs(int range) {
+    if (rgs.length != 0) {
+      if (range != -1) {
+        rgs[rgs.length - 1] = range;
+      }
+      schemas.stream().forEach((schema) -> {
+        schema.rgs = Arrays.copyOf(rgs, schema.rgs.length);
+      });
+    }
   }
 
   public String getDescr() {
@@ -83,8 +88,12 @@ public class Schema implements MutableTreeNode {
     return varMap;
   }
 
-  public int[] getEnRgs() {
-    return enRgs;
+  public int[] getRgs() {
+    return rgs;
+  }
+
+  public void setRgs(int[] rgs) {
+    this.rgs = rgs;
   }
 
   @Override

@@ -24,8 +24,11 @@ public class Result extends Schema {
     allowsChildren = false;
     int l = 0;
     try {
-      l = Integer.parseInt(result.getAttribute("level"));
-    } catch (NumberFormatException numberFormatException) {
+      if (result.hasAttribute("level")) {
+        l = Integer.parseInt(result.getAttribute("level"));
+      }
+    } catch (NumberFormatException nfe) {
+      throw new Exception("level incorrect : " + nfe.getMessage());
     }
     level = l;
     changes = new HashMap<>();
@@ -43,7 +46,7 @@ public class Result extends Schema {
   }
 
   /**
-   * ajoute une ExprNode à la liste exprNodes si elle est nouvelle et non de type discards
+   * teste si une ExprNode est nouvelle et non de type discards
    *
    * @param en ExprNode à ajouter
    * @param vars valeurs des variables à remplacer
@@ -53,11 +56,10 @@ public class Result extends Schema {
    * @param exprNodes liste déjà établie
    * @param exprDiscards
    * @return l'exprNode ou null si ne convient pas
-   * @throws Exception
    */
-  public ExprNode addExpr(ExprNode en, HashMap<Expression, Expression> vars,
+  public ExprNode newExpr(ExprNode en, HashMap<Expression, Expression> vars,
           HashMap<String, String> freevars, ArrayList<Expression> listvars,
-          Syntax syntax, ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards) throws Exception {
+          Syntax syntax, ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards)  {
     ExprNode ret = null;
     Expression e = getPattern().copy().replace(vars);
     en.setE(e);
@@ -86,19 +88,7 @@ public class Result extends Schema {
         }
       }
       if (!inlist) {
-        int n = exprNodes.size();
-        en.setRange(n);
-        exprNodes.add(en);
         ret = en;
-        if (!en.getParentList().isEmpty()) {
-          for (int i = 0; i < en.getParentList().get(0).length; i++) {
-            int j = en.getParentList().get(0)[i];
-            ExprNode en1 = exprNodes.get(j);
-            if (!en1.getChildList().contains(n)) {
-              en1.getChildList().add(n);
-            }
-          }
-        }
       }
     }
     return ret;

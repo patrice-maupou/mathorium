@@ -2,7 +2,6 @@
  * the code source is distributed under the GPL.
  * Please see http://www.fsf.org/copyleft/gpl.html
  */
-
 package org.maupou.expressions;
 
 import java.util.ArrayList;
@@ -17,7 +16,6 @@ import org.w3c.dom.NodeList;
  *
  * @author Patrice Maupou
  */
-
 /**
  *
  * @author Patrice Maupou
@@ -36,24 +34,24 @@ public class Generator {
     HashMap<String, String> freevars = new HashMap<>(); // remplacement type de variable = type à remplacer
     ArrayList<Expression> listvars = new ArrayList<>(); // liste des variables
     for (int i = 0; i < nodesVariables.getLength(); i++) {
-        Element lv = (Element) nodesVariables.item(i);
-        String vname = lv.getAttribute("name"); // type de la variable
-        String type = lv.getAttribute("type"); // le type représenté
-        freevars.put(vname, type);
-        Set<String> subtypes = syntax.getSubtypes().get(type);
-        if(subtypes == null) {
-            subtypes = new HashSet<>();
-            subtypes.add(type);
-            syntax.getSubtypes().put(type, subtypes);
+      Element lv = (Element) nodesVariables.item(i);
+      String vname = lv.getAttribute("name"); // type de la variable
+      String type = lv.getAttribute("type"); // le type représenté
+      freevars.put(vname, type);
+      Set<String> subtypes = syntax.getSubtypes().get(type);
+      if (subtypes == null) {
+        subtypes = new HashSet<>();
+        subtypes.add(type);
+        syntax.getSubtypes().put(type, subtypes);
+      }
+      subtypes.add(vname);
+      String list = lv.getAttribute("list");
+      if (!list.isEmpty() && !type.isEmpty()) {
+        String[] vars = list.trim().split("\\s");
+        for (String var : vars) { // liste de variables marquées symbol
+          listvars.add(new Expression(var, vname, null, true));
         }
-        subtypes.add(vname);
-        String list = lv.getAttribute("list");
-        if(!list.isEmpty() && !type.isEmpty()) {
-            String[] vars = list.trim().split("\\s");
-            for (String var : vars) { // liste de variables marquées symbol
-                listvars.add(new Expression(var, vname, null, true));
-            }
-        }
+      }
     }
     nodesVariables = elem.getElementsByTagName("genrule");
     for (int i = 0; i < nodesVariables.getLength(); i++) {
@@ -70,25 +68,20 @@ public class Generator {
   @Override
   public String toString() {
     String ret = name + "\n";
-    for (GenItem genItem : genItems) {
-      ret += genItem.toString() + "\n";
-    }
+    ret = genItems.stream().map((genItem) -> genItem.toString() + "\n").reduce(ret, String::concat);
     return ret;
   }
-
-
 
   public ArrayList<GenItem> getGenItems() {
     return genItems;
   }
 
-
   public String getName() {
     return name;
   }
 
-    public ArrayList<GenItem> getDiscards() {
-        return discards;
-    }
+  public ArrayList<GenItem> getDiscards() {
+    return discards;
+  }
 
 }

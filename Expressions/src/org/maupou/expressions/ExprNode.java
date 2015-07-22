@@ -29,8 +29,8 @@ public class ExprNode {
      */
     public ExprNode(Expression e, ArrayList<Integer> childList, ArrayList<int[]> parentList) {
         this.e = e;
-        this.childList = childList;
-        this.parentList = parentList;
+        this.childList = (childList == null)? new ArrayList<>() : childList;
+        this.parentList = (parentList == null)? new ArrayList<>() : parentList;
         exprs = new ArrayList<>();
         comment = "";
     }

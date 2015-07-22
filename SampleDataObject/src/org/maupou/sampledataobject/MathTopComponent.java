@@ -8,6 +8,8 @@ package org.maupou.sampledataobject;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -93,7 +95,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private final JToolBar toolbar = new JToolBar();
   private static RequestProcessor RP;
   private static final Logger log = Logger.getLogger(MathTopComponent.class.getName());
-  private GenTree genTree;  
+  private GenTree genTree;
   private Schema curSchema;
 
   public MathTopComponent() {
@@ -158,8 +160,9 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
 
   /**
    * met à jour le generator et les expNodes correspondant
+   *
    * @param generator
-   * @throws Exception 
+   * @throws Exception
    */
   private void updateGenerator(Generator generator) throws Exception {
     ArrayList<GenItem> genItems = generator.getGenItems();
@@ -183,21 +186,22 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
 
   /**
    * met à jour le genItem et les variables
-   * @param genItem 
+   *
+   * @param genItem
    */
   private void updateGenItem(GenItem genItem) throws Exception {
     resultTextField.setText("");
     /* avant
-    genTree.getRoot().setUserObject(genItem.getName());
-    genTree.setTree(genItem.getSchemas());
-    //*/
+     genTree.getRoot().setUserObject(genItem.getName());
+     genTree.setTree(genItem.getSchemas());
+     //*/
     //* modif
     DefaultTreeModel model = (DefaultTreeModel) genTree.getModel();
-    model.setRoot(genItem);    
+    model.setRoot(genItem);
     model.reload();
     genTree.expandPath(new TreePath(genItem));
     //*/
-    listparents.clear(); 
+    listparents.clear();
     if (!genItem.getSchemas().isEmpty()) {
       ArrayList<Expression> vars = genItem.getSchemas().get(0).getVars();
       int m = vars.size();
@@ -214,8 +218,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     resultReady = false;
     curSchema = null;
   }
-  
-  
 
   /**
    * This method is called from within the constructor to initialize the form. WARNING: Do NOT
@@ -486,46 +488,52 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     private void genItemBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_genItemBoxActionPerformed
       int index = genItemBox.getSelectedIndex();
       genItem = generator.getGenItems().get(index);
-    try {
-      updateGenItem(genItem);
-    } catch (Exception ex) {
-      displayMessage("Ne peut afficher l'item : " + genItem.getName(), "Error message");
-    }
+      try {
+        updateGenItem(genItem);
+      } catch (Exception ex) {
+        displayMessage("Ne peut afficher l'item : " + genItem.getName(), "Error message");
+      }
     }//GEN-LAST:event_genItemBoxActionPerformed
 
     private void resultTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resultTextFieldActionPerformed
-     if (toAdd != null) {
-        try {
-          int n = exprNodes.size();
-          toAdd.setRange(n);
-          exprNodes.add(toAdd);
-          Integer rg = (Integer) exprRange.getValue();
-          mdo.insert(exprNodes.subList(n, n+1), rg, generator);
-          exprRange.setModel(new SpinnerNumberModel(n+1, 1, n+1, 1));
-          editField.setText(toAdd.getE().toString(syntaxWrite));
-          toAdd = null;
-        } catch (Exception ex) {
-          displayMessage("Expression non valide : " + ex.getMessage(), "Expression error");
-        }
-      }
+      addExprNode();
       resultTextField.setText("");
-    try {
-      updateGenItem(genItem);
-    } catch (Exception ex) {
-      displayMessage("Item non valide : " + ex.getMessage(), "Item error");
-    }
+      try {
+        updateGenItem(genItem);
+      } catch (Exception ex) {
+        displayMessage("Item non valide : " + ex.getMessage(), "Item error");
+      }
     }//GEN-LAST:event_resultTextFieldActionPerformed
 
+  private void addExprNode() {
+    if (toAdd != null) {
+      try {
+        int n = exprNodes.size();
+        toAdd.setRange(n);
+        exprNodes.add(toAdd);
+        Integer rg = (Integer) exprRange.getValue();
+        mdo.insert(exprNodes.subList(n, n + 1), rg, generator);
+        exprRange.setModel(new SpinnerNumberModel(n + 1, 1, n + 1, 1));
+        editField.setText(toAdd.getE().toString(syntaxWrite));
+        toAdd = null;
+      } catch (Exception ex) {
+        displayMessage("insertion failed : " + ex.getMessage(), "Expression error");
+      }
+    }
+  }
+
+    
+    
     private void toValButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_toValButtonActionPerformed
-      if(!resultReady && curSchema instanceof MatchExpr) {
+      if (!resultReady && curSchema instanceof MatchExpr) {
         try {
           MatchExpr matchExpr = (MatchExpr) curSchema;
           int index = (int) getExprRange().getValue() - 1;
           ExprNode en = exprNodes.get(index);
           Expression e = en.getE().copy();
-          if (matchExpr.checkExpr(e, curSchema.getVarMap(), genItem.getTypesMap(), 
+          if (matchExpr.checkExpr(e, curSchema.getVarMap(), genItem.getTypesMap(),
                   genItem.getListvars(), syntax)) {
-            resultReady = true;            
+            resultReady = true;
             valueTextField.setText(editField.getText());
             int row = 0;
             for (Map.Entry<Expression, Expression> entry : curSchema.getVarMap().entrySet()) {
@@ -537,13 +545,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
               varsTable.setValueAt(type, row, 2);
               row++;
             }
-            //* modif
-            curSchema.updateEnRgs(index);
-            //*/
+            curSchema.updateRgs(index);
             TreePath path = genTree.getSelectionModel().getLeadSelectionPath();
             genTree.expandPath(path);
-          }
-          else {
+          } else {
             valueTextField.setText("L'expression choisie ne convient pas.");
             resultReady = false;
           }
@@ -566,87 +571,53 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         public void run() {
           int oldsize;
           ArrayList<ExprNode> exprDiscards = new ArrayList<>();
-          boolean once = true;
           do {
             oldsize = exprNodes.size();
             for (GenItem genItem : generator.getGenItems()) {
-              ArrayList<MatchExpr> matchExprs = genItem.getMatchExprs();
-              int matchsize = matchExprs.size();
-              if (matchsize == 0 && genItem.getResultExprs().isEmpty()) {
-                continue;
-              }
-              int[] genpList = new int[matchsize];
-              HashMap<Expression, Expression> evars = new HashMap<>();
-              ArrayList<HashMap<Expression, Expression>> mvars = new ArrayList<>();
-              for (int i = 0; i < matchsize; i++) {
-                mvars.add(evars);
-              }
-              ArrayList<Integer> childList = new ArrayList<>();
-              ArrayList<int[]> parentList = new ArrayList<>();
-              parentList.add(genpList);
-              HashMap<Integer, Integer> rangsEN = new HashMap<>();
-              int m = 0, i = 0; // rangs de matchexpr et exprNodes
-              do {
-                try {
-                  ExprNode en = new ExprNode(null, childList, parentList);
-                  rangsEN.put(m, i);
-                  HashMap<Expression, Expression> vars = new HashMap<>();
-                  vars.putAll(evars);
-                  if (matchExprs.isEmpty() && once) {
-                    // résultats directs
-                    genItem.addResults(en, vars, syntax, level, exprNodes, exprDiscards);
-                    updateEditor();
-                    mdo.insert(exprNodes, 0, generator);
-                    oldsize = exprNodes.size();
-                    break;
-                  } else { // TODO : test sur rangsEN si m == matchsize - 1
-                    en = genItem.genapply(level, m, i, syntax, en, vars, exprNodes);
-                  }
-                  if (m == matchsize - 1 || en == null) { // fin des tests
-                    if (en != null) {
-                      int n0 = exprNodes.size();
-                      int[] p = new int[rangsEN.size()];
-                      for (int j = 0; j < p.length; j++) {
-                        p[j] = rangsEN.get(j);
-                      }
-                      parentList.add(p);
-                      int n = genItem.addResults(en, vars, syntax, level, exprNodes, exprDiscards);
-                      if (n != 0) {
-                        updateEditor();
-                        mdo.insert(exprNodes.subList(n0, n0 + n), n0, generator);
-                      }
+              Schema schema = genItem, child;
+              HashMap<String, String> typesMap = genItem.getTypesMap();
+              ArrayList<Expression> listvars = genItem.getListvars();
+              int lastmatch = 0;
+              loop:
+              do { // on suppose que schema est vérifié
+                int cnt = schema.getChildCount() - 1;              
+                for (int m = lastmatch; m <= cnt; m++) { // 
+                  child = (Schema) schema.getChildAt(m);
+                  System.arraycopy(schema.getRgs(), 0, child.getRgs(), 0, schema.getRgs().length);
+                  int last = child.getRgs().length - 1;
+                  if (child instanceof Result) {
+                    Expression e = child.getPattern().copy().replace(schema.getVarMap());
+                    ExprNode en = new ExprNode(null, null, new ArrayList<>());
+                    if (schema.getRgs().length > 0) {
+                      en.getParentList().add(schema.getRgs());
                     }
-                    while (i >= oldsize - 1 && m > -1) { // revenir en arrière
-                      m--; // evars doit changer
-                      if (m > -1) {
-                        i = rangsEN.get(m);
-                        evars = (m == 0) ? new HashMap<>() : mvars.get(m - 1);
+                    toAdd = ((Result)child).newExpr(en, schema.getVarMap(), typesMap, listvars, syntax, 
+                            exprNodes, exprDiscards);
+                    addExprNode();
+                  } 
+                  else if (child instanceof MatchExpr) {
+                    MatchExpr matchExpr = (MatchExpr) child;
+                    for (int i = child.getRgs()[last]; i < oldsize; i++) { // parcours de la liste
+                      matchExpr.getVarMap().clear();
+                      if (schema instanceof MatchExpr) {
+                        matchExpr.getVarMap().putAll(((MatchExpr) schema).getVarMap());
                       }
-                    }
-                    i++;
-                  } else { // match suivant
-                    evars.putAll(vars);
-                    mvars.set(m, evars);
-                    m++;
-                    i = 0;
+                      Expression e = exprNodes.get(i).getE();
+                      if (matchExpr.checkExpr(e, matchExpr.getVarMap(), typesMap, listvars, syntax)) {
+                        child.getRgs()[last] = i + 1;
+                        schema = child;
+                        continue loop;
+                      }                      
+                      if (Thread.interrupted()) {
+                        return;
+                      }
+                    } // plus d'expressions
                   }
-                } catch (Exception ex) {
-                  StringWriter sw = new StringWriter();
-                  PrintWriter pw = new PrintWriter(sw);
-                  ex.printStackTrace(pw);
-                  String s = sw.toString();
-                  NotifyDescriptor.Message d = new NotifyDescriptor.Message(s);
-                  DialogDisplayer.getDefault().notify(d);
-                  return;
-                }
-                if (Thread.interrupted()) {
-                  return;
-                }
-              } while (m > -1);
-            }
-            once = false;
+                } // fin boucle child                
+                schema = (Schema) schema.getParent();
+              } while (schema != null && !schema.equals(genItem)); // (si child of Result ou child = MatchExpr
+            } // boucle genItem
           } while (oldsize < exprNodes.size());
-          //System.out.println("sortie normale");
         }
       };
       final RequestProcessor.Task theTask = RP.create(runnable);
@@ -684,9 +655,9 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     if (node != null && (node instanceof Schema)) {
       Schema schema = (Schema) node;
       TreeNode pre = (Schema) schema.getParent();
-      boolean ok = (pre != null) && ((pre instanceof GenItem)|| (resultReady && pre.equals(curSchema)));
+      boolean ok = (pre != null) && ((pre instanceof GenItem) || (resultReady && pre.equals(curSchema)));
       if (ok) {
-        HashMap<Expression, Expression> varMap = (curSchema == null)? new HashMap<>(): curSchema.getVarMap();
+        HashMap<Expression, Expression> varMap = (curSchema == null) ? new HashMap<>() : curSchema.getVarMap();
         curSchema = schema;
         curSchema.getVarMap().clear();
         curSchema.getVarMap().putAll(varMap);
@@ -694,20 +665,19 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         if (curSchema instanceof MatchExpr) {
           valueTextField.setText("Choisir une expression de la liste conforme "
                   + "au modèle et cliquer sur valeur");
-        }
-        else if(curSchema instanceof Result) {
+        } else if (curSchema instanceof Result) {
           Expression e = curSchema.getPattern().copy().replace(curSchema.getVarMap());
           ArrayList<int[]> parents = new ArrayList<>();
-          if (curSchema.getEnRgs().length > 0) {
-            parents.add(curSchema.getEnRgs());
+          if (curSchema.getRgs().length > 0) {
+            parents.add(curSchema.getRgs());
           }
           toAdd = new ExprNode(e, new ArrayList<>(), parents);
           int index = exprNodes.indexOf(toAdd);
-          if(index != -1) {
+          if (index != -1) {
             ExprNode en = exprNodes.get(index);
-            index = en.getParentList().indexOf(curSchema.getEnRgs());
-            if(index != -1) {
-              en.getParentList().add(curSchema.getEnRgs());
+            index = en.getParentList().indexOf(curSchema.getRgs());
+            if (index != -1) {
+              en.getParentList().add(curSchema.getRgs());
             }
             toAdd = null;
           }
@@ -715,7 +685,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
             resultTextField.setText(e.toString(syntaxWrite));
             resultTextField.requestFocus();
           } catch (Exception ex) {
-            displayMessage(ex.getMessage(),"Error message");
+            displayMessage(ex.getMessage(), "Error message");
           }
         }
       } else {
@@ -843,6 +813,5 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   public javax.swing.JSpinner getExprRange() {
     return exprRange;
   }
-
 
 }

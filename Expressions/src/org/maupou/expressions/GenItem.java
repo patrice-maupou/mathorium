@@ -17,8 +17,6 @@ import org.w3c.dom.NodeList;
 public class GenItem extends Schema {
 
   private final String name;
-  private final ArrayList<MatchExpr> matchExprs;
-  private final ArrayList<Result> resultExprs;
   private final HashMap<String, String> typesMap; //table de remplacement d'un type par un autre 
   //ex : (propvar->prop)
   private final ArrayList<Expression> listvars; //  liste de référence des variables
@@ -40,23 +38,19 @@ public class GenItem extends Schema {
     SyntaxWrite sw = syntax.getSyntaxWrite();
     this.typesMap = typesMap;
     this.listvars = listvars;
-    matchExprs = new ArrayList<>();
     NodeList nodelist = e.getElementsByTagName("match");
     for (int i = 0; i < nodelist.getLength(); i++) {
       if (e.isEqualNode(nodelist.item(i).getParentNode())) {
         MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), 1, listvars, sw);
         matchExprTree(matchExpr, 1, (Element) nodelist.item(i), sw);
-        matchExprs.add(matchExpr);
         add(matchExpr);
       }
     }
-    resultExprs = new ArrayList<>();
     if (nodelist.getLength() == 0) {
-      nodelist = e.getElementsByTagName("result");
+      nodelist = e.getElementsByTagName("result"); // résultats directs
       for (int i = 0; i < nodelist.getLength(); i++) {
         Result result = new Result((Element) nodelist.item(i), sw);
-        result.enRgs = new int[0];
-        resultExprs.add(result);
+        result.setRgs(new int[0]);
         add(result);
       }
     }
@@ -85,101 +79,16 @@ public class GenItem extends Schema {
       nodelist = e.getElementsByTagName("result");
       for (int i = 0; i < nodelist.getLength(); i++) {
         Result result = new Result((Element) nodelist.item(i), sw);
-        result.enRgs = new int[depth];
+        result.setRgs(new int[depth]);
         matchExpr.add(result);
       }
     }
   }
 
-  /**
-   * Test de l'exprNode en de rang exprg par matchExpr de rang matchrg.
-   * Retourne null si le test est négatif, sinon :
-   * remplit la table vars{var->value} marque en comme parent,
-   * renvoie en ou la la variable global si elle existe
-   * 
-   * @param level niveau à comparer à celui de genitem
-   * @param matchrg rang de matchExpr
-   * @param exprg rang de l'exprNode à tester
-   * @param syntax
-   * @param en patron pour la liste enRgs-enfants
-   * @param vars table de variables des modèles
-   * @param exprNodes
-   * @return l'ExprNode transformée
-   * @throws java.lang.Exception
-   */
-  public ExprNode genapply(int level, int matchrg, int exprg, Syntax syntax, ExprNode en,
-          HashMap<Expression, Expression> vars, ArrayList<ExprNode> exprNodes)
-          throws Exception {
-    ExprNode ret = null;
-    if (matchrg < matchExprs.size()) {
-      MatchExpr matchExpr = matchExprs.get(matchrg);
-      Expression e = exprNodes.get(exprg).getE().copy();
-      if (matchExpr.checkExpr(e, vars, typesMap, listvars, syntax)) { // e convient
-        ArrayList<int[]> parentList = new ArrayList<>();
-        int[] p = new int[]{exprg};
-        if (!en.getParentList().isEmpty()) { // le node de rang exprg est dont parent potentiel
-          p = Arrays.copyOf(en.getParentList().get(0), en.getParentList().get(0).length);
-          p[matchrg] = exprg;
-        }
-        parentList.add(p);
-        if (matchExpr.getGlobal() != null) {
-          Expression g = vars.get(matchExpr.getGlobal()); // la variable t par exemple
-          e = (g == null) ? e : g;
-        }
-        ret = new ExprNode(e, en.getChildList(), parentList);
-      }
-    }
-    return ret;
-  }
-  
-
-  /**
-   * ajoute les nouveaux résultats à la liste exprNodes
-   *
-   * @param en
-   * @param vars
-   * @param syntax
-   * @param level
-   * @param exprNodes liste d'expressions déjà obtenues
-   * @param exprDiscards
-   * @return le nombre de résultats ajoutés
-   * @throws Exception
-   */
-  public int addResults(ExprNode en, HashMap<Expression, Expression> vars, Syntax syntax,
-          int level, ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards)
-          throws Exception {
-    int ret = 0;
-    if (resultExprs.isEmpty()) {
-      if (exprNodes.indexOf(en) == -1) {
-        en.setRange(exprNodes.size());
-        exprNodes.add(en);
-        ret = 1;
-      }
-    }
-    for (Result result : resultExprs) {
-      if (result.getLevel() <= level) {
-        ExprNode en1 = en.copy();
-        en1 = result.addExpr(en1, vars, typesMap, listvars, syntax, exprNodes, exprDiscards);
-        if (en1 != null) {
-          ret++;
-        }
-      }
-    }
-    return ret;
-  }
 
   @Override
   public String toString() {
-    String ret = "";
-    for (MatchExpr matchExpr : matchExprs) {
-      String cond = matchExpr.toString();
-      ret += "   " + cond;
-    }
-    ret += "  ->  ";
-    for (Result result : resultExprs) {
-      ret += "  " + result;
-    }
-    return ret;
+    return name;
   }
 
   public HashMap<String, String> getTypesMap() {
@@ -194,12 +103,5 @@ public class GenItem extends Schema {
     return name;
   }
 
-  public ArrayList<MatchExpr> getMatchExprs() {
-    return matchExprs;
-  }
-
-  public ArrayList<Result> getResultExprs() {
-    return resultExprs;
-  }
 
 }

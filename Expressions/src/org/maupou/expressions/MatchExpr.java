@@ -5,6 +5,7 @@
 package org.maupou.expressions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.w3c.dom.Element;
@@ -24,7 +25,7 @@ public class MatchExpr extends Schema {
           throws Exception {
     global = null;
     allowsChildren = true;
-    enRgs = new int[depth];
+    setRgs(new int[depth]);
     HashMap<String, String> options = new HashMap<>();
     NodeList patterns = match.getElementsByTagName("pattern");
     if (patterns.getLength() == 0) {
@@ -58,11 +59,9 @@ public class MatchExpr extends Schema {
    * @param vars table des variables déjà connues, ex: {A:=(A->B)->A}
    * @param syntax
    * @return true si l'expression convient
-   * @throws Exception
    */
   public boolean checkExpr(Expression expr, HashMap<Expression, Expression> vars,
-          HashMap<String, String> typesMap, ArrayList<Expression> listvars, Syntax syntax)
-          throws Exception {
+          HashMap<String, String> typesMap, ArrayList<Expression> listvars, Syntax syntax) {
     boolean ret;
     if (expr != null) { // pattern : A->B type: prop
       HashMap<Expression, Expression> svars = new HashMap<>(), evars = new HashMap<>();
@@ -158,7 +157,11 @@ public class MatchExpr extends Schema {
 
   @Override
   public String toString() {
-    String ret = "match : " + getPattern().toString() + "  vars : " + getVars();
+    String ret = "match : " + getPattern().toString() + "\nvars : " + getVars() + "\trgs : ";
+    for (int i = 0; i < getRgs().length; i++) {
+      ret += (i == 0)? "" : ",";
+      ret += getRgs()[i];
+    }
     return ret;
   }
 

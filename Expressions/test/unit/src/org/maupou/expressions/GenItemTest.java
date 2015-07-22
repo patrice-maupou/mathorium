@@ -96,50 +96,8 @@ public class GenItemTest {
   public void tearDown() {
   }
 
-  /**
-   * Test of genapply method, of class GenItem.
-   *
-   * @throws java.lang.Exception
-   */
-  @Test
-  public void testGenapply() throws Exception {
-    System.out.println("genapply");
-    ArrayList<GenItem> genItems = syntax.getGenerators().get(0).getGenItems();
-    for (GenItem genItem : genItems) {
-      int level = 0;
-      int matchrg = 0;
-      int exprg = 0;
-      for (int i = 0; i < exprNodes.size(); i++) {
-        ExprNode en = new ExprNode(null, new ArrayList<>(), new ArrayList<>());
-        HashMap<Expression, Expression> vars = new HashMap<>();
-        ExprNode expResult = null;
-        ExprNode result = genItem.genapply(level, matchrg, i, syntax, en, vars, exprNodes);
-        assertEquals(expResult, result);
+  
 
-      }
-    }
-  }
-
-  /**
-   * Test of addResults method, of class GenItem.
-   */
-  @Test
-  @Ignore
-  public void testAddResults() throws Exception {
-    System.out.println("addResults");
-    ExprNode en = null;
-    HashMap<Expression, Expression> vars = null;
-    Syntax syntax = null;
-    int level = 0;
-    ArrayList<ExprNode> exprNodes = null;
-    ArrayList<ExprNode> exprDiscards = null;
-    GenItem instance = null;
-    int expResult = 0;
-    int result = instance.addResults(en, vars, syntax, level, exprNodes, exprDiscards);
-    assertEquals(expResult, result);
-    // TODO review the generated test code and remove the default call to fail.
-    fail("The test case is a prototype.");
-  }
 
   /**
    * Test of toString method, of class GenItem.
@@ -216,19 +174,6 @@ public class GenItemTest {
     fail("The test case is a prototype.");
   }
 
-  /**
-   * Test of getResultExprs method, of class GenItem.
-   */
-  @Test
-  @Ignore
-  public void testGetResultExprs() {
-    System.out.println("getResultExprs");
-    GenItem instance = null;
-    ArrayList<Result> expResult = null;
-    ArrayList<Result> result = instance.getResultExprs();
-    assertEquals(expResult, result);
-    // TODO review the generated test code and remove the default call to fail.
-    fail("The test case is a prototype.");
-  }
+ 
 
 }
