@@ -168,7 +168,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     ArrayList<GenItem> genItems = generator.getGenItems();
     String[] itemStrings = new String[genItems.size()];
     for (int i = 0; i < itemStrings.length; i++) {
-      itemStrings[i] = genItems.get(i).getName();
+      itemStrings[i] = genItems.get(i).toString();
     }
     try {
       exprNodes = mdo.readExprNodes(generator);
@@ -231,7 +231,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     jScrollPane1 = new javax.swing.JScrollPane();
     commentArea = new javax.swing.JTextArea();
     commentLabel = new javax.swing.JLabel();
-    editLabel = new javax.swing.JLabel();
     generatorLabel = new javax.swing.JLabel();
     generatorBox = new javax.swing.JComboBox();
     itemLabel = new javax.swing.JLabel();
@@ -268,8 +267,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     jScrollPane1.setViewportView(commentArea);
 
     org.openide.awt.Mnemonics.setLocalizedText(commentLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.commentLabel.text")); // NOI18N
-
-    org.openide.awt.Mnemonics.setLocalizedText(editLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.editLabel.text")); // NOI18N
 
     org.openide.awt.Mnemonics.setLocalizedText(generatorLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.generatorLabel.text")); // NOI18N
 
@@ -322,7 +319,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     org.openide.awt.Mnemonics.setLocalizedText(toValButton, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.toValButton.text")); // NOI18N
     toValButton.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
-        toValButtonActionPerformed(evt);
+        ValButtonActionPerformed(evt);
       }
     });
 
@@ -375,46 +372,40 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       .addGroup(layout.createSequentialGroup()
         .addContainerGap()
         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+          .addComponent(exprRange, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+          .addComponent(hintLabel)
+          .addComponent(resultLabel)
+          .addComponent(commentLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+          .addComponent(itemLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
+          .addComponent(generatorLabel))
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
           .addGroup(layout.createSequentialGroup()
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-              .addComponent(exprRange, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
-              .addComponent(hintLabel)
-              .addComponent(resultLabel)
-              .addComponent(commentLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
-              .addComponent(itemLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
-              .addComponent(generatorLabel))
-            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+              .addComponent(editField, javax.swing.GroupLayout.Alignment.TRAILING)
+              .addComponent(valueTextField)
+              .addComponent(resultTextField))
+            .addGap(38, 38, 38))
+          .addGroup(layout.createSequentialGroup()
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+              .addComponent(treeScrollPane, javax.swing.GroupLayout.Alignment.LEADING)
+              .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 627, Short.MAX_VALUE)
+              .addComponent(genItemBox, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+              .addComponent(generatorBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
               .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                  .addComponent(editField, javax.swing.GroupLayout.Alignment.TRAILING)
-                  .addComponent(valueTextField)
-                  .addComponent(resultTextField))
-                .addGap(38, 38, 38))
-              .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                  .addComponent(treeScrollPane, javax.swing.GroupLayout.Alignment.LEADING)
-                  .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 627, Short.MAX_VALUE)
-                  .addComponent(genItemBox, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                  .addComponent(generatorBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                  .addGroup(layout.createSequentialGroup()
-                    .addGap(2, 2, 2)
-                    .addComponent(cntResultsLabel)
-                    .addGap(18, 18, 18)
-                    .addComponent(cntResSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(levelLabel)
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addComponent(levelSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(194, 194, 194)
-                    .addComponent(commentButton)
-                    .addGap(94, 94, 94))
-                  .addComponent(jScrollPane1))
-                .addContainerGap(38, Short.MAX_VALUE))))
-          .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-            .addGap(0, 0, Short.MAX_VALUE)
-            .addComponent(editLabel)
-            .addGap(351, 351, 351))))
+                .addGap(2, 2, 2)
+                .addComponent(cntResultsLabel)
+                .addGap(18, 18, 18)
+                .addComponent(cntResSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(levelLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(levelSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(194, 194, 194)
+                .addComponent(commentButton)
+                .addGap(94, 94, 94))
+              .addComponent(jScrollPane1))
+            .addContainerGap(38, Short.MAX_VALUE))))
       .addGroup(layout.createSequentialGroup()
         .addGap(191, 191, 191)
         .addComponent(deleteButton)
@@ -427,9 +418,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     layout.setVerticalGroup(
       layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
       .addGroup(layout.createSequentialGroup()
-        .addGap(18, 18, 18)
-        .addComponent(editLabel)
-        .addGap(18, 18, 18)
+        .addGap(50, 50, 50)
         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
           .addComponent(editField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
           .addComponent(exprRange, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -491,7 +480,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       try {
         updateGenItem(genItem);
       } catch (Exception ex) {
-        displayMessage("Ne peut afficher l'item : " + genItem.getName(), "Error message");
+        displayMessage("Ne peut afficher l'item : " + genItem.toString(), "Error message");
       }
     }//GEN-LAST:event_genItemBoxActionPerformed
 
@@ -524,7 +513,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
 
     
     
-    private void toValButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_toValButtonActionPerformed
+    private void ValButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ValButtonActionPerformed
       if (!resultReady && curSchema instanceof MatchExpr) {
         try {
           MatchExpr matchExpr = (MatchExpr) curSchema;
@@ -556,7 +545,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           displayMessage(ex.getMessage(), "Error message");
         }
       }
-    }//GEN-LAST:event_toValButtonActionPerformed
+    }//GEN-LAST:event_ValButtonActionPerformed
 
     private void commentButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_commentButtonActionPerformed
       int n = (int) exprRange.getValue();
@@ -623,7 +612,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                   return;
                 } 
                 schema = (Schema) schema.getParent();
-              } while (schema != null); //  && (schema instanceof MatchExpr)
+              } while (schema != null); // remonte au parent
             } // boucle genItem
             inf = exprNodes.size();
           } while (oldsize < exprNodes.size());
@@ -719,7 +708,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private javax.swing.JLabel commentLabel;
   private javax.swing.JButton deleteButton;
   private javax.swing.JTextField editField;
-  private javax.swing.JLabel editLabel;
   private javax.swing.JSpinner exprRange;
   private javax.swing.JComboBox genItemBox;
   private javax.swing.JComboBox generatorBox;

@@ -63,7 +63,7 @@ public class MatchExprTest {
         freevars = genItems.get(0).getTypesMap();
         listvars = genItems.get(0).getListvars();
         for (GenItem genItem : genItems) {
-          if (genItem.getName().equals("modus ponens")) {
+          if (genItem.toString().equals("modus ponens")) {
             schemas = genItem.getSchemas();
             break;
           }

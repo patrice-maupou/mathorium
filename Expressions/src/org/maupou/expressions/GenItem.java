@@ -99,10 +99,6 @@ public class GenItem extends Schema {
     return listvars;
   }
 
-  public String getName() {
-    return name;
-  }
-
   @Override
   public String log() {
     return name;    

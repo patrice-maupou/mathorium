@@ -144,20 +144,7 @@ public class GenItemTest {
     fail("The test case is a prototype.");
   }
 
-  /**
-   * Test of getName method, of class GenItem.
-   */
-  @Test
-  @Ignore
-  public void testGetName() {
-    System.out.println("getName");
-    GenItem instance = null;
-    String expResult = "";
-    String result = instance.getName();
-    assertEquals(expResult, result);
-    // TODO review the generated test code and remove the default call to fail.
-    fail("The test case is a prototype.");
-  }
+  
 
   /**
    * Test of getMatchExprs method, of class GenItem.

@@ -42,7 +42,7 @@
   <!-- automatic generation of naturals equalities -->
   <generators name="addition_and_equality">
     <variable type="digit" name="cv" list="u v w"/> 
-    <variable type="natural" name="nv" list="a b c"/>  
+    <variable type="natural" name="nv" list="a b c d e"/>  
     <genrule name="base">
       <result>(EQU,(ADD,0:digit,0:digit):natural,0:digit):equality</result>
       <result>(EQU,(ADD,0:digit,1:digit):natural,1:digit):equality</result>
@@ -76,12 +76,12 @@
     </genrule>
     <genrule name="add all">
       <match name="equality">
-        <pattern>(EQU,(ADD,a:nv,b:nv):natural,c:nv):equality</pattern>
+        <pattern>(EQU,(ADD,c:nv,1:digit):natural,e:nv):equality</pattern>   <!--c+1=e -->
           <match name="equality">
-            <pattern>(EQU,(ADD,b:nv,1:digit):natural,d:nv):equality</pattern>
+            <pattern>(EQU,(ADD,b:nv,1:digit):natural,d:nv):equality</pattern>      <!--b+1=d -->
               <match name="equality">
-                <pattern>(EQU,(ADD,c:nv,1:digit):natural,e:nv):equality</pattern>
-                  <result>(EQU,(ADD,a:natural,d:natural):natural,e:natural):equality</result>
+                  <pattern>(EQU,(ADD,a:nv,b:nv):natural,c:nv):equality</pattern>             <!--a+b=c -->
+                  <result>(EQU,(ADD,a:natural,d:natural):natural,e:natural):equality</result><!--a+d=e -->
               </match>
           </match>
       </match>
