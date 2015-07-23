@@ -559,7 +559,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         @Override
         public void run() {
           int oldsize, inf = 0;
-          ArrayList<ExprNode> exprDiscards = new ArrayList<>();
+          ArrayList<ExprNode> exprDiscards = new ArrayList<>(); // TODO : clarifier le rôle
           do {
             oldsize = exprNodes.size();
             for (GenItem genItem : generator.getGenItems()) {
@@ -573,7 +573,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                 for (int m = 0; m <= cnt; m++) { // liste child
                   child = (Schema) schema.getChildAt(m);
                   System.arraycopy(schema.getRgs(), 0, child.getRgs(), 0, schema.getRgs().length);
-                  child.setReady(schema.isReady()); // transmission
+                  child.setReady(schema.isReady()); // transmission descendante
                   int last = child.getRgs().length - 1;
                   if (child instanceof Result && child.isReady()) {
                     ExprNode en = new ExprNode(null, null, new ArrayList<>());

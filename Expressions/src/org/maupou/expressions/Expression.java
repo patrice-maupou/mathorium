@@ -61,7 +61,7 @@ public class Expression {
   public Expression(String text) throws Exception {
     symbol = false;
     ArrayList<Expression> list = new ArrayList<>();
-    String[] ret = scanExpr(text.trim(), list);
+    String[] ret = scanExpr(text.replaceAll("\\s",""), list);
     if (list.size() == 1 && ret[1].isEmpty()) {
       name = list.get(0).getName();
       type = list.get(0).getType();
