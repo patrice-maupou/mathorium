@@ -200,6 +200,17 @@ public class Schema implements MutableTreeNode {
     this.ready = ready;
   }
   
-  
+  public String log() {
+    String ret = getClass().getSimpleName().substring(0, 1);
+    Schema p = (Schema) getParent();
+    if(p != null) {
+      int index = p.getSchemas().indexOf(this);
+      ret += index + " [";
+    }
+    for (int i = 0; i < rgs.length; i++) {
+      ret += (i==0)? rgs[i] : ","+rgs[i];
+    }
+    return ret + "]";
+  }
  
 }

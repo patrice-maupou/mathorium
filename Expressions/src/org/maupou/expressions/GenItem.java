@@ -103,5 +103,9 @@ public class GenItem extends Schema {
     return name;
   }
 
+  @Override
+  public String log() {
+    return name;    
+  }
 
 }

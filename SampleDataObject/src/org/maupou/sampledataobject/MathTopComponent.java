@@ -594,9 +594,8 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                     toAdd = ((Result)child).newExpr(en, schema.getVarMap(), typesMap, listvars, syntax, 
                             exprNodes, exprDiscards);
                     addExprNode();
-                    if (m == cnt) {
-                      schema.setReady(false);
-                    }
+                    schema.setReady(m != cnt); // première sortie
+                    System.out.println(schema.log()+ " -> "+ child.log() + " :"+ toAdd);
                   } 
                   else if (child instanceof MatchExpr) {
                     MatchExpr matchExpr = (MatchExpr) child;
@@ -611,18 +610,20 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                       }
                       Expression e = exprNodes.get(i).getE();
                       if (matchExpr.checkExpr(e, matchExpr.getVarMap(), typesMap, listvars, syntax)) {
+                        System.out.println(schema.log()+ " -> "+ child.log() + " e"+i+":"+ e);
                         schema = child;
-                        continue loop;
+                        continue loop; // 2è sortie
                       }  
-                    } // plus d'expressions
+                    } // plus d'expressions, 3è sortie
                     child.getRgs()[last] = 0; // seul le dernier est pris en compte
+                    System.out.println(schema.log()+ " -> "+ child.log()+ " ...");
                   }
                 } // fin boucle child                       
                 if (Thread.interrupted()) {
                   return;
-                }             
+                } 
                 schema = (Schema) schema.getParent();
-              } while (schema != null && (schema instanceof MatchExpr)); //on remonte
+              } while (schema != null); //  && (schema instanceof MatchExpr)
             } // boucle genItem
             inf = exprNodes.size();
           } while (oldsize < exprNodes.size());
