@@ -5,11 +5,7 @@
  */
 package org.maupou.sampledataobject;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -20,7 +16,6 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
@@ -82,7 +77,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private MathDataObject mdo;
   private ExprNode toAdd;
   private ArrayList<ExprNode> exprNodes;
-  private ArrayList<ExprNode> listparents;
   private Syntax syntax;
   private SyntaxWrite syntaxWrite;
   private ArrayList<Generator> generators;
@@ -106,7 +100,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     toAdd = null;
     exprNodes = new ArrayList<>();
     varsToExprs = new HashMap<>();
-    listparents = new ArrayList<>();
     level = 1;
     RP = new RequestProcessor("Generation of expressions", 1, true);
     log.setLevel(Level.INFO);
@@ -191,17 +184,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
    */
   private void updateGenItem(GenItem genItem) throws Exception {
     resultTextField.setText("");
-    /* avant
-     genTree.getRoot().setUserObject(genItem.getName());
-     genTree.setTree(genItem.getSchemas());
-     //*/
-    //* modif
     DefaultTreeModel model = (DefaultTreeModel) genTree.getModel();
     model.setRoot(genItem);
     model.reload();
     genTree.expandPath(new TreePath(genItem));
-    //*/
-    listparents.clear();
     if (!genItem.getSchemas().isEmpty()) {
       ArrayList<Expression> vars = genItem.getSchemas().get(0).getVars();
       int m = vars.size();
