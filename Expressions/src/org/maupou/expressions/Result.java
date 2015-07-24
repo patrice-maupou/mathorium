@@ -73,10 +73,11 @@ public class Result extends Schema {
           exprNode.getParentList().addAll(en.getParentList());
         }
         inlist = true;
-        break;
+        break;  // (return null)
       }
     }
     if (!inlist) {
+    //* inutile ?
       if (exprDiscards != null) {
         for (ExprNode exprNode : exprDiscards) {
           Expression expr = exprNode.getE();
@@ -86,7 +87,7 @@ public class Result extends Schema {
             break;
           }
         }
-      }
+      } //*/
       if (!inlist) {
         ret = en;
       }

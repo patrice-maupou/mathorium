@@ -286,7 +286,7 @@ public class Expression {
     }
   }
 
-  /**
+  /** TODO : à réexaminer
    * examine les sous-expressions qui correspondent à schema et leur donne le childType de schema et
    * les met dans la liste des Expr de en
    *

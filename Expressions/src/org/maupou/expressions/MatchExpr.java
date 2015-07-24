@@ -18,12 +18,10 @@ import org.w3c.dom.NodeList;
  */
 public class MatchExpr extends Schema {
 
-  private final Expression global;
-  private final boolean recursive, bidir;
+  private final boolean bidir;
 
   public MatchExpr(Element match, int depth, ArrayList<Expression> listvars, SyntaxWrite sw) 
           throws Exception {
-    global = null;
     allowsChildren = true;
     setRgs(new int[depth]);
     HashMap<String, String> options = new HashMap<>();
@@ -44,7 +42,6 @@ public class MatchExpr extends Schema {
         }
       }
     }
-    recursive = "yes".equals(options.get("recursive"));
     bidir = "yes".equals(options.get("bidirectional"));
   }
 
@@ -165,8 +162,5 @@ public class MatchExpr extends Schema {
     return ret;
   }
 
-  public Expression getGlobal() {
-    return global;
-  }
 
 }
