@@ -42,49 +42,19 @@ public class GenItem extends Schema {
     for (int i = 0; i < nodelist.getLength(); i++) {
       if (e.isEqualNode(nodelist.item(i).getParentNode())) {
         MatchExpr matchExpr = new MatchExpr((Element) nodelist.item(i), 1, listvars, sw);
-        matchExprTree(matchExpr, 1, (Element) nodelist.item(i), sw);
         add(matchExpr);
       }
     }
     if (nodelist.getLength() == 0) {
       nodelist = e.getElementsByTagName("result"); // résultats directs
       for (int i = 0; i < nodelist.getLength(); i++) {
-        Result result = new Result((Element) nodelist.item(i), sw);
-        result.setRgs(new int[0]);
+        Result result = new Result((Element) nodelist.item(i), 0, sw);
         add(result);
       }
     }
     setParent(null);    
   }
   
-  /**
-   * 
-   * @param matchExpr racine de l'arbre
-   * @param depth indice de profondeur
-   * @param e élément DOM
-   * @throws Exception 
-   */
-  private void matchExprTree(MatchExpr matchExpr, int depth, Element e, SyntaxWrite sw) 
-          throws Exception {
-    NodeList nodelist = e.getElementsByTagName("match");
-    for (int i = 0; i < nodelist.getLength(); i++) {
-      if (e.isEqualNode(nodelist.item(i).getParentNode())) { // niveau immédiatement inférieur
-        Element echild = (Element) nodelist.item(i);
-        MatchExpr matchChild = new MatchExpr(echild, depth + 1, listvars, sw);
-        matchExprTree(matchChild, depth + 1, echild, sw);
-        matchExpr.add(matchChild);
-      }      
-    }
-    if(nodelist.getLength() == 0) {
-      nodelist = e.getElementsByTagName("result");
-      for (int i = 0; i < nodelist.getLength(); i++) {
-        Result result = new Result((Element) nodelist.item(i), sw);
-        result.setRgs(new int[depth]);
-        matchExpr.add(result);
-      }
-    }
-  }
-
 
   @Override
   public String toString() {

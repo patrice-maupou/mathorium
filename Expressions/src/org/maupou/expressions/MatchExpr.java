@@ -20,16 +20,32 @@ public class MatchExpr extends Schema {
 
   private final boolean bidir;
 
-  public MatchExpr(Element match, int depth, ArrayList<Expression> listvars, SyntaxWrite sw) 
+  public MatchExpr(Element match, int depth, ArrayList<Expression> listvars, SyntaxWrite sw)
           throws Exception {
     allowsChildren = true;
-    setRgs(new int[depth]);
+    rgs = new int[depth];
     HashMap<String, String> options = new HashMap<>();
     NodeList patterns = match.getElementsByTagName("pattern");
     if (patterns.getLength() == 0) {
       setPattern(match);
     } else {
       setPattern((Element) patterns.item(0));
+    }
+    NodeList nodelist = match.getElementsByTagName("match");
+    for (int i = 0; i < nodelist.getLength(); i++) {
+      if (match.isEqualNode(nodelist.item(i).getParentNode())) { // niveau immédiatement inférieur
+        Element echild = (Element) nodelist.item(i);
+        MatchExpr matchChild = new MatchExpr(echild, depth + 1, listvars, sw);
+        add(matchChild);
+      }
+    }
+    nodelist = match.getElementsByTagName("result");
+    for (int i = 0; i < nodelist.getLength(); i++) {
+      if (match.isEqualNode(nodelist.item(i).getParentNode())) { // niveau immédiatement inférieur
+        Result result = new Result((Element) nodelist.item(i), depth, sw);
+        result.varMap = varMap;
+        add(result);
+      }
     }
     setUserObject("modèle : " + getPattern().toString(sw));
     varsInExpression(getPattern(), getVars(), listvars);
@@ -53,12 +69,11 @@ public class MatchExpr extends Schema {
    * @param expr l'expression examinée par rapport à pattern, ex : ((A->B)->C)->(B->C)
    * @param typesMap table de remplacement d'un type par un autre (propse->prop)
    * @param listvars liste des symboles à remplacer
-   * @param vars table des variables déjà connues, ex: {A:=(A->B)->A}
    * @param syntax
    * @return true si l'expression convient
    */
-  public boolean checkExpr(Expression expr, HashMap<Expression, Expression> vars,
-          HashMap<String, String> typesMap, ArrayList<Expression> listvars, Syntax syntax) {
+  public boolean checkExpr(Expression expr, HashMap<String, String> typesMap,
+          ArrayList<Expression> listvars, Syntax syntax) {
     boolean ret;
     if (expr != null) { // pattern : A->B type: prop
       HashMap<Expression, Expression> svars = new HashMap<>(), evars = new HashMap<>();
@@ -67,14 +82,14 @@ public class MatchExpr extends Schema {
       } else {
         ret = expr.match(getPattern(), typesMap, listvars, svars, syntax.getSubtypes());
       }
-      if (vars.isEmpty()) { // ajouter les nouvelles variables à la table vars
-        vars.putAll(svars);
+      if (varMap.isEmpty()) { // ajouter les nouvelles variables à la table vars
+        varMap.putAll(svars);
         listvars.stream().forEach((var) -> {
           var.setSymbol(true);
         });
       } else { // ce n'est pas le premier modèle
         HashMap<Expression, Expression> nsvars = new HashMap<>(), nvars = new HashMap<>();
-        for (Map.Entry<Expression, Expression> var : vars.entrySet()) {
+        for (Map.Entry<Expression, Expression> var : varMap.entrySet()) {
           Expression svar = svars.get(var.getKey()); // A->B
           Expression e = var.getValue(); // (A->B)->C
           if (ret && svar != null) { // nsvars={A=(A->B)->C, B=B->C} mais pas le C de B:=  
@@ -87,18 +102,18 @@ public class MatchExpr extends Schema {
             extendMap(e, nsvars, listvars);
           });
           // corrige vars avec svars
-          vars.keySet().stream().forEach((var) -> {
-            vars.put(var, vars.get(var).replace(nvars));
+          varMap.keySet().stream().forEach((var) -> {
+            varMap.put(var, varMap.get(var).replace(nvars));
           });
           svars.keySet().stream().forEach((svar) -> {
             svars.put(svar, svars.get(svar).replace(nsvars));
           });
-          vars.putAll(svars);
+          varMap.putAll(svars);
         }
       }
       expr.markUsedVars(listvars);
     } else { // expr est nulle : vérifier si le schéma correspond au type
-      Expression e = getPattern().replace(vars);
+      Expression e = getPattern().replace(varMap);
       ret = getPattern().getType().equals(e.getType());
     }
     return ret;
@@ -156,11 +171,10 @@ public class MatchExpr extends Schema {
   public String toString() {
     String ret = "match : " + getPattern().toString() + "\nvars : " + getVars() + "\trgs : ";
     for (int i = 0; i < getRgs().length; i++) {
-      ret += (i == 0)? "" : ",";
+      ret += (i == 0) ? "" : ",";
       ret += getRgs()[i];
     }
     return ret;
   }
-
 
 }

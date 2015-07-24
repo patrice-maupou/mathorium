@@ -485,7 +485,8 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     }//GEN-LAST:event_genItemBoxActionPerformed
 
     private void resultTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resultTextFieldActionPerformed
-      addExprNode();
+      addExprNode(toAdd);
+      toAdd = null;
       resultTextField.setText("");
       try {
         updateGenItem(genItem);
@@ -494,17 +495,16 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       }
     }//GEN-LAST:event_resultTextFieldActionPerformed
 
-  private void addExprNode() {
-    if (toAdd != null) {
+  private void addExprNode(ExprNode en) {
+    if (en != null) {
       try {
         int n = exprNodes.size();
-        toAdd.setRange(n);
-        exprNodes.add(toAdd);
+        en.setRange(n);
+        exprNodes.add(en);
         Integer rg = (Integer) exprRange.getValue();
         mdo.insert(exprNodes.subList(n, n + 1), rg, generator);
         exprRange.setModel(new SpinnerNumberModel(n + 1, 1, n + 1, 1));
-        editField.setText(toAdd.getE().toString(syntaxWrite));
-        toAdd = null;
+        editField.setText(en.getE().toString(syntaxWrite));
       } catch (Exception ex) {
         displayMessage("insertion failed : " + ex.getMessage(), "Expression error");
       }
@@ -520,7 +520,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           int index = (int) getExprRange().getValue() - 1;
           ExprNode en = exprNodes.get(index);
           Expression e = en.getE().copy();
-          if (matchExpr.checkExpr(e, curSchema.getVarMap(), genItem.getTypesMap(),
+          if (matchExpr.checkExpr(e, genItem.getTypesMap(),
                   genItem.getListvars(), syntax)) {
             resultReady = true;
             valueTextField.setText(editField.getText());
@@ -559,7 +559,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         @Override
         public void run() {
           int oldsize, inf = 0;
-          ArrayList<ExprNode> exprDiscards = new ArrayList<>(); // TODO : clarifier le rôle
           do {
             oldsize = exprNodes.size();
             for (GenItem genItem : generator.getGenItems()) {
@@ -580,11 +579,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                     if (schema.getRgs().length > 0) {
                       en.getParentList().add(schema.getRgs());
                     }
-                    toAdd = ((Result)child).newExpr(en, schema.getVarMap(), typesMap, listvars, syntax, 
-                            exprNodes, exprDiscards);
-                    addExprNode();
+                    addExprNode(((Result)child).newExpr(en, typesMap, listvars, syntax, exprNodes));
                     schema.setReady(m != cnt); // première sortie
-                    System.out.println(schema.log()+ " -> "+ child.log() + " :"+ toAdd);
+                    System.out.println(schema.log()+ " -> "+ child.log() + " :"+ 
+                            exprNodes.get(exprNodes.size()-1));
                   } 
                   else if (child instanceof MatchExpr) {
                     MatchExpr matchExpr = (MatchExpr) child;
@@ -593,12 +591,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                     }
                     for (int i = child.getRgs()[last]; i < oldsize; i++) { // parcours de la liste
                       child.getRgs()[last] = i + 1;
-                      matchExpr.getVarMap().clear();
-                      if (schema instanceof MatchExpr) {
-                        matchExpr.getVarMap().putAll(((MatchExpr) schema).getVarMap());
-                      }
+                      child.getVarMap().clear();
+                      child.getVarMap().putAll(schema.getVarMap());
                       Expression e = exprNodes.get(i).getE();
-                      if (matchExpr.checkExpr(e, matchExpr.getVarMap(), typesMap, listvars, syntax)) {
+                      if (matchExpr.checkExpr(e, typesMap, listvars, syntax)) {
                         System.out.println(schema.log()+ " -> "+ child.log() + " e"+i+":"+ e);
                         schema = child;
                         continue loop; // 2è sortie
@@ -657,10 +653,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       if (ok) {
         HashMap<Expression, Expression> varMap = (curSchema == null) ? new HashMap<>() : curSchema.getVarMap();
         curSchema = schema;
-        curSchema.getVarMap().clear();
-        curSchema.getVarMap().putAll(varMap);
         resultReady = false;
         if (curSchema instanceof MatchExpr) {
+          curSchema.getVarMap().clear();
+          curSchema.getVarMap().putAll(varMap);
           valueTextField.setText("Choisir une expression de la liste conforme "
                   + "au modèle et cliquer sur valeur");
         } else if (curSchema instanceof Result) {

@@ -17,11 +17,13 @@ public class Result extends Schema {
   /**
    *
    * @param result élément de document définissant l'instance pattern
+   * @param depth nombre de conditions précédent ce résultat
    * @param sw
    * @throws Exception
    */
-  public Result (Element result, SyntaxWrite sw) throws Exception {
+  public Result (Element result, int depth, SyntaxWrite sw) throws Exception {
     allowsChildren = false;
+    rgs = new int[depth];
     int l = 0;
     try {
       if (result.hasAttribute("level")) {
@@ -49,21 +51,16 @@ public class Result extends Schema {
    * teste si une ExprNode est nouvelle et non de type discards
    *
    * @param en ExprNode à ajouter
-   * @param vars valeurs des variables à remplacer
    * @param freevars
    * @param listvars
    * @param syntax
    * @param exprNodes liste déjà établie
-   * @param exprDiscards
    * @return l'exprNode ou null si ne convient pas
    */
-  public ExprNode newExpr(ExprNode en, HashMap<Expression, Expression> vars,
-          HashMap<String, String> freevars, ArrayList<Expression> listvars,
-          Syntax syntax, ArrayList<ExprNode> exprNodes, ArrayList<ExprNode> exprDiscards)  {
-    ExprNode ret = null;
-    Expression e = getPattern().copy().replace(vars);
+  public ExprNode newExpr(ExprNode en, HashMap<String, String> freevars, ArrayList<Expression> listvars, 
+          Syntax syntax, ArrayList<ExprNode> exprNodes)  {
+    Expression e = getPattern().copy().replace(varMap);
     en.setE(e);
-    boolean inlist = false;
     for (ExprNode exprNode : exprNodes) {
       Expression expr = exprNode.getE();
       HashMap<Expression, Expression> nvars = new HashMap<>();
@@ -72,27 +69,10 @@ public class Result extends Schema {
         if (!exprNode.getParentList().containsAll(en.getParentList())) {
           exprNode.getParentList().addAll(en.getParentList());
         }
-        inlist = true;
-        break;  // (return null)
+        return null;
       }
     }
-    if (!inlist) {
-    //* inutile ?
-      if (exprDiscards != null) {
-        for (ExprNode exprNode : exprDiscards) {
-          Expression expr = exprNode.getE();
-          HashMap<Expression, Expression> nvars = new HashMap<>();
-          if (e.matchRecursively(expr, freevars, listvars, nvars, syntax.getSubtypes(), en)) {
-            inlist = true;
-            break;
-          }
-        }
-      } //*/
-      if (!inlist) {
-        ret = en;
-      }
-    }
-    return ret;
+    return en;
   }
 
   @Override

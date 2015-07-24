@@ -27,8 +27,8 @@ public class Schema implements MutableTreeNode {
   protected boolean allowsChildren;
   protected final ArrayList<Schema> schemas;
   private final ArrayList<Expression> vars; // liste des variables
-  protected final HashMap<Expression, Expression> varMap; // pour les valeurs des variables
-  private int[] rgs;
+  protected HashMap<Expression, Expression> varMap; // pour les valeurs des variables
+  protected int[] rgs;
   private boolean ready;
   
   public Schema() {
@@ -92,10 +92,6 @@ public class Schema implements MutableTreeNode {
 
   public int[] getRgs() {
     return rgs;
-  }
-
-  public void setRgs(int[] rgs) {
-    this.rgs = rgs;
   }
 
   @Override
