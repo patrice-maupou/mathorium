@@ -12,9 +12,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Action;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListModel;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
+import javax.swing.ListModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
@@ -84,22 +86,21 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private GenItem genItem;
   private boolean resultReady;
   private int level;
-  private HashMap<Expression, Expression> varsToExprs;
   private MultiViewElementCallback callback;
   private final JToolBar toolbar = new JToolBar();
   private static RequestProcessor RP;
   private static final Logger log = Logger.getLogger(MathTopComponent.class.getName());
   private GenTree genTree;
   private Schema curSchema;
+  private ExprListModel listModel;
 
   public MathTopComponent() {
+    exprNodes = new ArrayList<>();
     initComponents();
     genTree = (GenTree) treeGenItem;
     setName(Bundle.CTL_MathTopComponent());
     setToolTipText(Bundle.HINT_MathTopComponent());
     toAdd = null;
-    exprNodes = new ArrayList<>();
-    varsToExprs = new HashMap<>();
     level = 1;
     RP = new RequestProcessor("Generation of expressions", 1, true);
     log.setLevel(Level.INFO);
@@ -111,7 +112,9 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     try {
       syntax = mdo.setSyntax();
       syntaxWrite = syntax.getSyntaxWrite();
-      //genTree.setSw(syntaxWrite);
+      exprList.setCellRenderer(new ExprListCellRenderer(syntaxWrite));
+      listModel = (ExprListModel) exprList.getModel();
+      exprNodes = listModel.getExprList();
       generators = syntax.getGenerators();
       ArrayList<String> names = new ArrayList<>();
       generators.stream().forEach((gen) -> {
@@ -128,30 +131,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   }
 
   /**
-   * met à jour exprRange et editField
-   *
-   * @throws Exception
-   */
-  private void updateEditor() {
-    int max = exprNodes.size();
-    int min = (max == 0) ? 0 : 1;
-    SpinnerNumberModel model = (SpinnerNumberModel) exprRange.getModel();
-    model.setValue(max);
-    model.setMaximum(max);
-    model.setMinimum(min);
-    try {
-      if (max > 0) {
-        ExprNode en = exprNodes.get(max - 1);
-        editField.setText(en.getE().toString(syntaxWrite));
-      } else {
-        editField.setText("");
-      }
-    } catch (Exception ex) {
-      Exceptions.printStackTrace(ex);
-    }
-  }
-
-  /**
    * met à jour le generator et les expNodes correspondant
    *
    * @param generator
@@ -164,8 +143,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       itemStrings[i] = genItems.get(i).toString();
     }
     try {
-      exprNodes = mdo.readExprNodes(generator);
-      updateEditor();
+      mdo.readExprNodes(generator, listModel);
     } catch (Exception ex) {
       displayMessage("Erreur de lecture des expressions " + ex.getMessage(), "Error message");
     }
@@ -184,9 +162,9 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
    */
   private void updateGenItem(GenItem genItem) throws Exception {
     resultTextField.setText("");
-    DefaultTreeModel model = (DefaultTreeModel) genTree.getModel();
-    model.setRoot(genItem);
-    model.reload();
+    DefaultTreeModel treeModel = (DefaultTreeModel) genTree.getModel();
+    treeModel.setRoot(genItem);
+    treeModel.reload();
     genTree.expandPath(new TreePath(genItem));
     if (!genItem.getSchemas().isEmpty()) {
       ArrayList<Expression> vars = genItem.getSchemas().get(0).getVars();
@@ -200,7 +178,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       }
     }
     valueTextField.setText("Sélectionner un modèle ou un résultat");
-    varsToExprs.clear();
     resultReady = false;
     curSchema = null;
   }
@@ -212,8 +189,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
   private void initComponents() {
 
-    editField = new javax.swing.JTextField();
-    exprRange = new javax.swing.JSpinner();
     jScrollPane1 = new javax.swing.JScrollPane();
     commentArea = new javax.swing.JTextArea();
     commentLabel = new javax.swing.JLabel();
@@ -237,16 +212,8 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     deleteButton = new javax.swing.JButton();
     treeScrollPane = new javax.swing.JScrollPane();
     treeGenItem = new GenTree();
-
-    editField.setEditable(false);
-    editField.setText(org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.editField.text")); // NOI18N
-
-    exprRange.setModel(new javax.swing.SpinnerNumberModel(0, 0, 0, 1));
-    exprRange.addChangeListener(new javax.swing.event.ChangeListener() {
-      public void stateChanged(javax.swing.event.ChangeEvent evt) {
-        exprRangeStateChanged(evt);
-      }
-    });
+    listScrollPane = new javax.swing.JScrollPane();
+    exprList = new javax.swing.JList();
 
     commentArea.setColumns(20);
     commentArea.setRows(5);
@@ -305,7 +272,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     org.openide.awt.Mnemonics.setLocalizedText(toValButton, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.toValButton.text")); // NOI18N
     toValButton.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
-        ValButtonActionPerformed(evt);
+        valButtonActionPerformed(evt);
       }
     });
 
@@ -351,6 +318,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     });
     treeScrollPane.setViewportView(treeGenItem);
 
+    exprList.setModel(new ExprListModel(exprNodes));
+    exprList.setToolTipText(org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.exprList.toolTipText")); // NOI18N
+    listScrollPane.setViewportView(exprList);
+
     javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
     this.setLayout(layout);
     layout.setHorizontalGroup(
@@ -358,7 +329,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       .addGroup(layout.createSequentialGroup()
         .addContainerGap()
         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-          .addComponent(exprRange, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
           .addComponent(hintLabel)
           .addComponent(resultLabel)
           .addComponent(commentLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -368,14 +338,13 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
           .addGroup(layout.createSequentialGroup()
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-              .addComponent(editField, javax.swing.GroupLayout.Alignment.TRAILING)
               .addComponent(valueTextField)
               .addComponent(resultTextField))
             .addGap(38, 38, 38))
           .addGroup(layout.createSequentialGroup()
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
               .addComponent(treeScrollPane, javax.swing.GroupLayout.Alignment.LEADING)
-              .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 627, Short.MAX_VALUE)
+              .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.LEADING)
               .addComponent(genItemBox, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
               .addComponent(generatorBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
               .addGroup(layout.createSequentialGroup()
@@ -383,15 +352,16 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                 .addComponent(cntResultsLabel)
                 .addGap(18, 18, 18)
                 .addComponent(cntResSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 77, Short.MAX_VALUE)
                 .addComponent(levelLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(levelSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(194, 194, 194)
                 .addComponent(commentButton)
                 .addGap(94, 94, 94))
-              .addComponent(jScrollPane1))
-            .addContainerGap(38, Short.MAX_VALUE))))
+              .addComponent(jScrollPane1)
+              .addComponent(listScrollPane, javax.swing.GroupLayout.Alignment.LEADING))
+            .addContainerGap(40, Short.MAX_VALUE))))
       .addGroup(layout.createSequentialGroup()
         .addGap(191, 191, 191)
         .addComponent(deleteButton)
@@ -404,11 +374,9 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     layout.setVerticalGroup(
       layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
       .addGroup(layout.createSequentialGroup()
-        .addGap(50, 50, 50)
-        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-          .addComponent(editField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-          .addComponent(exprRange, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-        .addGap(36, 36, 36)
+        .addContainerGap()
+        .addComponent(listScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addGap(18, 18, 18)
         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
           .addComponent(deleteButton)
           .addComponent(toValButton)
@@ -447,18 +415,9 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
           .addComponent(resultLabel)
           .addComponent(resultTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-        .addContainerGap(32, Short.MAX_VALUE))
+        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
     );
   }// </editor-fold>//GEN-END:initComponents
-
-    private void exprRangeStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_exprRangeStateChanged
-      Integer range = (Integer) exprRange.getValue();
-      try {
-        editField.setText(exprNodes.get(range - 1).getE().toString(syntaxWrite));
-      } catch (Exception ex) {
-        NotifyDescriptor error = new NotifyDescriptor.Message(ex);
-      }
-    }//GEN-LAST:event_exprRangeStateChanged
 
     private void genItemBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_genItemBoxActionPerformed
       int index = genItemBox.getSelectedIndex();
@@ -486,30 +445,26 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       try {
         int n = exprNodes.size();
         en.setRange(n);
-        exprNodes.add(en);
-        Integer rg = (Integer) exprRange.getValue();
-        mdo.insert(exprNodes.subList(n, n + 1), rg, generator);
-        exprRange.setModel(new SpinnerNumberModel(n + 1, 1, n + 1, 1));
-        editField.setText(en.getE().toString(syntaxWrite));
+        listModel.add(en);
+        exprList.ensureIndexIsVisible(n - 1);
+        mdo.insert(exprNodes.subList(n, n + 1), n, generator);
       } catch (Exception ex) {
         displayMessage("insertion failed : " + ex.getMessage(), "Expression error");
       }
     }
   }
-
     
     
-    private void ValButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ValButtonActionPerformed
+    private void valButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_valButtonActionPerformed
       if (!resultReady && curSchema instanceof MatchExpr) {
         try {
           MatchExpr matchExpr = (MatchExpr) curSchema;
-          int index = (int) getExprRange().getValue() - 1;
-          ExprNode en = exprNodes.get(index);
+          int index = exprList.getSelectedIndex();
+          ExprNode en = (ExprNode) listModel.getElementAt(index);
           Expression e = en.getE().copy();
-          if (matchExpr.checkExpr(e, genItem.getTypesMap(),
-                  genItem.getListvars(), syntax)) {
+          if (matchExpr.checkExpr(e, genItem.getTypesMap(), genItem.getListvars(), syntax)) {
             resultReady = true;
-            valueTextField.setText(editField.getText());
+            valueTextField.setText(e.toString(syntaxWrite));
             int row = 0;
             for (Map.Entry<Expression, Expression> entry : curSchema.getVarMap().entrySet()) {
               String key = entry.getKey().toString(syntaxWrite);
@@ -531,11 +486,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           displayMessage(ex.getMessage(), "Error message");
         }
       }
-    }//GEN-LAST:event_ValButtonActionPerformed
+    }//GEN-LAST:event_valButtonActionPerformed
 
     private void commentButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_commentButtonActionPerformed
-      int n = (int) exprRange.getValue();
-      ExprNode en = exprNodes.get(n - 1);
+      ExprNode en = (ExprNode) exprList.getSelectedValue();      
       en.setComment(commentArea.getText());
       mdo.setModified(true);
     }//GEN-LAST:event_commentButtonActionPerformed
@@ -565,10 +519,12 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                     if (schema.getRgs().length > 0) {
                       en.getParentList().add(schema.getRgs());
                     }
-                    addExprNode(((Result)child).newExpr(en, typesMap, listvars, syntax, exprNodes));
-                    schema.setReady(m != cnt); // première sortie
-                    System.out.println(schema.log()+ " -> "+ child.log() + " :"+ 
-                            exprNodes.get(exprNodes.size()-1));
+                    if(((Result)child).newExpr(en, typesMap, listvars, syntax, exprNodes)) {
+                      addExprNode(en);
+                    }
+                    schema.setReady(m != cnt); // pour genItem
+                    System.out.println(schema.log()+ " -> "+ child.log() + " :" + 
+                            exprNodes.get(exprNodes.size()-1));  // première sortie
                   } 
                   else if (child instanceof MatchExpr) {
                     MatchExpr matchExpr = (MatchExpr) child;
@@ -618,15 +574,13 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       NotifyDescriptor d = new NotifyDescriptor.Confirmation("Really delete?", "Delete expression",
               NotifyDescriptor.OK_CANCEL_OPTION);
       if (DialogDisplayer.getDefault().notify(d) == NotifyDescriptor.OK_OPTION) {
-        int index = (Integer) exprRange.getValue() - 1;
+        int index = exprList.getSelectedIndex();
         try {
-          if (exprNodes.remove(index) != null) {
-            updateEditor();
-          }
+          listModel.remove(index);
+          mdo.delete(index, generator);
         } catch (Exception ex) {
-          Exceptions.printStackTrace(ex);
+          displayMessage(ex.getMessage(), "Error Message");
         }
-        mdo.delete(index, generator);
       }
     }//GEN-LAST:event_deleteButtonActionPerformed
 
@@ -634,38 +588,31 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     Object node = genTree.getLastSelectedPathComponent();
     if (node != null && (node instanceof Schema)) {
       Schema schema = (Schema) node;
-      TreeNode pre = (Schema) schema.getParent();
-      boolean ok = (pre != null) && ((pre instanceof GenItem) || (resultReady && pre.equals(curSchema)));
-      if (ok) {
-        HashMap<Expression, Expression> varMap = (curSchema == null) ? new HashMap<>() : curSchema.getVarMap();
+      Schema pre = (Schema) schema.getParent();
+      if ((pre instanceof GenItem) || (resultReady && pre.equals(curSchema))) {
         curSchema = schema;
         resultReady = false;
-        if (curSchema instanceof MatchExpr) {
+        if (curSchema instanceof MatchExpr) { // transmission des variables
           curSchema.getVarMap().clear();
-          curSchema.getVarMap().putAll(varMap);
+          curSchema.getVarMap().putAll(pre.getVarMap());
           valueTextField.setText("Choisir une expression de la liste conforme "
                   + "au modèle et cliquer sur valeur");
-        } else if (curSchema instanceof Result) {
-          Expression e = curSchema.getPattern().copy().replace(curSchema.getVarMap());
-          ArrayList<int[]> parents = new ArrayList<>();
-          if (curSchema.getRgs().length > 0) {
-            parents.add(curSchema.getRgs());
+        } else if (curSchema instanceof Result) { // fabrique une expression, vérifie la liste
+          Result result = (Result) curSchema;
+          toAdd = new ExprNode(null, null, new ArrayList<>());
+          if (result.getRgs().length > 0) {
+            toAdd.getParentList().add(curSchema.getRgs());
           }
-          toAdd = new ExprNode(e, new ArrayList<>(), parents);
-          int index = exprNodes.indexOf(toAdd);
-          if (index != -1) {
-            ExprNode en = exprNodes.get(index);
-            index = en.getParentList().indexOf(curSchema.getRgs());
-            if (index != -1) {
-              en.getParentList().add(curSchema.getRgs());
-            }
-            toAdd = null;
-          }
+          result.setReady(result.newExpr(toAdd, genItem.getTypesMap(), genItem.getListvars(), 
+                  syntax, exprNodes));
           try {
-            resultTextField.setText(e.toString(syntaxWrite));
+            resultTextField.setText(toAdd.getE().toString(syntaxWrite));
             resultTextField.requestFocus();
           } catch (Exception ex) {
             displayMessage(ex.getMessage(), "Error message");
+          }
+          if(!result.isReady()) {
+            toAdd = null;
           }
         }
       } else {
@@ -689,8 +636,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private javax.swing.JButton commentButton;
   private javax.swing.JLabel commentLabel;
   private javax.swing.JButton deleteButton;
-  private javax.swing.JTextField editField;
-  private javax.swing.JSpinner exprRange;
+  private javax.swing.JList exprList;
   private javax.swing.JComboBox genItemBox;
   private javax.swing.JComboBox generatorBox;
   private javax.swing.JLabel generatorLabel;
@@ -700,6 +646,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private javax.swing.JScrollPane jScrollPane3;
   private javax.swing.JLabel levelLabel;
   private javax.swing.JSpinner levelSpinner;
+  private javax.swing.JScrollPane listScrollPane;
   private javax.swing.JLabel resultLabel;
   private javax.swing.JTextField resultTextField;
   private javax.swing.JButton toValButton;
@@ -789,8 +736,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     return syntaxWrite;
   }
 
-  public javax.swing.JSpinner getExprRange() {
-    return exprRange;
+  public ExprListModel getListModel() {
+    return listModel;
   }
+
+
 
 }

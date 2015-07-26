@@ -64,7 +64,7 @@ public class Syntax {
    */
   public void addGenerators(Document document) throws Exception {
     generators = new ArrayList<>();
-    NodeList list = document.getElementsByTagName("generators");
+    NodeList list = document.getElementsByTagName("generator");
     for (int i = 0; i < list.getLength(); i++) {
       Element genElement = (Element) list.item(i);
       generators.add(new Generator(genElement.getAttribute("name"), genElement, this));

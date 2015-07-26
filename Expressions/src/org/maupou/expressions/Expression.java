@@ -504,11 +504,12 @@ public class Expression {
    *
    * @param syntaxWrite donne la syntaxe
    * @return la chaîne
-   * @throws Exception pas de fichier valide
    */
-  public String toString(SyntaxWrite syntaxWrite) throws Exception {
-    String ret = toString();
-    if (children != null) {
+  public String toString(SyntaxWrite syntaxWrite) {
+    String ret = "";
+    if(children == null) {
+      ret = toString();
+    } else {
       String unused = syntaxWrite.getUnused();
       NodeWrite node;
       try {
@@ -537,7 +538,7 @@ public class Expression {
           }
         }
       } catch (Exception ex) {
-        throw new Exception("fichier d'écriture absent : " + ex.getMessage());
+        ret = toString();
       }
     }
     return ret;

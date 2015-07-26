@@ -80,7 +80,7 @@
   </read>
   
   <!-- règles de production d'expressions -->
-  <generators name="develop">
+  <generator name="develop">
       <variable type="real" name="realvar" list="t u v w z"></variable>
       <genrule name="init"></genrule>
       <genrule name="distribute">
@@ -112,7 +112,7 @@
         </match>
         <result>(ADD,(ADD,u:realvar,v:realvar):real,w:realvar):real</result>
       </genrule>
-  </generators>
+  </generator>
  
   <!-- sortie standard -->
   <write>

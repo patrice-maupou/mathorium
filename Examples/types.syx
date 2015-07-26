@@ -58,7 +58,7 @@
         </rule>
     </read>
     
-    <generators name="none"></generators>
+    <generator name="none"></generator>
     
     <!-- Règle d'écriture d'une expression, compatible avec les règles de lecture citées plus haut
     -->

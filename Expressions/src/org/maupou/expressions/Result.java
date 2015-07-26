@@ -48,31 +48,31 @@ public class Result extends Schema {
   }
 
   /**
-   * teste si une ExprNode est nouvelle et non de type discards
+   * teste si une ExprNode est nouvelle
    *
    * @param en ExprNode à ajouter
-   * @param freevars
+   * @param typesMap table des types associés aux types des variables (ex: nv=natural)
    * @param listvars
    * @param syntax
    * @param exprNodes liste déjà établie
-   * @return l'exprNode ou null si ne convient pas
+   * @return l'exprNode ou null si ne convient pa si elle est déjà dans la liste 
    */
-  public ExprNode newExpr(ExprNode en, HashMap<String, String> freevars, ArrayList<Expression> listvars, 
+  public boolean newExpr(ExprNode en, HashMap<String, String> typesMap, ArrayList<Expression> listvars, 
           Syntax syntax, ArrayList<ExprNode> exprNodes)  {
     Expression e = getPattern().copy().replace(varMap);
     en.setE(e);
     for (ExprNode exprNode : exprNodes) {
       Expression expr = exprNode.getE();
       HashMap<Expression, Expression> nvars = new HashMap<>();
-      if (e.matchRecursively(expr, freevars, listvars, nvars, syntax.getSubtypes(), en)) {
+      if (e.matchRecursively(expr, typesMap, listvars, nvars, syntax.getSubtypes(), en)) {
         // déjà dans la liste (aux variables près)
         if (!exprNode.getParentList().containsAll(en.getParentList())) {
           exprNode.getParentList().addAll(en.getParentList());
         }
-        return null;
+        return false;
       }
     }
-    return en;
+    return true;
   }
 
   @Override

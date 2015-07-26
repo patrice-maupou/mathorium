@@ -14,6 +14,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.JToolBar;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
 import org.maupou.expressions.ExprNode;
@@ -59,12 +61,28 @@ public class MathVisualElement  extends JPanel implements MultiViewElement {
         setLayout(new java.awt.BorderLayout());
         scrollPane.setViewportView(textPane);
         add(scrollPane, java.awt.BorderLayout.CENTER);
-        mtc.getExprRange().addChangeListener((ChangeEvent ce) -> {
-            try {
+        mtc.getListModel().addListDataListener(new ListDataListener() {
+          @Override
+          public void intervalAdded(ListDataEvent e) {try {
                 display();
             } catch (Exception ex) {
                 Exceptions.printStackTrace(ex);
             }
+          }
+          @Override
+          public void intervalRemoved(ListDataEvent e) {try {
+                display();
+            } catch (Exception ex) {
+                Exceptions.printStackTrace(ex);
+            }
+          }
+          @Override
+          public void contentsChanged(ListDataEvent e) {try {
+                display();
+            } catch (Exception ex) {
+                Exceptions.printStackTrace(ex);
+            }
+          }
         });
     }
     

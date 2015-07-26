@@ -145,7 +145,7 @@ public class MathDataObject extends MultiDataObject {
       File syntaxFile = new File(path);
       Document syxdoc = documentBuilder.parse(syntaxFile);
       syntax = new Syntax(syxdoc);
-      syntax.addGenerators(syxdoc);
+      syntax.addGenerators(mathdoc);
     }
     return syntax;
   }
@@ -153,11 +153,10 @@ public class MathDataObject extends MultiDataObject {
   /**
    * remplit la liste des expressions correspondant à ce Generator
    * @param gen
-   * @return la liste
+   * @param model
    * @throws Exception 
    */
-  public ArrayList<ExprNode> readExprNodes(Generator gen) throws Exception {
-    ArrayList<ExprNode> exprNodes = new ArrayList<>();
+  public void readExprNodes(Generator gen, ExprListModel model) throws Exception {
     NodeList egens = mathdoc.getElementsByTagName("generator");
     for (int i = 0; i < egens.getLength(); i++) {
       Element egen = (Element) egens.item(i);
@@ -198,12 +197,11 @@ public class MathDataObject extends MultiDataObject {
           ExprNode en = new ExprNode(e, childs, parents);
           String id = exprItem.getAttribute("id");
           en.setRange(Integer.parseInt(id));
-          exprNodes.add(en);
+          model.add(en);
         }
       }
       break;
     }
-    return exprNodes;
   }
   
   /**

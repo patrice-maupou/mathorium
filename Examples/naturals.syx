@@ -40,7 +40,7 @@
 </read>
 
   <!-- automatic generation of naturals equalities -->
-  <generators name="addition_and_equality">
+  <generator name="addition_and_equality">
     <variable type="digit" name="cv" list="u v w"/> 
     <variable type="natural" name="nv" list="a b c d e"/>  
     <genrule name="base">
@@ -86,7 +86,7 @@
           </match>
       </match>
     </genrule>
-  </generators>
+  </generator>
 
   <!-- printing format  -->
   <write>

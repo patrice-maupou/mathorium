@@ -41,7 +41,7 @@
                 Si B->C thm, A->(B->C) puis (A->B)->(A->C) le sont.
 
   -->
-<generators name="theorems">
+<generator name="theorems">
   <variable type="prop" name="propvar" list="A B C D E F G H"/>
   <variable type="thm" name="propthm" list="S T U V W X Y Z"/>
   <genrule name="axiomes"> 
@@ -83,7 +83,7 @@
       <result>(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,C:propvar):prop):thm</result>
     </match>
   </discard>
-</generators>
+</generator>
 
 <!-- writing rules -->
  <write>
