@@ -37,15 +37,11 @@
                   <Group type="102" alignment="0" attributes="0">
                       <Group type="103" groupAlignment="1" max="-2" attributes="0">
                           <Component id="treeScrollPane" alignment="0" max="32767" attributes="0"/>
-                          <Component id="jScrollPane3" alignment="0" max="32767" attributes="0"/>
+                          <Component id="jScrollPane3" alignment="0" pref="627" max="32767" attributes="0"/>
                           <Component id="genItemBox" alignment="0" max="32767" attributes="0"/>
                           <Component id="generatorBox" alignment="1" max="32767" attributes="0"/>
                           <Group type="102" alignment="1" attributes="0">
                               <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
-                              <Component id="cntResultsLabel" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace type="separate" max="-2" attributes="0"/>
-                              <Component id="cntResSpinner" min="-2" pref="57" max="-2" attributes="0"/>
-                              <EmptySpace pref="77" max="32767" attributes="0"/>
                               <Component id="levelLabel" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="levelSpinner" min="-2" pref="38" max="-2" attributes="0"/>
@@ -91,8 +87,6 @@
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="levelSpinner" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="levelLabel" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="cntResSpinner" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="cntResultsLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="commentButton" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <Group type="103" groupAlignment="0" attributes="0">
@@ -239,24 +233,13 @@
         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
           <ResourceString bundle="org/maupou/sampledataobject/Bundle.properties" key="MathTopComponent.toValButton.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
         </Property>
+        <Property name="toolTipText" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="org/maupou/sampledataobject/Bundle.properties" key="MathTopComponent.toValButton.toolTipText" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="valButtonActionPerformed"/>
       </Events>
-    </Component>
-    <Component class="javax.swing.JLabel" name="cntResultsLabel">
-      <Properties>
-        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-          <ResourceString bundle="org/maupou/sampledataobject/Bundle.properties" key="MathTopComponent.cntResultsLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
-        </Property>
-      </Properties>
-    </Component>
-    <Component class="javax.swing.JSpinner" name="cntResSpinner">
-      <Properties>
-        <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
-          <SpinnerModel initial="20" numberType="java.lang.Integer" stepSize="1" type="number"/>
-        </Property>
-      </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="levelLabel">
       <Properties>
@@ -290,6 +273,9 @@
         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
           <ResourceString bundle="org/maupou/sampledataobject/Bundle.properties" key="MathTopComponent.commentButton.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
         </Property>
+        <Property name="toolTipText" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="org/maupou/sampledataobject/Bundle.properties" key="MathTopComponent.commentButton.toolTipText" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="commentButtonActionPerformed"/>
@@ -299,6 +285,9 @@
       <Properties>
         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
           <ResourceString bundle="org/maupou/sampledataobject/Bundle.properties" key="MathTopComponent.deleteButton.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+        </Property>
+        <Property name="toolTipText" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="org/maupou/sampledataobject/Bundle.properties" key="MathTopComponent.deleteButton.toolTipText" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
         </Property>
       </Properties>
       <Events>

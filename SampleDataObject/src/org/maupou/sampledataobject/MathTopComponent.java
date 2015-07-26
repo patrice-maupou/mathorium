@@ -1,7 +1,20 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* 
+ * Copyright (C) 2015 Patrice.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301  USA
  */
 package org.maupou.sampledataobject;
 
@@ -203,8 +216,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     resultLabel = new javax.swing.JLabel();
     resultTextField = new javax.swing.JTextField();
     toValButton = new javax.swing.JButton();
-    cntResultsLabel = new javax.swing.JLabel();
-    cntResSpinner = new javax.swing.JSpinner();
     levelLabel = new javax.swing.JLabel();
     levelSpinner = new javax.swing.JSpinner();
     autoButton = new javax.swing.JButton();
@@ -270,15 +281,12 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     });
 
     org.openide.awt.Mnemonics.setLocalizedText(toValButton, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.toValButton.text")); // NOI18N
+    toValButton.setToolTipText(org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.toValButton.toolTipText")); // NOI18N
     toValButton.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
         valButtonActionPerformed(evt);
       }
     });
-
-    org.openide.awt.Mnemonics.setLocalizedText(cntResultsLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.cntResultsLabel.text")); // NOI18N
-
-    cntResSpinner.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(20), null, null, Integer.valueOf(1)));
 
     org.openide.awt.Mnemonics.setLocalizedText(levelLabel, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.levelLabel.text")); // NOI18N
 
@@ -297,6 +305,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     });
 
     org.openide.awt.Mnemonics.setLocalizedText(commentButton, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.commentButton.text")); // NOI18N
+    commentButton.setToolTipText(org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.commentButton.toolTipText")); // NOI18N
     commentButton.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
         commentButtonActionPerformed(evt);
@@ -304,6 +313,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     });
 
     org.openide.awt.Mnemonics.setLocalizedText(deleteButton, org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.deleteButton.text")); // NOI18N
+    deleteButton.setToolTipText(org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.deleteButton.toolTipText")); // NOI18N
     deleteButton.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
         deleteButtonActionPerformed(evt);
@@ -344,15 +354,11 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           .addGroup(layout.createSequentialGroup()
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
               .addComponent(treeScrollPane, javax.swing.GroupLayout.Alignment.LEADING)
-              .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.LEADING)
+              .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 627, Short.MAX_VALUE)
               .addComponent(genItemBox, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
               .addComponent(generatorBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
               .addGroup(layout.createSequentialGroup()
                 .addGap(2, 2, 2)
-                .addComponent(cntResultsLabel)
-                .addGap(18, 18, 18)
-                .addComponent(cntResSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 77, Short.MAX_VALUE)
                 .addComponent(levelLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(levelSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -389,8 +395,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
           .addComponent(levelSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
           .addComponent(levelLabel)
-          .addComponent(cntResSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-          .addComponent(cntResultsLabel)
           .addComponent(commentButton))
         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
           .addGroup(layout.createSequentialGroup()
@@ -630,8 +634,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JButton autoButton;
-  private javax.swing.JSpinner cntResSpinner;
-  private javax.swing.JLabel cntResultsLabel;
   private javax.swing.JTextArea commentArea;
   private javax.swing.JButton commentButton;
   private javax.swing.JLabel commentLabel;
