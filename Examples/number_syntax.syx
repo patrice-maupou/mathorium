@@ -79,41 +79,7 @@
     </rule>
   </read>
   
-  <!-- règles de production d'expressions -->
-  <generator name="develop">
-      <variable type="real" name="realvar" list="t u v w z"></variable>
-      <genrule name="init"></genrule>
-      <genrule name="distribute">
-        <match name="real" options="recursive=yes">
-          <pattern name="real">(MUL,u:realvar,(ADD,v:realvar,w:realvar):real):real</pattern>
-          <result>(ADD,(MUL,u:realvar,v:realvar):real,(MUL,u:realvar,w:realvar):real):real</result>  
-        </match>  
-        <result>(ADD,(MUL,u:realvar,v:realvar):real,(MUL,u:realvar,w:realvar):real):real</result>   
-        <match name="real" options="recursive=yes">
-          <pattern name="real">(MUL,(ADD,v:realvar,w:realvar):real,u:realvar):real</pattern>
-          <result>(ADD,(MUL,v:realvar,u:realvar):real,(MUL,w:realvar,u:realvar):real):real</result>  
-        </match>  
-        <result>(ADD,(MUL,v:realvar,u:realvar):real,(MUL,w:realvar,u:realvar):real):real</result>   
-        <match name="real" options="recursive=yes">
-          <pattern name="real">(MUL,u:realvar,(SUB,v:realvar,w:realvar):real):real</pattern> 
-          <result>(SUB,(MUL,u:realvar,v:realvar):real,(MUL,u:realvar,w:realvar):real):real</result>
-        </match>  
-        <result>(SUB,(MUL,u:realvar,v:realvar):real,(MUL,u:realvar,w:realvar):real):real</result>   
-        <match name="real" options="recursive=yes">
-          <pattern name="real">(MUL,(SUB,v:realvar,w:realvar):real,u:realvar):real</pattern> 
-          <result>(SUB,(MUL,v:realvar,u:realvar):real,(MUL,w:realvar,u:realvar):real):real</result> 
-        </match>  
-        <result>(SUB,(MUL,v:realvar,u:realvar):real,(MUL,w:realvar,u:realvar):real):real</result>    
-      </genrule>
-      <genrule name="associative">
-        <match name="real" options="recursive=yes">          
-          <pattern name="real">(ADD,u:realvar,(ADD,v:realvar,w:realvar):real):real</pattern>
-          <result>(ADD,(ADD,u:realvar,v:realvar):real,w:realvar):real</result>
-        </match>
-        <result>(ADD,(ADD,u:realvar,v:realvar):real,w:realvar):real</result>
-      </genrule>
-  </generator>
- 
+  
   <!-- sortie standard -->
   <write>
   <wrule child="a">

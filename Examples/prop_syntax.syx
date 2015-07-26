@@ -36,54 +36,6 @@
     </rule>
   </read>
 
-<!-- generation of theorems
-    remarques : Si T thm alors T->(B->T) et B->T aussi d'après dummy
-                Si B->C thm, A->(B->C) puis (A->B)->(A->C) le sont.
-
-  -->
-<generator name="theorems">
-  <variable type="prop" name="propvar" list="A B C D E F G H"/>
-  <variable type="thm" name="propthm" list="S T U V W X Y Z"/>
-  <genrule name="axiomes"> 
-    <result level="1" ref="dummy">
-      (IMPLIES,A:propvar,(IMPLIES,B:propvar,A:propvar):prop):thm
-    </result>
-    <result level="1" ref="distr">
-      (IMPLIES,(IMPLIES,A:propvar,(IMPLIES,B:propvar,C:propvar):prop):prop,
-      (IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,C:propvar):prop):prop):thm
-    </result>
-    <result level="1" ref="simpl">
-      (IMPLIES,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,C:propvar):prop,
-      (IMPLIES,B:propvar,C:propvar):prop):thm
-    </result>
-    <result level="3" ref="contra">
-      (IMPLIES,(IMPLIES,(NOT,A:propvar):prop,(NOT,B:propvar):prop):prop,
-      (IMPLIES,B:propvar,A:propvar):prop):thm
-    </result>
-  </genrule>
-  <genrule name="modus ponens">
-    <match name="thm">
-      <pattern>A:propvar</pattern>
-      <match name="thm">
-        <pattern>(IMPLIES,A:propvar,B:propvar):thm</pattern>
-        <result level="1" ref="mp">B:thm</result>
-    </match>
-    </match>
-    
-  </genrule>
-  <discard name="thm" scope="right">
-    <match name="thm">
-      <pattern>T:propthm</pattern>
-      <result>(IMPLIES,A:prop,T:thm):thm</result>
-    </match>
-  </discard>
-  <discard>
-    <match name="thm">
-      <pattern>(IMPLIES,B:propvar,C:propvar):thm</pattern>
-      <result>(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,C:propvar):prop):thm</result>
-    </match>
-  </discard>
-</generator>
 
 <!-- writing rules -->
  <write>
