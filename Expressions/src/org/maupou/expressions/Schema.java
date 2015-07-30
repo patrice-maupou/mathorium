@@ -38,10 +38,10 @@ public class Schema implements MutableTreeNode {
   private Object descr;
   protected Schema parent;
   protected boolean allowsChildren;
-  protected final ArrayList<Schema> schemas;
+  protected final ArrayList<Schema> schemas; // liste des descendants directs
   private final ArrayList<Expression> vars; // liste des variables
   protected HashMap<Expression, Expression> varMap; // pour les valeurs des variables
-  protected int[] rgs;
+  protected int[] rgs; // rangs utilisés dans la liste exprNodes
   private boolean ready;
   
   public Schema() {
@@ -209,6 +209,9 @@ public class Schema implements MutableTreeNode {
     this.ready = ready;
   }
   
+  void setGenItemParent(GenItem genItem) {
+  } 
+  
   public String log() {
     String ret = getClass().getSimpleName().substring(0, 1);
     Schema p = (Schema) getParent();
@@ -221,5 +224,5 @@ public class Schema implements MutableTreeNode {
     }
     return ret + "]";
   }
- 
+
 }

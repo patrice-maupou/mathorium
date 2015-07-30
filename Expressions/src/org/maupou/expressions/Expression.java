@@ -305,11 +305,10 @@ public class Expression {
   }
 
   /** TODO : à réexaminer
-   * examine les sous-expressions qui correspondent à schema et leur donne le childType de schema et
-   * les met dans la liste des Expr de en
+   * examine les sous-expressions qui correspondent à schema et leur donne le childType de schema
    *
    * @param schema le modèle
-   * @param freevars
+   * @param typesMap
    * @param listvars
    * @param en
    * @param vars la table des valeurs
@@ -317,32 +316,16 @@ public class Expression {
    * @return true si l'expression entière convient
    */
   public boolean matchRecursively(Expression schema,
-          HashMap<String, String> freevars, ArrayList<Expression> listvars,
+          HashMap<String, String> typesMap, ArrayList<Expression> listvars,
           HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes, ExprNode en) {
-    boolean fit = match(schema, freevars, listvars, vars, subtypes);
-    //*
-    if (!fit) {
-      for (Expression e : schema.getChildren()) {
-        if (e.getChildren() != null) {
-          HashMap<Expression, Expression> nvars = new HashMap<>();
-          if (match(e, freevars, listvars, nvars, subtypes)) {
-            en.getExprs().add(schema.replace(nvars));
-            break;
-          }
-        }
-      }
-    }
-    //*/
-    if (fit) {
+    boolean fit = match(schema, vars, typesMap, listvars, subtypes);
+    if (fit) { // cette expression est conforme à schema (aux noms des variables près)
       setType(schema.getType());
-      en.getExprs().add(this);
-    } else {
-      if (children != null) {
-        children.stream().forEach((child) -> {
-          HashMap<Expression, Expression> nvars = new HashMap<>();
-          child.matchRecursively(schema, freevars, listvars, nvars, subtypes, en);
-        });
-      }
+    } else if (children != null) {
+      children.stream().forEach((child) -> {
+        HashMap<Expression, Expression> nvars = new HashMap<>();
+        child.matchRecursively(schema, typesMap, listvars, nvars, subtypes, en);
+      });
     }
     return fit;
   }
@@ -352,18 +335,18 @@ public class Expression {
    * des expressions de etype value ex: A->(B->(A->B)) avec A->(B->C) avec C=A->B
    *
    * @param schema l'expression contenant les variables et servant de modèle
-   * @param freevars table associant à un childType de variable un childType de remplacement
+   * @param typesMap table associant à un type de variable un type de remplacement
    * @param listvars liste des variables susceptibles d'être utilisées
    * @param vars table des variables à affecter
    * @param subtypes
    * @return true l'expression est du modèle indiqué
    */
-  public boolean match(Expression schema,
-          HashMap<String, String> freevars, ArrayList<Expression> listvars,
-          HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes) {
+  public boolean match(Expression schema, HashMap<Expression, Expression> vars, 
+          HashMap<String, String> typesMap, ArrayList<Expression> listvars, 
+          HashMap<String, Set<String>> subtypes) {
     boolean fit;
     Expression e;
-    String vtype = (listvars.contains(schema)) ? freevars.get(schema.type) : null;
+    String vtype = (listvars.contains(schema)) ? typesMap.get(schema.type) : null;
     if (vtype != null) { // le childType de remplacement existe
       if (fit = subtypes.get(vtype).contains(type)) { // childType sous-childType de vType
         if ((e = vars.get(schema)) != null) { // déjà dans la table vars
@@ -375,8 +358,8 @@ public class Expression {
     } else if (fit = name.equals(schema.name)) { // l'égalité doit être stricte entre e et schema
       if (children != null && (fit = children.size() == schema.getChildren().size())) {
         for (int i = 0; i < children.size(); i++) {
-          fit &= children.get(i).match(schema.getChildren().get(i), freevars, listvars,
-                  vars, subtypes);
+          fit &= children.get(i).match(schema.getChildren().get(i), vars, typesMap, listvars,
+                  subtypes);
         }
       }
     }
@@ -385,7 +368,7 @@ public class Expression {
 
   /**
    * Transforme l'expression en utilisant la table des remplacements replaceMap pour les
-   * sous-expressions qui conviennent.
+   * sous-expressions qui conviennent. (non encore utilisé)
    *
    * @param replaceMap table des transformations à effectuer
    * @param modifs liste qui contient un seul boolean modifié à true si l'expression a été modifiée.
@@ -400,7 +383,7 @@ public class Expression {
           HashMap<Expression, Expression> vars, HashMap<String, Set<String>> subtypes) {
     Expression e = copy();
     for (Map.Entry<Expression, Expression> entry : replaceMap.entrySet()) {
-      if (e.match(entry.getKey(), typesMap, listvars, vars, subtypes)) {
+      if (e.match(entry.getKey(), vars, typesMap, listvars, subtypes)) {
         e = entry.getValue().replace(vars);
         modifs[0] = true;
         return e;

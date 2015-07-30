@@ -27,8 +27,7 @@
         <pattern>(IMPLIES,A:propvar,B:propvar):thm</pattern>
         <result level="1" ref="mp">B:thm</result>
     </match>
-    </match>
-    
+    </match>    
   </genrule>
   <discard name="thm" scope="right">
     <match name="thm">

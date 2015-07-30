@@ -33,7 +33,6 @@ public class ExprNode {
     private String comment;
     private ArrayList<Integer> childList;
     private ArrayList<int[]> parentList;
-    private final ArrayList<Expression> exprs;
 
     /**
      *
@@ -45,7 +44,6 @@ public class ExprNode {
         this.e = e;
         this.childList = (childList == null)? new ArrayList<>() : childList;
         this.parentList = (parentList == null)? new ArrayList<>() : parentList;
-        exprs = new ArrayList<>();
         comment = "";
     }
 
@@ -126,10 +124,6 @@ public class ExprNode {
 
     public void setParentList(ArrayList<int[]> parentList) {
         this.parentList = parentList;
-    }
-
-    public ArrayList<Expression> getExprs() {
-        return exprs;
     }
 
    

@@ -103,7 +103,7 @@ public class ExpressionTest {
       if (texts != null) {
         matches = texts.getTextContent();
       }
-      texts = document.getElementById("matchsubExpr2");
+      texts = document.getElementById("matchsubExpr");
       if (texts != null) {
         matchsubExpr = texts.getTextContent();
         String separator = texts.getAttribute("separator");
@@ -164,6 +164,7 @@ public class ExpressionTest {
     }
   }
 
+  //*
   @Test
   //@Ignore
   public void testMatch() throws Exception {
@@ -173,7 +174,7 @@ public class ExpressionTest {
     System.out.println("match");
     HashMap<String, Set<String>> subtypes = syntax.getSubtypes();
     HashMap<Expression, Expression> replace = new HashMap<>();
-    HashMap<String, String> freevars = new HashMap<>();
+    HashMap<String, String> typesMap = new HashMap<>();
     ArrayList<Expression> listvars = new ArrayList<>();
     String[] ms = matches.split("\",\\s+\"");
     String[] ls = ms[1].split("\\s");
@@ -184,13 +185,13 @@ public class ExpressionTest {
     for (int i = 2; i < ms.length - 1; i += 4) {
       Expression e = new Expression(ms[i], syntax);
       Expression schema = new Expression(ms[i + 1], syntax);
-      freevars.put(ms[i + 2], ms[i + 3]);
+      typesMap.put(ms[i + 2], ms[i + 3]);
       replace.clear();
-      boolean fit = e.match(schema, freevars, listvars, replace, subtypes);
+      boolean fit = e.match(schema, replace, typesMap, listvars, subtypes);
       System.out.println("" + replace);
       assertEquals(true, fit);
     }
-  }
+  }//*/
 
   @Test  
   //@Ignore

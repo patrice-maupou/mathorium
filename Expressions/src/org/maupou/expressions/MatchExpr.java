@@ -33,6 +33,7 @@ import org.w3c.dom.NodeList;
 public class MatchExpr extends Schema {
 
   private final boolean bidir;
+  private GenItem genItemParent;
 
   public MatchExpr(Element match, int depth, ArrayList<Expression> listvars, SyntaxWrite sw)
           throws Exception {
@@ -94,20 +95,23 @@ public class MatchExpr extends Schema {
       if (bidir) {
         ret = expr.matchBoth(getPattern(), typesMap, listvars, evars, svars, syntax.getSubtypes());
       } else {
-        ret = expr.match(getPattern(), typesMap, listvars, svars, syntax.getSubtypes());
+        //* modif
+        ret = genItemParent.match(expr, getPattern(), svars);
+        //*/
+        /* avant
+        ret = expr.match(getPattern(), svars, typesMap, listvars, syntax.getSubtypes());
+        //*/
       }
       if (varMap.isEmpty()) { // ajouter les nouvelles variables à la table vars
         varMap.putAll(svars);
-        listvars.stream().forEach((var) -> {
-          var.setSymbol(true);
-        });
+        listvars.stream().forEach((var) -> {var.setSymbol(true);});
       } else { // ce n'est pas le premier modèle
         HashMap<Expression, Expression> nsvars = new HashMap<>(), nvars = new HashMap<>();
         for (Map.Entry<Expression, Expression> var : varMap.entrySet()) {
           Expression svar = svars.get(var.getKey()); // A->B
           Expression e = var.getValue(); // (A->B)->C
           if (ret && svar != null) { // nsvars={A=(A->B)->C, B=B->C} mais pas le C de B:=  
-            ret &= e.match(svar, typesMap, listvars, nsvars, syntax.getSubtypes());
+            ret &= e.match(svar, nsvars, typesMap, listvars, syntax.getSubtypes());
           }
         }
         if (ret) {
@@ -180,6 +184,16 @@ public class MatchExpr extends Schema {
       });
     }
   }
+
+  public GenItem getGenItemParent() {
+    return genItemParent;
+  }
+
+  @Override
+  void setGenItemParent(GenItem genItem) {
+    genItemParent = genItem;
+  } 
+  
 
   @Override
   public String toString() {

@@ -30,6 +30,7 @@ import org.w3c.dom.Element;
 public class Result extends Schema {
 
   private final HashMap<Expression, Expression> changes;
+  private GenItem genItemParent;
   private final int level;
 
   /**
@@ -113,6 +114,14 @@ public class Result extends Schema {
     return changes;
   }
 
+  public GenItem getGenItemParent() {
+    return genItemParent;
+  }
+  
+  @Override
+  void setGenItemParent(GenItem genItem) {
+    genItemParent = genItem;
+  } 
 
   public int getLevel() {
     return level;
