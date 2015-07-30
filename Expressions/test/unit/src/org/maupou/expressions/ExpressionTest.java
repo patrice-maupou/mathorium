@@ -39,6 +39,7 @@ public class ExpressionTest {
   private String depths;
 
   private final String syxfile, tstfile;
+  private static File sysDir, tstDir;
 
   /**
    * nom des fichiers à tester {syntaxe, exemples}
@@ -58,7 +59,9 @@ public class ExpressionTest {
   }
 
   @BeforeClass
-  public static void setUpClass() throws Exception {    
+  public static void setUpClass() throws Exception {
+    sysDir = new File("C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples");
+    tstDir = new File("C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/datatest");  
   }
 
   @AfterClass
@@ -66,10 +69,9 @@ public class ExpressionTest {
   }
 
   @Before
-  public void setUp() {    
-    File directory = new File("C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples");
-    File syntaxFile = new File(directory, syxfile);
-    File expressions = new File(directory, tstfile);
+  public void setUp() {
+    File syntaxFile = new File(sysDir, syxfile);
+    File expressions = new File(tstDir, tstfile);
     if (!syntaxFile.isFile() && expressions.exists()) {
       System.out.println("pas de fichier syntaxe : " + syntaxFile);
       return;

@@ -50,6 +50,7 @@ public class GenItemTest {
   private HashMap<String, Set<String>> subtypes;
   private String matches, matchBoth, matchsubExpr;
   private final String syxfile, tstfile;
+  private static File sysDir, tstDir;
   /**
    * nom des fichiers à tester {syntaxe, exemples}
    * @return la liste des noms de fichiers
@@ -57,7 +58,7 @@ public class GenItemTest {
   @Parameterized.Parameters
   public static Collection<Object[]> data() {
     Object[][] files = new Object[][]{
-      {"number_syntax.syx", "expressionsTests.xml"}
+      {"number_syntax.syx", "genItemTests.xml"}
     };
     return Arrays.asList(files);
   }
@@ -74,6 +75,8 @@ public class GenItemTest {
   
   @BeforeClass
   public static void setUpClass() {
+    sysDir = new File("C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples");
+    tstDir = new File("C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/datatest");
   }
   
   @AfterClass
@@ -82,9 +85,8 @@ public class GenItemTest {
   
   @Before
   public void setUp() {
-    File directory = new File("C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples");
-    File syntaxFile = new File(directory, syxfile);
-    File expressions = new File(directory, tstfile);
+    File syntaxFile = new File(sysDir, syxfile);
+    File expressions = new File(tstDir, tstfile);
     if (!syntaxFile.isFile() && expressions.exists()) {
       System.out.println("pas de fichier syntaxe : " + syntaxFile);
       return;

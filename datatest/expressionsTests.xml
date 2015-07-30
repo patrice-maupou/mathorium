@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE root [
-<!ELEMENT root (results|texts)*>
+<!ELEMENT root (texts)*>
 <!ELEMENT texts (#PCDATA)>
 <!ATTLIST texts name ID #REQUIRED value CDATA "default">
 <!ATTLIST texts separator CDATA #IMPLIED>
