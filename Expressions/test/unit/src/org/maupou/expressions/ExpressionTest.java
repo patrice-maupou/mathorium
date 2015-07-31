@@ -261,21 +261,7 @@ public class ExpressionTest {
     }
   }
 
-  @Test
-  //@Ignore   
-  public void testDepth() throws Exception {
-    if (depths == null) {
-      return;
-    }
-    System.out.println("depth");
-    String[] depthtxts = depths.split("\",\\s+\"");
-    for (int i = 1; i < depthtxts.length - 1; i += 2) {
-      Expression e = new Expression(depthtxts[i], syntax);
-      int depth = Integer.parseInt(depthtxts[i + 1]);
-      assertEquals("profondeur inadéquate sur " + e.toString(syntaxWrite), depth, e.depth());
-    }
-  }
-
+ 
   /**
    * Test of toString method, of class Expression.
    *

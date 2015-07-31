@@ -323,20 +323,6 @@ public class Expression {
     return hash;
   }
 
-  public int depth() {
-    int d = 1;
-    if (children != null) {
-      int nd = d;
-      for (Expression child : children) {
-        int dc = d + child.depth();
-        if (nd < dc) {
-          nd = dc;
-        }
-      }
-      d = nd;
-    }
-    return d;
-  }
 
   /**
    * écriture d'une expression en utilisant un fichier de syntaxe
