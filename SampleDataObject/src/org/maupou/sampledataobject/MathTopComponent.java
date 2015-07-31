@@ -317,6 +317,8 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       }
     });
 
+    listScrollPane.setPreferredSize(new java.awt.Dimension(627, 130));
+
     exprList.setModel(new ExprListModel(exprNodes));
     exprList.setToolTipText(org.openide.util.NbBundle.getMessage(MathTopComponent.class, "MathTopComponent.exprList.toolTipText")); // NOI18N
     listScrollPane.setViewportView(exprList);
@@ -334,47 +336,48 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     this.setLayout(layout);
     layout.setHorizontalGroup(
       layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addGroup(layout.createSequentialGroup()
-        .addGap(191, 191, 191)
-        .addComponent(deleteButton)
-        .addGap(77, 77, 77)
-        .addComponent(valButton)
-        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 103, Short.MAX_VALUE)
-        .addComponent(autoButton, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
+      .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+          .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+            .addContainerGap()
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+              .addComponent(hintLabel)
+              .addComponent(resultLabel)
+              .addComponent(commentLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+              .addComponent(itemLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
+              .addComponent(generatorLabel))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+              .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                  .addComponent(valueTextField)
+                  .addComponent(resultTextField))
+                .addGap(38, 38, 38))
+              .addComponent(listScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+              .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(varTableScroll, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 627, Short.MAX_VALUE)
+                    .addComponent(genItemBox, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(generatorBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                      .addComponent(levelLabel)
+                      .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                      .addComponent(levelSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
+                      .addGap(194, 194, 194)
+                      .addComponent(commentButton)
+                      .addGap(94, 94, 94))
+                    .addComponent(treeScrollPane))
+                  .addComponent(commentScroll, javax.swing.GroupLayout.PREFERRED_SIZE, 627, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(0, 0, Short.MAX_VALUE))))
+          .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+            .addGap(191, 191, 191)
+            .addComponent(deleteButton)
+            .addGap(77, 77, 77)
+            .addComponent(valButton)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(autoButton, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)))
         .addGap(54, 54, 54))
-      .addGroup(layout.createSequentialGroup()
-        .addContainerGap()
-        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-          .addComponent(hintLabel)
-          .addComponent(resultLabel)
-          .addComponent(commentLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
-          .addComponent(itemLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
-          .addComponent(generatorLabel))
-        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-          .addGroup(layout.createSequentialGroup()
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-              .addComponent(valueTextField)
-              .addComponent(resultTextField))
-            .addGap(38, 38, 38))
-          .addGroup(layout.createSequentialGroup()
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-              .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                .addComponent(varTableScroll, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 627, Short.MAX_VALUE)
-                .addComponent(genItemBox, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(generatorBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(layout.createSequentialGroup()
-                  .addGap(2, 2, 2)
-                  .addComponent(levelLabel)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(levelSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                  .addGap(194, 194, 194)
-                  .addComponent(commentButton)
-                  .addGap(94, 94, 94))
-                .addComponent(commentScroll)
-                .addComponent(listScrollPane, javax.swing.GroupLayout.Alignment.LEADING))
-              .addComponent(treeScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 582, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
     );
     layout.setVerticalGroup(
       layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -465,7 +468,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           int index = exprList.getSelectedIndex();
           ExprNode en = (ExprNode) listModel.getElementAt(index);
           Expression e = en.getE().copy();
-          if (matchExpr.checkExpr(e, genItem.getTypesMap(), genItem.getListvars(), syntax)) {
+          if (matchExpr.checkExpr(e, genItem.getTypesMap(), genItem.getListvars())) {
             resultReady = true;
             valueTextField.setText(e.toString(syntaxWrite));
             int row = 0;
@@ -540,7 +543,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                       child.getVarMap().clear();
                       child.getVarMap().putAll(schema.getVarMap());
                       Expression e = exprNodes.get(i).getE();
-                      if (matchExpr.checkExpr(e, typesMap, listvars, syntax)) {
+                      if (matchExpr.checkExpr(e, typesMap, genItem.getListvars())) {
                         //System.out.println(schema.log()+ " -> "+ child.log() + " e"+i+":"+ e);
                         schema = child;
                         continue loop; // 2è sortie

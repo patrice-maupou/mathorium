@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE root [
-<!ELEMENT root (texts)*>
+<!ELEMENT root (syntax)*>
+<!ATTLIST syntax file ID #REQUIRED>
+<!ELEMENT syntax (texts)*>
 <!ELEMENT texts (#PCDATA)>
-<!ATTLIST texts name ID #REQUIRED value CDATA "default">
+<!ATTLIST texts name CDATA #REQUIRED>
 <!ATTLIST texts separator CDATA #IMPLIED>
 ]>
 
 <root>
+  <syntax file="number_syntax.syx">
   <texts name="matches"><![CDATA[",
     "A B C",
     "a+3×(17+b)", "A+B", "var", "real",
@@ -30,4 +33,7 @@
     "A*(B+C)", "(A+C)*B", "var", "integer",
     "]]>
   </texts>
+  </syntax>
+  <syntax file="prop_syntax.syx">    
+  </syntax>
 </root>

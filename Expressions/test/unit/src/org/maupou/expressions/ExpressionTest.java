@@ -126,8 +126,8 @@ public class ExpressionTest {
   public void tearDown() {
   }
 
+  /*
   @Test
-  //@Ignore
   public void testMatchsubExpr() throws Exception {
     if (matchsubExpr == null) {
       return;
@@ -165,10 +165,10 @@ public class ExpressionTest {
       assertEquals(expected, result);
     }
   }
+  //*/
 
-  //*
+  /*
   @Test
-  //@Ignore
   public void testMatch() throws Exception {
     if (matches == null) {
       return;
@@ -195,8 +195,8 @@ public class ExpressionTest {
     }
   }//*/
 
-  @Test  
-  //@Ignore
+  /*
+  @Test 
   public void testMatchBoth() throws Exception {
     if (matchBoth == null) {
       return;
@@ -227,6 +227,7 @@ public class ExpressionTest {
       assertEquals(true, fit);
     }
   }
+  //*/
 
   /*
    @Test

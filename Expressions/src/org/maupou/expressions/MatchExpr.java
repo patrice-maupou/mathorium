@@ -84,23 +84,17 @@ public class MatchExpr extends Schema {
    * @param expr l'expression examinée par rapport à pattern, ex : ((A->B)->C)->(B->C)
    * @param typesMap table de remplacement d'un type par un autre (propse->prop)
    * @param listvars liste des symboles à remplacer
-   * @param syntax
    * @return true si l'expression convient
    */
-  public boolean checkExpr(Expression expr, HashMap<String, String> typesMap,
-          ArrayList<Expression> listvars, Syntax syntax) {
+  public boolean checkExpr(Expression expr, HashMap<String, String> typesMap, 
+          ArrayList<Expression> listvars) {
     boolean ret;
     if (expr != null) { // pattern : A->B type: prop
       HashMap<Expression, Expression> svars = new HashMap<>(), evars = new HashMap<>();
       if (bidir) {
-        ret = expr.matchBoth(getPattern(), typesMap, listvars, evars, svars, syntax.getSubtypes());
+        ret = genItemParent.matchBoth(expr, getPattern(), evars, svars);
       } else {
-        //* modif
         ret = genItemParent.match(expr, getPattern(), svars);
-        //*/
-        /* avant
-        ret = expr.match(getPattern(), svars, typesMap, listvars, syntax.getSubtypes());
-        //*/
       }
       if (varMap.isEmpty()) { // ajouter les nouvelles variables à la table vars
         varMap.putAll(svars);
@@ -110,8 +104,8 @@ public class MatchExpr extends Schema {
         for (Map.Entry<Expression, Expression> var : varMap.entrySet()) {
           Expression svar = svars.get(var.getKey()); // A->B
           Expression e = var.getValue(); // (A->B)->C
-          if (ret && svar != null) { // nsvars={A=(A->B)->C, B=B->C} mais pas le C de B:=  
-            ret &= e.match(svar, nsvars, typesMap, listvars, syntax.getSubtypes());
+          if (ret && svar != null) { // nsvars={A=(A->B)->C, B=B->C} mais pas le C de B:= 
+            ret &= genItemParent.match(e, svar, nsvars);
           }
         }
         if (ret) {
@@ -129,7 +123,7 @@ public class MatchExpr extends Schema {
           varMap.putAll(svars);
         }
       }
-      expr.markUsedVars(listvars);
+      genItemParent.markUsedVars(expr);
     } else { // expr est nulle : vérifier si le schéma correspond au type
       Expression e = getPattern().replace(varMap);
       ret = getPattern().getType().equals(e.getType());
@@ -169,7 +163,7 @@ public class MatchExpr extends Schema {
     int index = listvars.indexOf(e);
     if (index != -1) {
       Expression evar = listvars.get(index);
-      if (!evar.isSymbol() && !vars.containsKey(e)) {
+      if (!evar.isSymbol() && !vars.containsKey(e)) { // evar est une variable utilisée 
         for (Expression var : listvars) {
           if (var.isSymbol() && var.getType().equals(e.getType())) {
             var.setSymbol(false);

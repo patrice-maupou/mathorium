@@ -37,6 +37,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 /**
  *
@@ -71,6 +72,9 @@ public class GenItemTest {
   public GenItemTest(String s, String t) {
     syxfile = s;
     tstfile = t;
+    matches = "";
+    matchBoth = "";
+    matchsubExpr = "";
   }
   
   @BeforeClass
@@ -102,19 +106,20 @@ public class GenItemTest {
       syntaxWrite = syntax.getSyntaxWrite();
       subtypes = syntax.getSubtypes();
       document = documentBuilder.parse(expressions);
-      Element texts = document.getElementById("matches");
-      if (texts != null) {
-        matches = texts.getTextContent();
-      }
-      texts = document.getElementById("matchsubExpr");
-      if (texts != null) {
-        matchsubExpr = texts.getTextContent();
-        String separator = texts.getAttribute("separator");
-        matchsubExpr = separator + matchsubExpr;
-      }
-      texts = document.getElementById("matchBoth");
-      if (texts != null) {
-        matchBoth = texts.getTextContent();
+      Element doc = document.getElementById(syxfile);
+      NodeList texts = doc.getElementsByTagName("texts");
+      for (int i = 0; i < texts.getLength(); i++) {
+        Element text = (Element) texts.item(i);
+        if("matches".equals(text.getAttribute("name"))) {
+          matches += text.getTextContent();
+        }        
+        if("matchBoth".equals(text.getAttribute("name"))) {
+          matchBoth += text.getTextContent();
+        }
+        if("matchsubExpr".equals(text.getAttribute("name"))) {
+          matchsubExpr = text.getAttribute("separator");
+          matchsubExpr += text.getTextContent();
+        }
       }
     } catch (Exception ex) {
       System.out.println("Pas de document");

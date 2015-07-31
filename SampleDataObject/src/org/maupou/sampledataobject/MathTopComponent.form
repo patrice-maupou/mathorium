@@ -16,56 +16,59 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Group type="102" alignment="0" attributes="0">
-              <EmptySpace min="-2" pref="191" max="-2" attributes="0"/>
-              <Component id="deleteButton" min="-2" max="-2" attributes="0"/>
-              <EmptySpace min="-2" pref="77" max="-2" attributes="0"/>
-              <Component id="valButton" min="-2" max="-2" attributes="0"/>
-              <EmptySpace pref="103" max="32767" attributes="0"/>
-              <Component id="autoButton" min="-2" pref="171" max="-2" attributes="0"/>
-              <EmptySpace min="-2" pref="54" max="-2" attributes="0"/>
-          </Group>
-          <Group type="102" alignment="0" attributes="0">
-              <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="hintLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                  <Component id="resultLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                  <Component id="commentLabel" alignment="0" min="-2" pref="73" max="-2" attributes="0"/>
-                  <Component id="itemLabel" min="-2" pref="63" max="-2" attributes="0"/>
-                  <Component id="generatorLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-              </Group>
-              <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" attributes="0">
+          <Group type="102" alignment="1" attributes="0">
+              <Group type="103" groupAlignment="1" attributes="0">
+                  <Group type="102" alignment="0" attributes="0">
+                      <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="valueTextField" max="32767" attributes="0"/>
-                          <Component id="resultTextField" max="32767" attributes="0"/>
+                          <Component id="hintLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="resultLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="commentLabel" alignment="0" min="-2" pref="73" max="-2" attributes="0"/>
+                          <Component id="itemLabel" min="-2" pref="63" max="-2" attributes="0"/>
+                          <Component id="generatorLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace min="-2" pref="38" max="-2" attributes="0"/>
-                  </Group>
-                  <Group type="102" attributes="0">
+                      <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                              <Component id="varTableScroll" alignment="0" pref="627" max="32767" attributes="0"/>
-                              <Component id="genItemBox" alignment="0" max="32767" attributes="0"/>
-                              <Component id="generatorBox" alignment="1" max="32767" attributes="0"/>
-                              <Group type="102" alignment="1" attributes="0">
-                                  <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
-                                  <Component id="levelLabel" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="levelSpinner" min="-2" pref="38" max="-2" attributes="0"/>
-                                  <EmptySpace min="-2" pref="194" max="-2" attributes="0"/>
-                                  <Component id="commentButton" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace min="-2" pref="94" max="-2" attributes="0"/>
+                          <Group type="102" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="valueTextField" max="32767" attributes="0"/>
+                                  <Component id="resultTextField" max="32767" attributes="0"/>
                               </Group>
-                              <Component id="commentScroll" alignment="1" max="32767" attributes="0"/>
-                              <Component id="listScrollPane" alignment="0" max="32767" attributes="0"/>
+                              <EmptySpace min="-2" pref="38" max="-2" attributes="0"/>
                           </Group>
-                          <Component id="treeScrollPane" min="-2" pref="582" max="-2" attributes="0"/>
+                          <Component id="listScrollPane" alignment="0" max="-2" attributes="0"/>
+                          <Group type="102" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                      <Component id="varTableScroll" alignment="0" pref="627" max="32767" attributes="0"/>
+                                      <Component id="genItemBox" alignment="0" max="32767" attributes="0"/>
+                                      <Component id="generatorBox" alignment="1" max="32767" attributes="0"/>
+                                      <Group type="102" alignment="1" attributes="0">
+                                          <Component id="levelLabel" min="-2" max="-2" attributes="0"/>
+                                          <EmptySpace max="-2" attributes="0"/>
+                                          <Component id="levelSpinner" min="-2" pref="38" max="-2" attributes="0"/>
+                                          <EmptySpace min="-2" pref="194" max="-2" attributes="0"/>
+                                          <Component id="commentButton" min="-2" max="-2" attributes="0"/>
+                                          <EmptySpace min="-2" pref="94" max="-2" attributes="0"/>
+                                      </Group>
+                                      <Component id="treeScrollPane" alignment="1" max="32767" attributes="0"/>
+                                  </Group>
+                                  <Component id="commentScroll" min="-2" pref="627" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                          </Group>
                       </Group>
+                  </Group>
+                  <Group type="102" alignment="0" attributes="0">
+                      <EmptySpace min="-2" pref="191" max="-2" attributes="0"/>
+                      <Component id="deleteButton" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="77" max="-2" attributes="0"/>
+                      <Component id="valButton" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="32767" attributes="0"/>
+                      <Component id="autoButton" min="-2" pref="171" max="-2" attributes="0"/>
                   </Group>
               </Group>
+              <EmptySpace min="-2" pref="54" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -297,6 +300,11 @@
       </Events>
     </Component>
     <Container class="javax.swing.JScrollPane" name="listScrollPane">
+      <Properties>
+        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[627, 130]"/>
+        </Property>
+      </Properties>
       <AuxValues>
         <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
       </AuxValues>

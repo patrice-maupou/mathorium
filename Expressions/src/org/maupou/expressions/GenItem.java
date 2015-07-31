@@ -164,14 +164,14 @@ public class GenItem extends Schema {
   }
   
   /**
-   * examine les sous-expressions qui correspondent à s et leur donne le childType de s
+   * examine les sous-expressions qui correspondent à s (obtenue) et leur donne le type de s
    * @param e
    * @param s expression déjà dans la liste obtenue
    * @param vars
    * @return
    */
   public boolean matchRecursively(Expression e, Expression s, HashMap<Expression, Expression> vars) {
-    boolean fit = match(e,s,vars);
+    boolean fit = match(e, s, vars);
     if(fit) {
       e.setType(s.getType());
     }
@@ -181,7 +181,7 @@ public class GenItem extends Schema {
         matchRecursively(child, s, nvars);
       });
     }
-    return false;
+    return fit;
   }
   
   /**
@@ -207,6 +207,19 @@ public class GenItem extends Schema {
     return expr;
   }
   
+  /**
+   * si l'expression contient une variable de listvars, on fixe le boolean symbol de cette variable
+   * à la valeur false. (utilisé dans MatchExpr.checkExpr)
+   * @param e expression dont on recherche les variables
+   */
+  public void markUsedVars(Expression e) {
+    int index = listvars.indexOf(e);
+    if (index != -1) { // e est une variable
+      listvars.get(index).setSymbol(false);
+    } else if (e != null && e.getChildren() != null) {
+      e.getChildren().stream().forEach(this::markUsedVars);
+    }
+  }
 
   @Override
   public String toString() {
