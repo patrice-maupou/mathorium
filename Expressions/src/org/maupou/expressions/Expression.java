@@ -56,7 +56,7 @@ public class Expression {
    * @throws Exception si l'écriture est non valide
    */
   public Expression(String text, Syntax syntax) throws Exception {
-    Expression e = parse(text, syntax);
+    Expression e = syntax.parse(text);   
     symbol = false;
     if (e != null) {
       name = e.getName();
@@ -136,106 +136,6 @@ public class Expression {
       ret = scanExpr(text, list);
     }
     return ret;
-  }
-
-
-  /**
-   * analyse le texte et retourne une expression ou null en cas d'erreur
-   *
-   * @param text
-   * @param syntax
-   * @return
-   */
-  private static Expression parse(String text, Syntax syntax) {
-    String unused = syntax.getUnused();
-    String tokenvar = "____________________________________";
-    StringBuilder buf = new StringBuilder();
-    while (buf.length() < text.length()) {
-      buf.append(tokenvar);
-    }
-    buf.insert(0, unused);
-    tokenvar = buf.toString();
-    String tkvar = unused + "_*"; // remplace les parties décodées
-    TreeMap<Integer, Expression> tm = new TreeMap<>();
-    boolean haschanged;
-    do {
-      haschanged = false;
-      loop_rules:
-      for (SyntaxRule rule : syntax.getRules()) {
-        String[] childs = rule.getChilds();
-        Matcher m = rule.getPatternRule().matcher(text);
-        loop_find:
-        while (m.find()) {
-          SyntaxPattern syntaxPattern = null;
-          ArrayList<Expression> ch = new ArrayList<>();
-          TypeCheck typeCheck;
-          int i, idx = 0;
-          for (Integer key : rule.getSyntaxPatternGroups().keySet()) {
-            if (m.group(key) != null) { // c'est le pattern qui convient
-              idx = key; // c'est le premier groupe
-              syntaxPattern = rule.getSyntaxPatternGroups().get(key);
-              break;
-            }
-          }
-          if (syntaxPattern == null) {
-            break;
-          }
-          String nodeName = syntaxPattern.getName();
-          if (nodeName.isEmpty()) { // atomes ou expressions simples
-            nodeName = m.group();
-            ch = null;
-            typeCheck = syntaxPattern.getTypeChecks().get(0);
-          } else {
-            // liste des enfants
-            for (int j = idx + 1; j <= m.groupCount(); j++) {
-              if (m.group(j) != null && ch.size() < childs.length) {
-                ch.add(tm.get(m.start(j)));
-              }
-            }
-            // vérification des types des enfants
-            typeCheck = null;
-            for (TypeCheck typChck : syntaxPattern.getTypeChecks()) {
-              for (i = 0; i < childs.length; i++) {
-                String childType = typChck.getChildtypes().get(childs[i]);
-                if (!syntax.getSubtypes().get(childType).contains(ch.get(i).getType())) {
-                  break;
-                }
-              }
-              if (i == childs.length) { // terminé
-                typeCheck = typChck;
-                break;
-              }
-            }
-          }
-          // suppression des enfants dans tm
-          if (typeCheck != null) {
-            Expression e = new Expression(nodeName, typeCheck.getType(), ch, false);
-            if (childs.length > 0 && nodeName.equals(childs[0])) {
-              if(ch != null && ch.size() > 1) {
-                ch.remove(0);
-                e = new Expression(nodeName, typeCheck.getType(), ch, false);
-              } else {
-               e = tm.get(m.start(idx + 1));
-              }
-            }
-            for (i = 0; i < childs.length; i++) {
-              tm.remove(m.start(idx + i + 1));
-            }
-            // changement de text et expression dans tm
-            tm.put(m.start(), e);
-            text = text.substring(0, m.start()) + tokenvar.substring(0, m.end() - m.start())
-                    + text.substring(m.end());
-            m.reset(text);
-            if (text.matches(tkvar)) {
-              return e;
-            }
-            haschanged = true;
-            break loop_rules;
-          }
-        } // end loop_find // end loop_find
-      } // end rules // end rules
-    } while (haschanged);
-    return null;
   }
 
 

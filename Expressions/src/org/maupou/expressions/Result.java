@@ -89,14 +89,6 @@ public class Result extends Schema {
         } 
         return false;       
       }
-      /*
-      if (e.matchRecursively(expr, typesMap, listvars, nvars, syntax.getSubtypes(), en)) {
-        // déjà dans la liste (aux variables près)
-        if (!exprNode.getParentList().containsAll(en.getParentList())) {
-          exprNode.getParentList().addAll(en.getParentList());
-        }
-        return false;
-      }//*/
     }
     return true;
   }
