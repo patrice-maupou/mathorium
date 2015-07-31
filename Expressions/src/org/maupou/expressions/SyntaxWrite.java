@@ -20,7 +20,9 @@ package org.maupou.expressions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -60,6 +62,41 @@ public class SyntaxWrite {
         nodeWrites.add(new NodeWrite(node, childs, childmap, unused));
       }
     }
+  }
+  
+  /**
+   * Ecriture de l'expression e par la syntaxe
+   * @param e
+   * @return 
+   */
+  public String toString(Expression e) {
+    String ret = null; 
+    if (e != null) {
+      if (e.getChildren() == null) {
+        ret = e.toString();
+      } else {
+        for (NodeWrite node : nodeWrites) {
+          String nodename = node.getName();
+          if (e.getName().matches(nodename)) {
+            ret = node.getValue();
+            for (Map.Entry<Integer, ChildReplace> entry : node.getMapreplace().entrySet()) {
+              Integer j = entry.getKey();
+              ChildReplace childReplace = entry.getValue();
+              String childname = childReplace.getName();
+              String replace = childReplace.getReplacement();
+              List<String> conditions = childReplace.getConditions();
+              Expression child = e.getChildren().get(j);
+              String ewr = toString(child);
+              replace = (conditions.contains(child.getName())) ? replace.replace(childname, ewr) : ewr;
+              int pos = ret.indexOf(unused);
+              ret = ret.substring(0, pos) + replace + ret.substring(pos + unused.length());
+            }
+            break;
+          }
+        }
+      }
+    }
+    return ret;
   }
 
   @Override

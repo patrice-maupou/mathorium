@@ -63,7 +63,7 @@ public class Result extends Schema {
       }
     }
     setPattern(result);
-    setUserObject("résultat : " + getPattern().toString(sw));
+    setUserObject("résultat : " + sw.toString(getPattern()));
   }
 
   /**

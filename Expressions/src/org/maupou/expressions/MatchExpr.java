@@ -62,7 +62,7 @@ public class MatchExpr extends Schema {
         add(result);
       }
     }
-    setUserObject("modèle : " + getPattern().toString(sw));
+    setUserObject("modèle : " + sw.toString(getPattern()));
     varsInExpression(getPattern(), getVars(), listvars);
     String[] listopts = match.getAttribute("options").split(",");
     for (String option : listopts) {

@@ -223,52 +223,6 @@ public class Expression {
     return hash;
   }
 
-
-  /**
-   * écriture d'une expression en utilisant un fichier de syntaxe
-   *
-   * @param syntaxWrite donne la syntaxe
-   * @return la chaîne
-   */
-  public String toString(SyntaxWrite syntaxWrite) {
-    String ret = "";
-    if(children == null) {
-      ret = toString();
-    } else {
-      String unused = syntaxWrite.getUnused();
-      NodeWrite node;
-      try {
-        for (int i = 0; i < syntaxWrite.getNodeWrites().size(); i++) {
-          node = syntaxWrite.getNodeWrites().get(i);
-          String nodename = node.getName();
-          if (name.matches(nodename)) {
-            ret = node.getValue();
-            if (!node.getVar().isEmpty()) {
-              ret = ret.replace(node.getVar(), name);
-            }
-            TreeMap<Integer, ChildReplace> childmap = node.getMapreplace();
-            for (Map.Entry<Integer, ChildReplace> entry : childmap.entrySet()) {
-              Integer j = entry.getKey();
-              ChildReplace childReplace = entry.getValue();
-              String childname = childReplace.getName();
-              String replace = childReplace.getReplacement();
-              List<String> conditions = childReplace.getConditions();
-              Expression e = children.get(j);
-              String ewr = e.toString(syntaxWrite);
-              replace = (conditions.contains(e.getName())) ? replace.replace(childname, ewr) : ewr;
-              int pos = ret.indexOf(unused);
-              ret = ret.substring(0, pos) + replace + ret.substring(pos + unused.length());
-            }
-            break;
-          }
-        }
-      } catch (Exception ex) {
-        ret = toString();
-      }
-    }
-    return ret;
-  }
-
   /**
    * Ecriture complète de l'expression comprenant le childType et permettant de reconstruire
    * l'expression exemple : (ADD,3:natural,x:real):real

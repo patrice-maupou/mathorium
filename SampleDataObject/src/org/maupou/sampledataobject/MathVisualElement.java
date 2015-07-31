@@ -140,7 +140,7 @@ public class MathVisualElement  extends JPanel implements MultiViewElement {
             if(!exprNode.getComment().isEmpty()) {
                 output.append("<div>").append(exprNode.getComment()).append("</div>");
             }
-            output.append("<var>").append(exprNode.getE().toString(syntaxWrite)).append("</var><br>");
+            output.append("<var>").append(syntaxWrite.toString(exprNode.getE())).append("</var><br>");
         }        
         textPane.setText(output.toString());
     }

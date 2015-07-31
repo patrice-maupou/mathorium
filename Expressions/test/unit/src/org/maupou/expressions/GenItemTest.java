@@ -188,8 +188,13 @@ public class GenItemTest {
       boolean fit = genItem.matchBoth(e, s, evars, svars);
       System.out.println("" + evars);
       System.out.println("" + svars);
+      /* avant
       System.out.println("e : " + e.toString(syntaxWrite)
               + "\ts : " + s.toString(syntaxWrite) + "\n");
+      //*/
+      //* modif
+      System.out.println("e : " + syntaxWrite.toString(e) + "\ts : " + syntaxWrite.toString(s) + "\n");
+      //*/
       assertEquals(true, fit);
     }
   }
@@ -250,7 +255,7 @@ public class GenItemTest {
       Expression expected = new Expression(ms[i + 4], syntax);
       vars.clear();
       Expression result = genItem.matchSubExpr(e, replaceMap);
-      System.out.println(e.toString(syntaxWrite) + "  ->  " + result.toString(syntaxWrite));
+      System.out.println(syntaxWrite.toString(e) + "  ->  " + syntaxWrite.toString(result));
       assertEquals(expected, result);
     }
     System.out.println("");

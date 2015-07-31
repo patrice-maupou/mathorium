@@ -52,11 +52,7 @@ public class ExprListCellRenderer extends JLabel implements ListCellRenderer {
           boolean cellHasFocus) {
     ExprNode en = (ExprNode) value;
     Expression e = en.getE();
-    try {
-      setText(e.toString(sw));
-    } catch (Exception ex) {
-      setText(e.toString());
-    }
+    setText(sw.toString(e));
     setOpaque(true);
     if (isSelected) {
       setBackground(list.getSelectionBackground());

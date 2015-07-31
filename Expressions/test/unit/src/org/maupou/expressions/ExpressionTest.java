@@ -126,119 +126,11 @@ public class ExpressionTest {
   public void tearDown() {
   }
 
-  /*
-  @Test
-  public void testMatchsubExpr() throws Exception {
-    if (matchsubExpr == null) {
-      return;
-    }
-    System.out.println("matchsubExpr");
-    boolean[] modifs = new boolean[]{false};
-    HashMap<String, Set<String>> subtypes = syntax.getSubtypes();
-    HashMap<Expression, Expression> vars = new HashMap<>();
-    HashMap<Expression, Expression> replaceMap = new HashMap<>();
-    HashMap<String, String> typesMap = new HashMap<>();
-    ArrayList<Expression> listvars = new ArrayList<>();
-    String[] ms = matchsubExpr.split("\",\\s+\"");
-    String separator = ms[0];
-    String[] ls = ms[1].split("\\s");
-    for (String l : ls) {
-      Expression v = new Expression(l, syntax);
-      listvars.add(v);
-    }
-    for (int i = 2; i < ms.length - 1; i += 5) {
-      Expression e = new Expression(ms[i], syntax);
-      replaceMap.clear();
-      String[] replace = ms[i + 1].split(separator);
-      for (int j = 0; j < replace.length; j += 2) {
-        Expression key = new Expression(replace[j], syntax);
-        Expression value = new Expression(replace[j + 1], syntax);
-        replaceMap.put(key, value);
-      }
-      typesMap.put(ms[i + 2], ms[i + 3]);
-      Expression expected = new Expression(ms[i + 4], syntax);
-      vars.clear();
-      Expression result = e.matchsubExpr(replaceMap, modifs, typesMap, listvars,
-              vars, subtypes);
-
-      System.out.println("" + vars);
-      assertEquals(expected, result);
-    }
-  }
-  //*/
-
-  /*
-  @Test
-  public void testMatch() throws Exception {
-    if (matches == null) {
-      return;
-    }
-    System.out.println("match");
-    HashMap<String, Set<String>> subtypes = syntax.getSubtypes();
-    HashMap<Expression, Expression> replace = new HashMap<>();
-    HashMap<String, String> typesMap = new HashMap<>();
-    ArrayList<Expression> listvars = new ArrayList<>();
-    String[] ms = matches.split("\",\\s+\"");
-    String[] ls = ms[1].split("\\s");
-    for (String l : ls) {
-      Expression v = new Expression(l, syntax);
-      listvars.add(v);
-    }
-    for (int i = 2; i < ms.length - 1; i += 4) {
-      Expression e = new Expression(ms[i], syntax);
-      Expression schema = new Expression(ms[i + 1], syntax);
-      typesMap.put(ms[i + 2], ms[i + 3]);
-      replace.clear();
-      boolean fit = e.match(schema, replace, typesMap, listvars, subtypes);
-      System.out.println("" + replace);
-      assertEquals(true, fit);
-    }
-  }//*/
-
-  /*
-  @Test 
-  public void testMatchBoth() throws Exception {
-    if (matchBoth == null) {
-      return;
-    }
-    System.out.println("matchBoth");
-    HashMap<String, Set<String>> subtypes = syntax.getSubtypes();
-    HashMap<Expression, Expression> replace = new HashMap<>();
-    HashMap<Expression, Expression> sreplace = new HashMap<>();
-    ArrayList<Expression> listvars = new ArrayList<>();
-    String[] ms = matchBoth.split("\",\\s+\"");
-    String[] ls = ms[1].split("\\s");
-    for (String l : ls) {
-      Expression v = new Expression(l, syntax);
-      listvars.add(v);
-    }
-    for (int i = 2; i < ms.length - 1; i += 4) {
-      Expression e = new Expression(ms[i], syntax);
-      Expression schema = new Expression(ms[i + 1], syntax);
-      HashMap<String, String> freevars = new HashMap<>();
-      freevars.put(ms[i + 2], ms[i + 3]);
-      replace.clear();
-      sreplace.clear();
-      boolean fit = e.matchBoth(schema, freevars, listvars, replace, sreplace, subtypes);
-      System.out.println("" + replace);
-      System.out.println("" + sreplace);
-      System.out.println("e : " + e.toString(syntaxWrite)
-              + "\tschema : " + schema.toString(syntaxWrite) + "\n");
-      assertEquals(true, fit);
-    }
-  }
-  //*/
-
-  /*
-   @Test
-   @Ignore
-   public void testmarkUsedVars() throws Exception {
-        
-   }
-   //*/
+  
+ 
   @Test
   //@Ignore
-  public void testReplace() throws Exception {
+  public void testReplace() {
     if (replacements == null) {
       return;
     }
@@ -246,15 +138,15 @@ public class ExpressionTest {
     String[] replaces = replacements.split("\",\\s+\"");
     for (int i = 1; i < replaces.length - 1; i += 3) {
       String eTxt = replaces[i];
-      Expression e = new Expression(eTxt, syntax);
+      Expression e = syntax.parse(eTxt);
       String[] maptxt = replaces[i + 1].split(",");
       String rTxt = replaces[i + 2];
-      Expression result = new Expression(rTxt, syntax);
+      Expression result = syntax.parse(rTxt);
       HashMap<Expression, Expression> map = new HashMap<>();
       for (String maptxt1 : maptxt) {
         String[] couple = maptxt1.split("=");
         assertEquals("pas d'égalité", couple.length, 2);
-        map.put(new Expression(couple[0], syntax), new Expression(couple[1], syntax));
+        map.put(syntax.parse(couple[0]), syntax.parse(couple[1]));
       }
       e = e.replace(map);
       assertEquals(eTxt + " mal transformé", result, e);
@@ -265,11 +157,10 @@ public class ExpressionTest {
   /**
    * Test of toString method, of class Expression.
    *
-   * @throws Exception
    */
   @Test
   //@Ignore
-  public void testToString() throws Exception {
+  public void testToString() {
     if (results == null) {
       return;
     }
@@ -279,7 +170,7 @@ public class ExpressionTest {
     m = (n < m)? n : m;
     for (int i = 1; i < m-1; i++) {
       String entry = entries[i];
-      Expression exp = new Expression(entry, syntax);
+      Expression exp = syntax.parse(entry);
       String expString = exp.toString();
       String expected = results[i];
       System.out.println(i + ":  " + entry + "  ->  " + expString + "   type: " + exp.getType());
@@ -290,7 +181,7 @@ public class ExpressionTest {
 
   @Test
   //@Ignore
-  public void testToText() throws Exception {
+  public void testToText() {
     if (complete == null) {
       return;
     }
@@ -300,7 +191,7 @@ public class ExpressionTest {
     m = (n < m)? n : m;
     for (int i = 1; i < m-1; i++) {
       String entry = entries[i];
-      Expression exp = new Expression(entry, syntax);
+      Expression exp = syntax.parse(entry);
       String expString = exp.toText();
       String expected = complete[i];
       System.out.println(i + ": " + expString);
@@ -323,7 +214,7 @@ public class ExpressionTest {
     System.out.println("scanExpr");
     for (int i = 1; i < complete.length - 1; i++) {
       String text = complete[i];
-      Expression expected = new Expression(entries[i], syntax);
+      Expression expected = syntax.parse(entries[i]);
       ArrayList<Expression> list = new ArrayList<>();
       String[] ret = Expression.scanExpr(text, list);
       assertEquals(expected, list.get(0));
@@ -335,7 +226,7 @@ public class ExpressionTest {
 
   @Test
   //@Ignore
-  public void testToString_syntaxWrite() throws Exception {
+  public void testToString_syntaxWrite() {
     if (printing == null) {
       return;
     }
@@ -345,10 +236,10 @@ public class ExpressionTest {
     if(n < m) m = n;
     for (int i = 1; i < m - 1; i++) {
       String entry = entries[i];
-      Expression exp = new Expression(entry, syntax);
+      Expression exp = syntax.parse(entry);
       String expString;
       try {
-        expString = exp.toString(syntaxWrite);
+        expString = syntaxWrite.toString(exp);
       } catch (Exception ex) {
         expString = "";
       }

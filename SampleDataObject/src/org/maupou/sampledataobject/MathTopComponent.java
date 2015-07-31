@@ -463,33 +463,29 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     
     private void valButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_valButtonActionPerformed
       if (!resultReady && curSchema instanceof MatchExpr) {
-        try {
-          MatchExpr matchExpr = (MatchExpr) curSchema;
-          int index = exprList.getSelectedIndex();
-          ExprNode en = (ExprNode) listModel.getElementAt(index);
-          Expression e = en.getE().copy();
-          if (matchExpr.checkExpr(e, genItem.getTypesMap(), genItem.getListvars())) {
-            resultReady = true;
-            valueTextField.setText(e.toString(syntaxWrite));
-            int row = 0;
-            for (Map.Entry<Expression, Expression> entry : curSchema.getVarMap().entrySet()) {
-              String key = entry.getKey().toString(syntaxWrite);
-              String val = entry.getValue().toString(syntaxWrite);
-              String type = entry.getValue().getType();
-              varsTable.setValueAt(key, row, 0);
-              varsTable.setValueAt(val, row, 1);
-              varsTable.setValueAt(type, row, 2);
-              row++;
-            }
-            curSchema.updateRgs(index);
-            TreePath path = genTree.getSelectionModel().getLeadSelectionPath();
-            genTree.expandPath(path);
-          } else {
-            valueTextField.setText("L'expression choisie ne convient pas.");
-            resultReady = false;
+        MatchExpr matchExpr = (MatchExpr) curSchema;
+        int index = exprList.getSelectedIndex();
+        ExprNode en = (ExprNode) listModel.getElementAt(index);
+        Expression e = en.getE().copy();
+        if (matchExpr.checkExpr(e, genItem.getTypesMap(), genItem.getListvars())) {
+          resultReady = true;
+          valueTextField.setText(syntaxWrite.toString(e));
+          int row = 0;
+          for (Map.Entry<Expression, Expression> entry : curSchema.getVarMap().entrySet()) {
+            String key = syntaxWrite.toString(entry.getKey());
+            String val = syntaxWrite.toString(entry.getValue());
+            String type = entry.getValue().getType();
+            varsTable.setValueAt(key, row, 0);
+            varsTable.setValueAt(val, row, 1);
+            varsTable.setValueAt(type, row, 2);
+            row++;
           }
-        } catch (Exception ex) {
-          displayMessage(ex.getMessage(), "Error message");          
+          curSchema.updateRgs(index);
+          TreePath path = genTree.getSelectionModel().getLeadSelectionPath();
+          genTree.expandPath(path);
+        } else {
+          valueTextField.setText("L'expression choisie ne convient pas.");
+          resultReady = false;
         }
       }
     }//GEN-LAST:event_valButtonActionPerformed
@@ -612,12 +608,8 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           }
           result.setReady(result.newExpr(toAdd, genItem.getTypesMap(), genItem.getListvars(), 
                   syntax, exprNodes));
-          try {
-            resultTextField.setText(toAdd.getE().toString(syntaxWrite));
-            resultTextField.requestFocus();
-          } catch (Exception ex) {
-            displayMessage(ex.getMessage(), "Error message");
-          }
+          resultTextField.setText(syntaxWrite.toString(toAdd.getE()));
+          resultTextField.requestFocus();
           if(!result.isReady()) {
             toAdd = null;
           }

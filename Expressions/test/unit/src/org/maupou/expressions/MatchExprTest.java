@@ -112,7 +112,7 @@ public class MatchExprTest {
     System.out.println("vars = {");
     for (Map.Entry<Expression, Expression> entry : vars.entrySet()) {
       String v = entry.getKey().toString();
-      String val = entry.getValue().toString(syntax.getSyntaxWrite());
+      String val = syntax.getSyntaxWrite().toString(entry.getValue());
       System.out.print(v + " = " + val + "\n");
     }
     System.out.print("}\n");

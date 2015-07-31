@@ -33,17 +33,18 @@ import org.w3c.dom.Element;
  */
 public class NodeWrite {
 
-  private String name;
-  private String initvalue;
+  private final String name;
+  private final String initvalue;
   private String value;
-  private String var;
-  private TreeMap<Integer, ChildReplace> mapReplace;
+  private final String var; // ne semble pas utilisé
+  private final TreeMap<Integer, ChildReplace> mapReplace;
 
   /**
    * donne la valeur du noeud, et de la table replacing
    * @param node élément définissant
    * @param childs liste des noms des variables enfant
    * @param childmap associe le remplacement éventuel et les conditions de remplacement
+   * @param unused
    * @throws Exception
    */
   public NodeWrite(Element node, String[] childs, HashMap<String, String[]> childmap, String unused)
@@ -65,7 +66,7 @@ public class NodeWrite {
         childReplace = new ChildReplace(child, replacement, conditions);
       }
       else {
-        childReplace = new ChildReplace(child, child, new ArrayList<String>());
+        childReplace = new ChildReplace(child, child, new ArrayList<>());
       }
       mapReplace.put(i, childReplace);
     }
