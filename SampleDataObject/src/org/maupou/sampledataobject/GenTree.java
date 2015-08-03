@@ -33,7 +33,7 @@ public class GenTree extends JTree {
   
 
   public GenTree() {
-    setRootVisible(true);
+    setRootVisible(false);
     getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
     setShowsRootHandles(true);
     DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();

@@ -30,17 +30,15 @@ import org.w3c.dom.Element;
 public class Result extends Schema {
 
   private final HashMap<Expression, Expression> changes;
-  private GenItem genItemParent;
   private final int level;
 
   /**
    *
    * @param result élément de document définissant l'instance pattern
    * @param depth nombre de conditions précédent ce résultat
-   * @param sw
    * @throws Exception
    */
-  public Result (Element result, int depth, SyntaxWrite sw) throws Exception {
+  public Result (Element result, int depth) throws Exception {
     allowsChildren = false;
     rgs = new int[depth];
     int l = 0;
@@ -63,7 +61,6 @@ public class Result extends Schema {
       }
     }
     setPattern(result);
-    setUserObject("résultat : " + sw.toString(getPattern()));
   }
 
   /**
@@ -83,7 +80,7 @@ public class Result extends Schema {
     for (ExprNode exprNode : exprNodes) {
       Expression expr = exprNode.getE();
       HashMap<Expression, Expression> nvars = new HashMap<>();
-      if(getGenItemParent().matchRecursively(e, expr, nvars)) {
+      if(getRoot().matchRecursively(e, expr, nvars)) {
         if (!exprNode.getParentList().containsAll(en.getParentList())) {
           exprNode.getParentList().addAll(en.getParentList());
         } 
@@ -113,14 +110,6 @@ public class Result extends Schema {
     return changes;
   }
 
-  public GenItem getGenItemParent() {
-    return genItemParent;
-  }
-  
-  @Override
-  void setGenItemParent(GenItem genItem) {
-    genItemParent = genItem;
-  } 
 
   public int getLevel() {
     return level;

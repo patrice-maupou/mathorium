@@ -43,8 +43,8 @@ import org.w3c.dom.NodeList;
  *
  * @author Patrice
  */
- @RunWith(Parameterized.class)
-public class GenItemTest {
+@RunWith(Parameterized.class)
+public class GeneratorTest { 
   
   private Syntax syntax;
   private SyntaxWrite syntaxWrite;
@@ -64,12 +64,7 @@ public class GenItemTest {
     return Arrays.asList(files);
   }
   
-  /**
-   *
-   * @param s
-   * @param t
-   */
-  public GenItemTest(String s, String t) {
+  public GeneratorTest(String s, String t) {
     syxfile = s;
     tstfile = t;
     matches = "";
@@ -126,11 +121,12 @@ public class GenItemTest {
     }
   }
   
+  
   @After
   public void tearDown() {
   }
 
-  /**
+ /**
    * Test of match method, of class GenItem.
    * @throws java.lang.Exception
    */
@@ -149,12 +145,12 @@ public class GenItemTest {
     for (int i = 2; i < ms.length - 1; i += 4) {
       typesMap.put(ms[i + 2], ms[i + 3]);      
     }
-    GenItem genItem = new GenItem(typesMap, listvars, subtypes);
+    Generator gen = new Generator(typesMap, listvars, subtypes);
     for (int i = 2; i < ms.length - 1; i += 4) {
       Expression e = new Expression(ms[i], syntax);
       Expression s = new Expression(ms[i + 1], syntax);
       vars.clear();
-      boolean result = genItem.match(e, s, vars);
+      boolean result = gen.match(e, s, vars);
       System.out.println("" + vars);
       assertEquals(true, result);
     }
@@ -177,7 +173,7 @@ public class GenItemTest {
       Expression v = new Expression(l, syntax);
       listvars.add(v);
     }
-    GenItem genItem = new GenItem(typesMap, listvars, subtypes);
+    Generator gen = new Generator(typesMap, listvars, subtypes);
     for (int i = 2; i < ms.length - 1; i += 4) {
       typesMap.clear();
       typesMap.put(ms[i + 2], ms[i + 3]);
@@ -185,36 +181,12 @@ public class GenItemTest {
       Expression s = new Expression(ms[i + 1], syntax);
       evars.clear();
       svars.clear();
-      boolean fit = genItem.matchBoth(e, s, evars, svars);
+      boolean fit = gen.matchBoth(e, s, evars, svars);
       System.out.println("" + evars);
       System.out.println("" + svars);
-      /* avant
-      System.out.println("e : " + e.toString(syntaxWrite)
-              + "\ts : " + s.toString(syntaxWrite) + "\n");
-      //*/
-      //* modif
       System.out.println("e : " + syntaxWrite.toString(e) + "\ts : " + syntaxWrite.toString(s) + "\n");
-      //*/
       assertEquals(true, fit);
     }
-  }
-
-  /**
-   * Test of matchRecursively method, of class GenItem.
-   */
-  @Ignore
-  @Test
-  public void testMatchRecursively() {
-    System.out.println("matchRecursively");
-    Expression e = null;
-    Expression s = null;
-    HashMap<Expression, Expression> vars = null;
-    GenItem instance = null;
-    boolean expResult = false;
-    boolean result = instance.matchRecursively(e, s, vars);
-    assertEquals(expResult, result);
-    // TODO review the generated test code and remove the default call to fail.
-    fail("The test case is a prototype.");
   }
 
   /**
@@ -242,7 +214,7 @@ public class GenItemTest {
     for (int i = 2; i < ms.length - 1; i += 5) {      
       typesMap.put(ms[i + 2], ms[i + 3]);
     }
-    GenItem genItem = new GenItem(typesMap, listvars, subtypes);
+    Generator gen = new Generator(typesMap, listvars, subtypes);
     for (int i = 2; i < ms.length - 1; i += 5) {
       Expression e = new Expression(ms[i], syntax);
       replaceMap.clear();
@@ -254,7 +226,7 @@ public class GenItemTest {
       }      
       Expression expected = new Expression(ms[i + 4], syntax);
       vars.clear();
-      Expression result = genItem.matchSubExpr(e, replaceMap);
+      Expression result = gen.matchSubExpr(e, replaceMap);
       System.out.println(syntaxWrite.toString(e) + "  ->  " + syntaxWrite.toString(result));
       assertEquals(expected, result);
     }
@@ -262,13 +234,27 @@ public class GenItemTest {
   }
 
   /**
-   * Test of toString method, of class GenItem.
+   * Test of markUsedVars method, of class Generator.
+   */
+  @Test
+  @Ignore
+  public void testMarkUsedVars() {
+    System.out.println("markUsedVars");
+    Expression e = null;
+    Generator instance = null;
+    instance.markUsedVars(e);
+    // TODO review the generated test code and remove the default call to fail.
+    fail("The test case is a prototype.");
+  }
+
+  /**
+   * Test of toString method, of class Generator.
    */
   @Test
   @Ignore
   public void testToString() {
     System.out.println("toString");
-    GenItem instance = null;
+    Generator instance = null;
     String expResult = "";
     String result = instance.toString();
     assertEquals(expResult, result);
@@ -277,30 +263,30 @@ public class GenItemTest {
   }
 
   /**
-   * Test of getTypesMap method, of class GenItem.
+   * Test of getName method, of class Generator.
    */
   @Test
   @Ignore
-  public void testGetTypesMap() {
-    System.out.println("getTypesMap");
-    GenItem instance = null;
-    HashMap<String, String> expResult = null;
-    HashMap<String, String> result = instance.getTypesMap();
+  public void testGetName() {
+    System.out.println("getName");
+    Generator instance = null;
+    String expResult = "";
+    String result = instance.getName();
     assertEquals(expResult, result);
     // TODO review the generated test code and remove the default call to fail.
     fail("The test case is a prototype.");
   }
 
   /**
-   * Test of getListvars method, of class GenItem.
+   * Test of getDiscards method, of class Generator.
    */
   @Test
   @Ignore
-  public void testGetListvars() {
-    System.out.println("getListvars");
-    GenItem instance = null;
-    ArrayList<Expression> expResult = null;
-    ArrayList<Expression> result = instance.getListvars();
+  public void testGetDiscards() {
+    System.out.println("getDiscards");
+    Generator instance = null;
+    ArrayList<GenItem> expResult = null;
+    ArrayList<GenItem> result = instance.getDiscards();
     assertEquals(expResult, result);
     // TODO review the generated test code and remove the default call to fail.
     fail("The test case is a prototype.");

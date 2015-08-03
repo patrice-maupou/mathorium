@@ -33,10 +33,8 @@ import org.w3c.dom.NodeList;
 public class MatchExpr extends Schema {
 
   private final boolean bidir;
-  private GenItem genItemParent;
 
-  public MatchExpr(Element match, int depth, ArrayList<Expression> listvars, SyntaxWrite sw)
-          throws Exception {
+  public MatchExpr(Element match, int depth, ArrayList<Expression> listvars) throws Exception {
     allowsChildren = true;
     rgs = new int[depth];
     HashMap<String, String> options = new HashMap<>();
@@ -50,19 +48,18 @@ public class MatchExpr extends Schema {
     for (int i = 0; i < nodelist.getLength(); i++) {
       if (match.isEqualNode(nodelist.item(i).getParentNode())) { // niveau immédiatement inférieur
         Element echild = (Element) nodelist.item(i);
-        MatchExpr matchChild = new MatchExpr(echild, depth + 1, listvars, sw);
+        MatchExpr matchChild = new MatchExpr(echild, depth + 1, listvars);
         add(matchChild);
       }
     }
     nodelist = match.getElementsByTagName("result");
     for (int i = 0; i < nodelist.getLength(); i++) {
       if (match.isEqualNode(nodelist.item(i).getParentNode())) { // niveau immédiatement inférieur
-        Result result = new Result((Element) nodelist.item(i), depth, sw);
+        Result result = new Result((Element) nodelist.item(i), depth);
         result.varMap = varMap;
         add(result);
       }
     }
-    setUserObject("modèle : " + sw.toString(getPattern()));
     varsInExpression(getPattern(), getVars(), listvars);
     String[] listopts = match.getAttribute("options").split(",");
     for (String option : listopts) {
@@ -92,9 +89,9 @@ public class MatchExpr extends Schema {
     if (expr != null) { // pattern : A->B type: prop
       HashMap<Expression, Expression> svars = new HashMap<>(), evars = new HashMap<>();
       if (bidir) {
-        ret = genItemParent.matchBoth(expr, getPattern(), evars, svars);
+        ret = getRoot().matchBoth(expr, getPattern(), evars, svars);
       } else {
-        ret = genItemParent.match(expr, getPattern(), svars);
+        ret = getRoot().match(expr, getPattern(), svars);
       }
       if (varMap.isEmpty()) { // ajouter les nouvelles variables à la table vars
         varMap.putAll(svars);
@@ -105,7 +102,7 @@ public class MatchExpr extends Schema {
           Expression svar = svars.get(var.getKey()); // A->B
           Expression e = var.getValue(); // (A->B)->C
           if (ret && svar != null) { // nsvars={A=(A->B)->C, B=B->C} mais pas le C de B:= 
-            ret &= genItemParent.match(e, svar, nsvars);
+            ret &= getRoot().match(e, svar, nsvars);
           }
         }
         if (ret) {
@@ -123,7 +120,7 @@ public class MatchExpr extends Schema {
           varMap.putAll(svars);
         }
       }
-      genItemParent.markUsedVars(expr);
+      getRoot().markUsedVars(expr);
     } else { // expr est nulle : vérifier si le schéma correspond au type
       Expression e = getPattern().replace(varMap);
       ret = getPattern().getType().equals(e.getType());
@@ -178,15 +175,10 @@ public class MatchExpr extends Schema {
       });
     }
   }
+  
 
-  public GenItem getGenItemParent() {
-    return genItemParent;
-  }
+  
 
-  @Override
-  void setGenItemParent(GenItem genItem) {
-    genItemParent = genItem;
-  } 
   
 
   @Override

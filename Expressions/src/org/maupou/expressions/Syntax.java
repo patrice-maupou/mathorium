@@ -170,25 +170,7 @@ public class Syntax {
     return null;
   }
   
-  /**
-   * établit la liste des générateurs et celle des expressions à écarter
-   *
-   * @param document
-   * @throws Exception
-   */
-  public void addGenerators(Document document) throws Exception {
-    generators = new ArrayList<>();
-    NodeList list = document.getElementsByTagName("generator");
-    for (int i = 0; i < list.getLength(); i++) {
-      Element genElement = (Element) list.item(i);
-      generators.add(new Generator(genElement.getAttribute("name"), genElement, this));
-    }
-  }
-
-  public ArrayList<Generator> getGenerators() {
-    return generators;
-  }
-
+  
   public HashMap<String, SyntaxWrite> getSyntaxWrites() {
     return syntaxWrites;
   }

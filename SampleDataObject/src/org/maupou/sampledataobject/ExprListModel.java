@@ -27,7 +27,7 @@ import javax.swing.AbstractListModel;
  */
 public class ExprListModel<ExprNode> extends AbstractListModel<ExprNode> {
   
-  private ArrayList<ExprNode> exprList;
+  private final ArrayList<ExprNode> exprList;
 
   public ExprListModel(ArrayList<ExprNode> exprList) {
     this.exprList = exprList;

@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 import org.junit.Ignore;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 /**
  *
@@ -57,12 +58,12 @@ public class MatchExprTest {
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
         Document document = documentBuilder.parse(syntaxFile);
         syntax = new Syntax(document);
-        syntax.addGenerators(document);
-        Generator gen = syntax.getGenerators().get(0);
-        ArrayList<GenItem> genItems = gen.getGenItems();
-        typesMap = genItems.get(0).getTypesMap();
-        listvars = genItems.get(0).getListvars();
-        for (GenItem genItem : genItems) {
+        ArrayList<Generator> generators = setGenerators(document, syntax);
+        Generator gen = generators.get(0);
+        ArrayList<Schema> genItems = gen.getSchemas();
+        typesMap = gen.getTypesMap();
+        listvars = gen.getListvars();
+        for (Schema genItem : genItems) {
           if (genItem.toString().equals("modus ponens")) {
             schemas = genItem.getSchemas();
             break;
@@ -76,6 +77,36 @@ public class MatchExprTest {
         Logger.getLogger(MatchExprTest.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
+  }
+  /**
+   * Etablit la liste des Generators du document
+   * @param mathdoc
+   * @param syntax
+   * @return
+   * @throws Exception 
+   */
+  public ArrayList<Generator> setGenerators(Document mathdoc,Syntax syntax) throws Exception {
+    ArrayList<Generator> generators = new ArrayList<>();
+    NodeList list = mathdoc.getElementsByTagName("generator");
+    for (int i = 0; i < list.getLength(); i++) {
+      Element genElement = (Element) list.item(i);
+      Generator gen = new Generator(genElement.getAttribute("name"), genElement, syntax);
+      if(generators.add(gen)) {
+        setRoot(gen, gen);
+      }
+    }
+    return generators;
+  }
+  /**
+   * Etablit la racine au Genarator gen pour les descendants
+   * @param schema
+   * @param gen racine de l'arbre
+   */
+  public void setRoot(Schema schema, Generator gen) {
+    schema.getSchemas().stream().map((child) -> {
+      child.setRoot(gen);
+      return child;
+    }).forEach((child) -> {setRoot(child, gen);});
   }
 
   @After

@@ -224,29 +224,5 @@ public class ExpressionTest {
     System.out.println("\n");
   }
 
-  @Test
-  //@Ignore
-  public void testToString_syntaxWrite() {
-    if (printing == null) {
-      return;
-    }
-    System.out.println("toString(syntaxWrite)");
-    int n = entries.length;
-    int m = printing.length;
-    if(n < m) m = n;
-    for (int i = 1; i < m - 1; i++) {
-      String entry = entries[i];
-      Expression exp = syntax.parse(entry);
-      String expString;
-      try {
-        expString = syntaxWrite.toString(exp);
-      } catch (Exception ex) {
-        expString = "";
-      }
-      String expected = printing[i];
-      System.out.println(i + ":  " + entry + "  ->  " + expString + "   type: " + exp.getType());
-      assertEquals(expected, expString);
-    }
-  }
-
+  
 }

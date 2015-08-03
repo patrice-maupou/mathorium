@@ -65,12 +65,8 @@ public final class syxAction implements ActionListener {
         try {
             FileObject fo = syxObj.getPrimaryFile();
             String path = fo.getPath();
-            File syntaxFile = new File(path);
             DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-            Document syxdoc = documentBuilder.parse(syntaxFile);
-            Syntax syntax = new Syntax(syxdoc);
-            syntax.addGenerators(syxdoc);
             Document document = documentBuilder.newDocument();
             document.setXmlVersion("1.0");
             Element root = document.createElement("expressions");

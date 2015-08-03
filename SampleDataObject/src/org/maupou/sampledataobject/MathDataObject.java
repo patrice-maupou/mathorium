@@ -36,7 +36,11 @@ import javax.xml.transform.stream.StreamResult;
 import org.maupou.expressions.ExprNode;
 import org.maupou.expressions.Expression;
 import org.maupou.expressions.Generator;
+import org.maupou.expressions.MatchExpr;
+import org.maupou.expressions.Result;
+import org.maupou.expressions.Schema;
 import org.maupou.expressions.Syntax;
+import org.maupou.expressions.SyntaxWrite;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -158,9 +162,46 @@ public class MathDataObject extends MultiDataObject {
       File syntaxFile = new File(path);
       Document syxdoc = documentBuilder.parse(syntaxFile);
       syntax = new Syntax(syxdoc);
-      syntax.addGenerators(mathdoc);
     }
     return syntax;
+  }
+  
+  /**
+   * Etablit la liste des Generators du document
+   * @param syntax
+   * @return
+   * @throws Exception 
+   */
+  public ArrayList<Generator> setGenerators(Syntax syntax) throws Exception {
+    ArrayList<Generator> generators = new ArrayList<>();
+    NodeList list = mathdoc.getElementsByTagName("generator");
+    for (int i = 0; i < list.getLength(); i++) {
+      Element genElement = (Element) list.item(i);
+      Generator gen = new Generator(genElement.getAttribute("name"), genElement, syntax);
+      if(generators.add(gen)) {
+        setRoot(gen, gen, syntax);
+      }
+    }
+    return generators;
+  }
+  /**
+   * Etablit la racine au Generator gen pour les descendants
+   * @param schema
+   * @param gen racine de l'arbre
+   * @param syntax
+   */
+  public void setRoot(Schema schema, Generator gen, Syntax syntax) {
+    schema.getSchemas().stream().map((child) -> {
+      child.setRoot(gen);
+      String p = (syntax == null)? child.getPattern().toString() : 
+              syntax.getSyntaxWrite().toString(child.getPattern());
+      if(child instanceof MatchExpr) {
+        child.setUserObject("modèle : " + p);
+      } else if(child instanceof Result) {
+        child.setUserObject("résultat : " + p);
+      }
+      return child;
+    }).forEach((child) -> {setRoot(child, gen, syntax);});
   }
 
   /**
