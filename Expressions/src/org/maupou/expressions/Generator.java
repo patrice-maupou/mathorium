@@ -38,16 +38,17 @@ public class Generator extends Schema {
 
   private final String name;
   private final ArrayList<GenItem> discards; // pour écarter des expressions
-  private HashMap<String, Set<String>> subtypes;
+  private final HashMap<String, Set<String>> subtypes;
   private final HashMap<String, String> typesMap; // type de la variable -> type remplacé
   private final ArrayList<Expression> listvars; // liste des variables
 
-  public Generator(String name, Element elem, Syntax syntax) throws Exception {
+  public Generator(String name, Element elem, HashMap<String, Set<String>> subtypes) throws Exception {
     allowsChildren = true;
     this.name = name;
     setUserObject(name);
     discards = new ArrayList<>();
     typesMap = new HashMap<>(); // remplacement type de variable = type à remplacer
+    this.subtypes = subtypes;
     NodeList nodesVariables = elem.getElementsByTagName("variable");
     listvars = new ArrayList<>(); // liste des variables
     for (int i = 0; i < nodesVariables.getLength(); i++) {
@@ -55,7 +56,6 @@ public class Generator extends Schema {
       String vname = lv.getAttribute("name"); // type de la variable
       String type = lv.getAttribute("type"); // le type représenté
       typesMap.put(vname, type);
-      subtypes = syntax.getSubtypes();
       Set<String> typeSubtypes = subtypes.get(type);
       if (typeSubtypes == null) {
         typeSubtypes = new HashSet<>();
@@ -74,13 +74,13 @@ public class Generator extends Schema {
     nodesVariables = elem.getElementsByTagName("genrule");
     for (int i = 0; i < nodesVariables.getLength(); i++) {
       Element genRuleElement = (Element) nodesVariables.item(i);
-      GenItem genItem = new GenItem(genRuleElement, syntax, listvars);
+      GenItem genItem = new GenItem(genRuleElement, listvars);
       add(genItem);
     }
     nodesVariables = elem.getElementsByTagName("discard");
     for (int i = 0; i < nodesVariables.getLength(); i++) {
       Element ifElement = (Element) nodesVariables.item(i);
-      discards.add(new GenItem(ifElement, syntax, listvars));
+      discards.add(new GenItem(ifElement, listvars));
     }
   }
 
@@ -146,7 +146,7 @@ public class Generator extends Schema {
           fit = val.equals(e);
         } else { // nouvelle entrée dans svars
           svars.put(s.copy(), e.copy());
-          svars.values().stream().forEach((value) -> {value = value.replace(evars);});
+          svars.values().stream().forEach((value) -> {value.replace(evars);});
         }
       }     
     } else if (listvars.contains(e)) { // e est une variable

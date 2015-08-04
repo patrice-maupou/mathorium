@@ -446,12 +446,12 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           int oldsize, inf = 0;
           do {
             oldsize = exprNodes.size();
-            for (Schema genSchema : generator.getSchemas()) {
+            for (Schema genSchema : getGenerator().getSchemas()) {
               GenItem genItem = (GenItem) genSchema;
               if(!genItem.isReady()) continue;
               Schema schema = genItem, child;
-              HashMap<String, String> typesMap = generator.getTypesMap();
-              ArrayList<Expression> listvars = generator.getListvars();
+              HashMap<String, String> typesMap = getGenerator().getTypesMap();
+              ArrayList<Expression> listvars = getGenerator().getListvars();
               loop:
               do { // examen des childs
                 int cnt = schema.getChildCount() - 1;              
@@ -682,6 +682,11 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   public UndoRedo getUndoRedo() {
     return UndoRedo.NONE;
   }
+
+  public Generator getGenerator() {
+    return generator;
+  }
+
 
   ArrayList<ExprNode> getExprNodes() {
     return exprNodes;

@@ -90,7 +90,7 @@ public class MatchExprTest {
     NodeList list = mathdoc.getElementsByTagName("generator");
     for (int i = 0; i < list.getLength(); i++) {
       Element genElement = (Element) list.item(i);
-      Generator gen = new Generator(genElement.getAttribute("name"), genElement, syntax);
+      Generator gen = new Generator(genElement.getAttribute("name"), genElement, syntax.getSubtypes());
       if(generators.add(gen)) {
         setRoot(gen, gen);
       }

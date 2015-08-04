@@ -37,15 +37,13 @@ public class GenItem extends Schema {
    * constructeur
    *
    * @param e élément de tagname "genrule" ou "discard"
-   * @param syntax
    * @param listvars
    * @throws Exception
    */
-  public GenItem(Element e, Syntax syntax, ArrayList<Expression> listvars) throws Exception {
+  public GenItem(Element e, ArrayList<Expression> listvars) throws Exception {
     name = e.getAttribute("name");
     setUserObject(name);
     allowsChildren = true;
-    SyntaxWrite sw = syntax.getSyntaxWrite();
     NodeList nodelist = e.getElementsByTagName("match");
     for (int i = 0; i < nodelist.getLength(); i++) {
       if (e.isEqualNode(nodelist.item(i).getParentNode())) {
