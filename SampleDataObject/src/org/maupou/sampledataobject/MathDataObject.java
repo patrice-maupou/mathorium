@@ -179,29 +179,10 @@ public class MathDataObject extends MultiDataObject {
       Element genElement = (Element) list.item(i);
       Generator gen = new Generator(genElement.getAttribute("name"), genElement, syntax.getSubtypes());
       if(generators.add(gen)) {
-        setRoot(gen, gen, syntax);
+        gen.setSchema(gen, syntax);
       }
     }
     return generators;
-  }
-  /**
-   * Etablit la racine au Generator gen pour les descendants
-   * @param schema
-   * @param gen racine de l'arbre
-   * @param syntax
-   */
-  public void setRoot(Schema schema, Generator gen, Syntax syntax) {
-    schema.getSchemas().stream().map((child) -> {
-      child.setRoot(gen);
-      String p = (syntax == null)? child.getPattern().toString() : 
-              syntax.getSyntaxWrite().toString(child.getPattern());
-      if(child instanceof MatchExpr) {
-        child.setUserObject("modèle : " + p);
-      } else if(child instanceof Result) {
-        child.setUserObject("résultat : " + p);
-      }
-      return child;
-    }).forEach((child) -> {setRoot(child, gen, syntax);});
   }
 
   /**

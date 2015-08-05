@@ -23,7 +23,7 @@
   <genrule name="modus ponens">
     <match name="thm">
       <pattern>A:propvar</pattern>
-      <match name="thm">
+      <match name="thm" options="bidirectional=yes">
         <pattern>(IMPLIES,A:propvar,B:propvar):thm</pattern>
         <result level="1" ref="mp">B:thm</result>
     </match>

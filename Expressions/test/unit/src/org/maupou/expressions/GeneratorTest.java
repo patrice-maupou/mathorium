@@ -59,7 +59,7 @@ public class GeneratorTest {
   @Parameterized.Parameters
   public static Collection<Object[]> data() {
     Object[][] files = new Object[][]{
-      {"number_syntax.syx", "genItemTests.xml"}
+      {"number_syntax.syx", "generatorTests.xml"}
     };
     return Arrays.asList(files);
   }
@@ -127,14 +127,13 @@ public class GeneratorTest {
   }
 
  /**
-   * Test of match method, of class GenItem.
+   * Test of match method, of class Generator
    * @throws java.lang.Exception
    */
   @Test
   public void testMatch() throws Exception {
     System.out.println("match");
     HashMap<Expression, Expression> vars = new HashMap<>();
-    HashMap<String, String> typesMap = new HashMap<>();
     ArrayList<Expression> listvars = new ArrayList<>();
     String[] ms = matches.split("\",\\s+\"");
     String[] ls = ms[1].split("\\s"); // liste des variables
@@ -142,10 +141,7 @@ public class GeneratorTest {
       Expression v = new Expression(l, syntax);
       listvars.add(v);
     }
-    for (int i = 2; i < ms.length - 1; i += 4) {
-      typesMap.put(ms[i + 2], ms[i + 3]);      
-    }
-    Generator gen = new Generator(typesMap, listvars, subtypes);
+    Generator gen = new Generator(listvars, subtypes);
     for (int i = 2; i < ms.length - 1; i += 4) {
       Expression e = new Expression(ms[i], syntax);
       Expression s = new Expression(ms[i + 1], syntax);
@@ -158,13 +154,12 @@ public class GeneratorTest {
   }
 
   /**
-   * Test of matchBoth method, of class GenItem.
+   * Test of matchBoth method, of class Generator.
    * @throws java.lang.Exception
    */
   @Test
   public void testMatchBoth() throws Exception {
     System.out.println("matchBoth");
-    HashMap<String, String> typesMap = new HashMap<>();
     ArrayList<Expression> listvars = new ArrayList<>();
     HashMap<Expression, Expression> evars = new HashMap<>(), svars = new HashMap<>();
     String[] ms = matchBoth.split("\",\\s+\"");
@@ -173,10 +168,8 @@ public class GeneratorTest {
       Expression v = new Expression(l, syntax);
       listvars.add(v);
     }
-    Generator gen = new Generator(typesMap, listvars, subtypes);
+    Generator gen = new Generator(listvars, subtypes);
     for (int i = 2; i < ms.length - 1; i += 4) {
-      typesMap.clear();
-      typesMap.put(ms[i + 2], ms[i + 3]);
       Expression e = new Expression(ms[i], syntax);
       Expression s = new Expression(ms[i + 1], syntax);
       evars.clear();
@@ -190,7 +183,7 @@ public class GeneratorTest {
   }
 
   /**
-   * Test of matchSubExpr method, of class GenItem.
+   * Test of matchSubExpr method, of class Generator.
    * @throws java.lang.Exception
    */
   @Test
@@ -200,7 +193,6 @@ public class GeneratorTest {
       fail("pas de données !");
       return;
     }
-    HashMap<String, String> typesMap = new HashMap<>();
     ArrayList<Expression> listvars = new ArrayList<>();
     HashMap<Expression, Expression> vars = new HashMap<>();
     HashMap<Expression, Expression> replaceMap = new HashMap<>();
@@ -211,10 +203,7 @@ public class GeneratorTest {
       Expression v = new Expression(l, syntax);
       listvars.add(v);
     }
-    for (int i = 2; i < ms.length - 1; i += 5) {      
-      typesMap.put(ms[i + 2], ms[i + 3]);
-    }
-    Generator gen = new Generator(typesMap, listvars, subtypes);
+    Generator gen = new Generator(listvars, subtypes);
     for (int i = 2; i < ms.length - 1; i += 5) {
       Expression e = new Expression(ms[i], syntax);
       replaceMap.clear();

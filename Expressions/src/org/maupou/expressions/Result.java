@@ -63,32 +63,6 @@ public class Result extends Schema {
     setPattern(result);
   }
 
-  /**
-   * teste si une ExprNode est nouvelle
-   *
-   * @param en ExprNode à ajouter
-   * @param typesMap table des types associés aux types des variables (ex: nv=natural)
-   * @param listvars
-   * @param syntax
-   * @param exprNodes liste déjà établie
-   * @return l'exprNode ou null si ne convient pa si elle est déjà dans la liste 
-   */
-  public boolean newExpr(ExprNode en, HashMap<String, String> typesMap, ArrayList<Expression> listvars, 
-          Syntax syntax, ArrayList<ExprNode> exprNodes)  {
-    Expression e = getPattern().copy().replace(varMap);
-    en.setE(e);
-    for (ExprNode exprNode : exprNodes) {
-      Expression expr = exprNode.getE();
-      HashMap<Expression, Expression> nvars = new HashMap<>();
-      if(getRoot().matchRecursively(e, expr, nvars)) {
-        if (!exprNode.getParentList().containsAll(en.getParentList())) {
-          exprNode.getParentList().addAll(en.getParentList());
-        } 
-        return false;       
-      }
-    }
-    return true;
-  }
 
   @Override
   public String toString() {

@@ -21,8 +21,8 @@ package org.maupou.expressions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -39,7 +39,6 @@ public class Generator extends Schema {
   private final String name;
   private final ArrayList<GenItem> discards; // pour écarter des expressions
   private final HashMap<String, Set<String>> subtypes;
-  private final HashMap<String, String> typesMap; // type de la variable -> type remplacé
   private final ArrayList<Expression> listvars; // liste des variables
 
   public Generator(String name, Element elem, HashMap<String, Set<String>> subtypes) throws Exception {
@@ -47,15 +46,14 @@ public class Generator extends Schema {
     this.name = name;
     setUserObject(name);
     discards = new ArrayList<>();
-    typesMap = new HashMap<>(); // remplacement type de variable = type à remplacer
     this.subtypes = subtypes;
     NodeList nodesVariables = elem.getElementsByTagName("variable");
     listvars = new ArrayList<>(); // liste des variables
     for (int i = 0; i < nodesVariables.getLength(); i++) {
       Element lv = (Element) nodesVariables.item(i);
       String vname = lv.getAttribute("name"); // type de la variable
+      /* inutile normalement
       String type = lv.getAttribute("type"); // le type représenté
-      typesMap.put(vname, type);
       Set<String> typeSubtypes = subtypes.get(type);
       if (typeSubtypes == null) {
         typeSubtypes = new HashSet<>();
@@ -63,8 +61,9 @@ public class Generator extends Schema {
         subtypes.put(type, typeSubtypes);
       }
       typeSubtypes.add(vname);
+      //*/
       String list = lv.getAttribute("list");
-      if (!list.isEmpty() && !type.isEmpty()) {
+      if (!list.isEmpty()) {
         String[] vars = list.trim().split("\\s");
         for (String var : vars) { // liste de variables marquées symbol
           listvars.add(new Expression(var, vname, null, true));
@@ -74,25 +73,74 @@ public class Generator extends Schema {
     nodesVariables = elem.getElementsByTagName("genrule");
     for (int i = 0; i < nodesVariables.getLength(); i++) {
       Element genRuleElement = (Element) nodesVariables.item(i);
-      GenItem genItem = new GenItem(genRuleElement, listvars);
+      GenItem genItem = new GenItem(genRuleElement);
       add(genItem);
     }
     nodesVariables = elem.getElementsByTagName("discard");
     for (int i = 0; i < nodesVariables.getLength(); i++) {
       Element ifElement = (Element) nodesVariables.item(i);
-      discards.add(new GenItem(ifElement, listvars));
+      discards.add(new GenItem(ifElement));
     }
   }
 
-  Generator(HashMap<String, String> typesMap, ArrayList<Expression> listvars,
-          HashMap<String, Set<String>> subtypes) {
+  Generator(ArrayList<Expression> listvars, HashMap<String, Set<String>> subtypes) {
     name = "test";
     this.listvars = listvars;
-    this.typesMap = typesMap;
     this.subtypes = subtypes;
     discards = null;
   }
   
+  /**
+   * teste l'expression expr en tenant compte de la table vars des variables déjà attribuées). 
+   * transformation de l'expression par la table varMap
+   * @param expr à tester
+   * @param matchExpr le modèle suivant
+   * @return true ssi l'expression est conforme au modèle
+   */
+  public boolean nextmatch(Expression expr, MatchExpr matchExpr) {
+    boolean ret;
+    HashMap<Expression, Expression> varsMap = matchExpr.getVarMap();
+    if (expr != null) { // pattern : A->B type: prop
+      HashMap<Expression, Expression> svars = new HashMap<>(), evars = new HashMap<>();
+      if (matchExpr.isBidir()) {
+        ret = matchBoth(expr, matchExpr.getPattern(), evars, svars);
+      } else {
+        ret = match(expr, matchExpr.getPattern(), svars);
+      }
+      if (varsMap.isEmpty()) { // ajouter les nouvelles variables à la table vars
+        varsMap.putAll(svars);
+        listvars.stream().forEach((var) -> {var.setSymbol(true);});
+      } else { // ce n'est pas le premier modèle
+        HashMap<Expression, Expression> nsvars = new HashMap<>(), nvars = new HashMap<>();
+        for (Map.Entry<Expression, Expression> var : varsMap.entrySet()) {
+          Expression svar = svars.get(var.getKey()); // A->B
+          Expression e = var.getValue(); // (A->B)->C
+          if (ret && svar != null) { // nsvars={A=(A->B)->C, B=B->C} mais pas le C de B:= 
+            ret &= match(e, svar, nsvars);
+          }
+        }
+        if (ret) {
+          // renomme certaines variables
+          svars.values().stream().forEach((e) -> {
+            extendMap(e, nsvars);
+          });
+          // corrige vars avec svars
+          varsMap.keySet().stream().forEach((var) -> {
+            varsMap.put(var, varsMap.get(var).replace(nvars));
+          });
+          svars.keySet().stream().forEach((svar) -> {
+            svars.put(svar, svars.get(svar).replace(nsvars));
+          });
+          varsMap.putAll(svars);
+        }
+      }
+      markUsedVars(expr);
+    } else { // expr est nulle : vérifier si le schéma correspond au type
+      Expression e = matchExpr.getPattern().replace(varsMap);
+      ret = matchExpr.getPattern().getType().equals(e.getType());
+    }
+    return ret;
+  }
     
   /**
    * teste si e est conforme au modèle s
@@ -103,9 +151,8 @@ public class Generator extends Schema {
    */
   public boolean match(Expression e, Expression s, HashMap<Expression, Expression> vars) {
     boolean fit;
-    String vtype = (listvars.contains(s)) ? typesMap.get(s.getType()) : null;
-    if (vtype != null) { // s est une variable représentant une expression de type vtype
-      if (fit = subtypes.get(vtype).contains(e.getType())) { // e:type:vtype
+    if (listvars.contains(s)) { // s est une variable représentant une expression de type vtype
+      if (fit = subtypes.get(s.getType()).contains(e.getType())) { // e.type:s.type
         if (vars.get(s) != null) { // déjà dans la table vars
           fit = e.equals(vars.get(s));
         } else { // nouvelle entrée dans vars
@@ -139,9 +186,8 @@ public class Generator extends Schema {
           HashMap<Expression, Expression> evars, HashMap<Expression, Expression> svars) {
     boolean fit;
     Expression val;
-    String vtype = (listvars.contains(s)) ? typesMap.get(s.getType()) : null;
-    if (vtype != null) { // s est une variable
-      if (fit = subtypes.get(vtype).contains(e.getType())) { // e:vtype
+    if (listvars.contains(s)) { // s est une variable
+      if (fit = subtypes.get(s.getType()).contains(e.getType())) {
         if ((val = svars.get(s)) != null) { // déjà dans la table schvars
           fit = val.equals(e);
         } else { // nouvelle entrée dans svars
@@ -150,7 +196,7 @@ public class Generator extends Schema {
         }
       }     
     } else if (listvars.contains(e)) { // e est une variable
-      if (fit = subtypes.get(typesMap.get(e.getType())).contains(s.getType())) { // erreur
+      if (fit = subtypes.get(e.getType()).contains(s.getType())) {
         if ((val = evars.get(e)) != null) {
           fit = val.equals(s);
         } else {
@@ -191,6 +237,29 @@ public class Generator extends Schema {
     }
     return expr;
   }
+  /**
+   * teste si une ExprNode est nouvelle
+   *
+   * @param en ExprNode à ajouter
+   * @param result le modèle
+   * @param exprNodes liste déjà établie
+   * @return l'exprNode ou null si ne convient pa si elle est déjà dans la liste 
+   */
+  public boolean newExpr(ExprNode en, Result result, ArrayList<ExprNode> exprNodes)  {
+    Expression e = result.getPattern().copy().replace(result.getVarMap());
+    en.setE(e);
+    for (ExprNode exprNode : exprNodes) {
+      Expression expr = exprNode.getE();
+      HashMap<Expression, Expression> nvars = new HashMap<>();
+      if(matchRecursively(e, expr, nvars)) {
+        if (!exprNode.getParentList().containsAll(en.getParentList())) {
+          exprNode.getParentList().addAll(en.getParentList());
+        } 
+        return false;       
+      }
+    }
+    return true;
+  }
   
   /**
    * examine les sous-expressions qui correspondent à s (obtenue) et leur donne le type de s
@@ -226,7 +295,69 @@ public class Generator extends Schema {
       e.getChildren().stream().forEach(this::markUsedVars);
     }
   }
+  /**
+   * ajoute à la liste vars les variables de listvars qui composent l'expression e
+   *
+   * @param e
+   * @param vars
+   */
   
+  public void varsInExpression(Expression e, ArrayList<Expression> vars) {
+    if (listvars.indexOf(e) == -1) {
+      if (e.getChildren() != null) {
+        e.getChildren().stream().forEach((child) -> {
+          varsInExpression(child, vars);
+        });
+      }
+    } else {
+      vars.add(e);
+    }
+  }
+  
+   /**
+   * ajoute à la table vars les variables de e déjà utilisées dans les valeurs de vars
+   *
+   * @param e expression
+   * @param vars table variable=valeur
+   */
+  public void extendMap(Expression e, HashMap<Expression, Expression> vars) {
+    int index = listvars.indexOf(e);
+    if (index != -1) {
+      Expression evar = listvars.get(index);
+      if (!evar.isSymbol() && !vars.containsKey(e)) { // evar est une variable utilisée 
+        for (Expression var : listvars) {
+          if (var.isSymbol() && var.getType().equals(e.getType())) {
+            var.setSymbol(false);
+            vars.put(e, var); // changement de variable
+            break;
+          }
+        }
+      }
+    } else if (e.getChildren() != null) {
+      e.getChildren().stream().forEach((child) -> {
+        extendMap(child, vars);
+      });
+    }
+  }
+  
+  /**
+   * complète la table des variables et l'écriture des patterns
+   * @param schema noeud inférieur
+   * @param syntax 
+   */
+  public void setSchema(Schema schema, Syntax syntax) {
+    for (Schema child : schema.getSchemas()) {
+      String p = (syntax == null)? child.getPattern().toString() : 
+              syntax.getSyntaxWrite().toString(child.getPattern());
+      if(child instanceof MatchExpr) {
+        child.setUserObject("modèle : " + p);
+        varsInExpression(child.getPattern(), child.getVars());
+      } else if(child instanceof Result) {
+        child.setUserObject("résultat : " + p);
+      }
+      setSchema(child, syntax);
+    }
+  }
     
   @Override
   public String toString() {
@@ -244,13 +375,6 @@ public class Generator extends Schema {
     return discards;
   }
 
-  public HashMap<String, Set<String>> getSubtypes() {
-    return subtypes;
-  }
-
-  public HashMap<String, String> getTypesMap() {
-    return typesMap;
-  }
 
   public ArrayList<Expression> getListvars() {
     return listvars;

@@ -18,14 +18,11 @@
       <pattern><![CDATA[\d+\.\d+]]>
         <type name="positive" subtypes="natural,var"></type>
       </pattern>
-      <pattern><![CDATA[[mn]'*|\d+]]>
+      <pattern><![CDATA[[mnop]'*|\d+]]>
         <type name="natural" subtypes="var"></type>
       </pattern>
-      <pattern><![CDATA[[abcdxyz]'*]]>
+      <pattern><![CDATA[[abcdtuvwxyz]'*]]>
         <type name="real" subtypes="positive,integer"></type>
-      </pattern>
-      <pattern><![CDATA[[tuvw]]]>
-          <type name="realvar" subtypes="real"></type>
       </pattern>
       <pattern><![CDATA[[ijkl]'*]]>
         <type name="integer" subtypes="natural"></type>

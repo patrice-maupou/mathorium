@@ -409,7 +409,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         int index = exprList.getSelectedIndex();
         ExprNode en = (ExprNode) listModel.getElementAt(index);
         Expression e = en.getE().copy();
-        if (matchExpr.checkExpr(e, generator.getTypesMap(), generator.getListvars())) {
+        if (generator.nextmatch(e, matchExpr)) {
           resultReady = true;
           valueTextField.setText(syntaxWrite.toString(e));
           int row = 0;
@@ -450,8 +450,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
               GenItem genItem = (GenItem) genSchema;
               if(!genItem.isReady()) continue;
               Schema schema = genItem, child;
-              HashMap<String, String> typesMap = getGenerator().getTypesMap();
-              ArrayList<Expression> listvars = getGenerator().getListvars();
               loop:
               do { // examen des childs
                 int cnt = schema.getChildCount() - 1;              
@@ -465,7 +463,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                     if (schema.getRgs().length > 0) {
                       en.getParentList().add(schema.getRgs());
                     }
-                    if(((Result)child).newExpr(en, typesMap, listvars, syntax, exprNodes)) {
+                    if(generator.newExpr(en, (Result)child, exprNodes)) {
                       addExprNode(en);
                     }
                     schema.setReady(m != cnt); // pour genItem
@@ -482,7 +480,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                       child.getVarMap().clear();
                       child.getVarMap().putAll(schema.getVarMap());
                       Expression e = exprNodes.get(i).getE();
-                      if (matchExpr.checkExpr(e, typesMap, listvars)) {
+                      if (generator.nextmatch(e, matchExpr)) {
                         //System.out.println(schema.log()+ " -> "+ child.log() + " e"+i+":"+ e);
                         schema = child;
                         continue loop; // 2è sortie
@@ -549,7 +547,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
             if (!prevars.contains(var) && m < varsTable.getRowCount()) {
               varsTable.setValueAt(var.toString(), m, 0);
               varsTable.setValueAt("", m, 1);
-              varsTable.setValueAt(generator.getTypesMap().get(var.getType()), m, 2);
+              varsTable.setValueAt(var.getType(), m, 2);
               m++;
             }
           }
@@ -566,8 +564,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           if (result.getRgs().length > 0) {
             toAdd.getParentList().add(curSchema.getRgs());
           }
-          result.setReady(result.newExpr(toAdd, generator.getTypesMap(), generator.getListvars(), 
-                  syntax, exprNodes));
+          result.setReady(generator.newExpr(toAdd, result, exprNodes));
           resultTextField.setText(syntaxWrite.toString(toAdd.getE()));
           resultTextField.requestFocus();
           if(!result.isReady()) {

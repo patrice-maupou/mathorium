@@ -3,7 +3,6 @@
 <!--DOCTYPE syntax SYSTEM "syntax.dtd"-->
 
 <!-- the one character string unused is mandatory and must not be used in any expression
-     the regex (®_*) stands for an already found subexpression
 -->
 <syntax xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="syntaxSchema.xsd"
@@ -12,15 +11,15 @@
   <read>
   <!-- Rule identified by the key "SIMPLES" is mandatory to get the basic blocks of the expression.  -->
   <rule key="SIMPLES">
-    <pattern><![CDATA[\d]]>
+    <pattern><![CDATA[[u-w]|\d]]>
       <type name="digit" subtypes="cv"></type>
     </pattern>
     <pattern><![CDATA[[a-e]]]>
-      <type name="nv"></type>
+      <type name="natural"></type>
     </pattern>
-    <pattern><![CDATA[[u-w]]]>
+    <!--pattern><![CDATA[[u-w]]]>
       <type name="cv"></type>
-    </pattern>
+    </pattern-->
   </rule>
   <rule child="a,b">
     <pattern node="CONCAT"><![CDATA[ab]]>
