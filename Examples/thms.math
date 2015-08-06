@@ -1,45 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <expressions syntax="C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples/prop_syntax.syx">
 <generator name="theorems">
-  <variable type="prop" name="propvar" list="A B C D E F G H"/>
-  <variable type="thm" name="propthm" list="S T U V W X Y Z"/>
-  <genrule name="axiomes"> 
-    <result level="1" ref="dummy">
-      (IMPLIES,A:propvar,(IMPLIES,B:propvar,A:propvar):prop):thm
-    </result>
-    <result level="1" ref="distr">
-      (IMPLIES,(IMPLIES,A:propvar,(IMPLIES,B:propvar,C:propvar):prop):prop,
-      (IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,C:propvar):prop):prop):thm
-    </result>
-    <result level="1" ref="simpl">
-      (IMPLIES,(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,C:propvar):prop,
-      (IMPLIES,B:propvar,C:propvar):prop):thm
-    </result>
-    <result level="3" ref="contra">
-      (IMPLIES,(IMPLIES,(NOT,A:propvar):prop,(NOT,B:propvar):prop):prop,
-      (IMPLIES,B:propvar,A:propvar):prop):thm
-    </result>
-  </genrule>
-  <genrule name="modus ponens">
+  <variable type="prop" list="A B C D E F G H"/>
+  <variable type="thm" list="S T U V W X Y Z"/>
+  <generator name="modus ponens">
     <match name="thm">
-      <pattern>A:propvar</pattern>
+      <pattern>A:prop</pattern>
       <match name="thm" options="bidirectional=yes">
-        <pattern>(IMPLIES,A:propvar,B:propvar):thm</pattern>
+        <pattern>(IMPLIES,A:prop,B:prop):thm</pattern>
         <result level="1" ref="mp">B:thm</result>
     </match>
     </match>    
-  </genrule>
-  <discard name="thm" scope="right">
-    <match name="thm">
-      <pattern>T:propthm</pattern>
-      <result>(IMPLIES,A:prop,T:thm):thm</result>
-    </match>
-  </discard>
-  <discard>
-    <match name="thm">
-      <pattern>(IMPLIES,B:propvar,C:propvar):thm</pattern>
-      <result>(IMPLIES,(IMPLIES,A:propvar,B:propvar):prop,(IMPLIES,A:propvar,C:propvar):prop):thm</result>
-    </match>
-  </discard>
+  </generator>
+<expr id="0" type="thm"><![CDATA[A->(B->A)]]>
+<text>(IMPLIES,A:prop,(IMPLIES,B:prop,A:prop):prop):thm</text>
+</expr>
+<expr id="1" type="thm"><![CDATA[(A->(B->C))->((A->B)->(A->C))]]>
+<text>(IMPLIES,(IMPLIES,A:prop,(IMPLIES,B:prop,C:prop):prop):prop,
+  (IMPLIES,(IMPLIES,A:prop,B:prop):prop,(IMPLIES,A:prop,C:prop):prop):prop):thm</text>
+</expr>
+<expr id="2" type="thm"><![CDATA[((A->B)->C)->(B->C)]]>
+<text>(IMPLIES,(IMPLIES,(IMPLIES,A:prop,B:prop):prop,C:prop):prop,
+  (IMPLIES,B:prop,C:prop):prop):thm</text>
+</expr>
+<expr id="3" type="thm">
+  <text>(IMPLIES,(IMPLIES,(NOT,A:prop):prop,(NOT,B:prop):prop):prop,
+  (IMPLIES,B:prop,A:prop):prop):thm</text>
+</expr>
 </generator>
 </expressions>

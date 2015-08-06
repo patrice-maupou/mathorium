@@ -22,7 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -168,19 +170,17 @@ public class MathDataObject extends MultiDataObject {
   
   /**
    * Etablit la liste des Generators du document
-   * @param syntax
+   * @param subtypes
    * @return
    * @throws Exception 
    */
-  public ArrayList<Generator> setGenerators(Syntax syntax) throws Exception {
+  public ArrayList<Generator> setGenerators(HashMap<String, Set<String>> subtypes) throws Exception {
     ArrayList<Generator> generators = new ArrayList<>();
     NodeList list = mathdoc.getElementsByTagName("generator");
     for (int i = 0; i < list.getLength(); i++) {
       Element genElement = (Element) list.item(i);
-      Generator gen = new Generator(genElement.getAttribute("name"), genElement, syntax.getSubtypes());
-      if(generators.add(gen)) {
-        gen.setSchema(gen, syntax);
-      }
+      Generator gen = new Generator(genElement.getAttribute("name"), genElement, subtypes);
+      generators.add(gen);
     }
     return generators;
   }

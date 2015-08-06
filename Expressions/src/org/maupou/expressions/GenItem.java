@@ -18,10 +18,6 @@
  */
 package org.maupou.expressions;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Set;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 

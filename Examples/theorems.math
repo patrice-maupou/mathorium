@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <expressions syntax="C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples/prop_syntax.syx">
 <generator name="theorems">
-  <variable type="prop" name="propvar" list="A B C D E F G H"/>
-  <variable type="thm" name="propthm" list="S T U V W X Y Z"/>
+  <variable type="prop" list="A B C D E F G H"/>
+  <variable type="thm" list="S T U V W X Y Z"/>
   <genrule name="modus ponens">
     <match name="thm">
       <pattern>A:prop</pattern>
@@ -10,8 +10,7 @@
         <pattern>(IMPLIES,A:prop,B:prop):thm</pattern>
         <result level="1" ref="mp">B:thm</result>
     </match>
-    </match>
-    
+    </match>    
   </genrule>
 <expr id="0" type="thm"><![CDATA[A->(B->A)]]>
 <text>(IMPLIES,A:prop,(IMPLIES,B:prop,A:prop):prop):thm</text>
@@ -23,6 +22,10 @@
 <expr id="2" type="thm"><![CDATA[((A->B)->C)->(B->C)]]>
 <text>(IMPLIES,(IMPLIES,(IMPLIES,A:prop,B:prop):prop,C:prop):prop,
   (IMPLIES,B:prop,C:prop):prop):thm</text>
+</expr>
+<expr id="3" type="thm">
+  <text>(IMPLIES,(IMPLIES,(NOT,A:propvar):prop,(NOT,B:propvar):prop):prop,
+  (IMPLIES,B:propvar,A:propvar):prop):thm</text>
 </expr>
 </generator>
 </expressions>

@@ -37,7 +37,6 @@ import org.w3c.dom.NodeList;
 public class Generator extends Schema {
 
   private final String name;
-  private final ArrayList<GenItem> discards; // pour écarter des expressions
   private final HashMap<String, Set<String>> subtypes;
   private final ArrayList<Expression> listvars; // liste des variables
 
@@ -45,28 +44,17 @@ public class Generator extends Schema {
     allowsChildren = true;
     this.name = name;
     setUserObject(name);
-    discards = new ArrayList<>();
     this.subtypes = subtypes;
     NodeList nodesVariables = elem.getElementsByTagName("variable");
     listvars = new ArrayList<>(); // liste des variables
     for (int i = 0; i < nodesVariables.getLength(); i++) {
       Element lv = (Element) nodesVariables.item(i);
-      String vname = lv.getAttribute("name"); // type de la variable
-      /* inutile normalement
-      String type = lv.getAttribute("type"); // le type représenté
-      Set<String> typeSubtypes = subtypes.get(type);
-      if (typeSubtypes == null) {
-        typeSubtypes = new HashSet<>();
-        typeSubtypes.add(type);
-        subtypes.put(type, typeSubtypes);
-      }
-      typeSubtypes.add(vname);
-      //*/
+      String type = lv.getAttribute("type"); // type de la variable
       String list = lv.getAttribute("list");
       if (!list.isEmpty()) {
         String[] vars = list.trim().split("\\s");
         for (String var : vars) { // liste de variables marquées symbol
-          listvars.add(new Expression(var, vname, null, true));
+          listvars.add(new Expression(var, type, null, true));
         }
       }
     }
@@ -76,18 +64,12 @@ public class Generator extends Schema {
       GenItem genItem = new GenItem(genRuleElement);
       add(genItem);
     }
-    nodesVariables = elem.getElementsByTagName("discard");
-    for (int i = 0; i < nodesVariables.getLength(); i++) {
-      Element ifElement = (Element) nodesVariables.item(i);
-      discards.add(new GenItem(ifElement));
-    }
   }
 
   Generator(ArrayList<Expression> listvars, HashMap<String, Set<String>> subtypes) {
     name = "test";
     this.listvars = listvars;
     this.subtypes = subtypes;
-    discards = null;
   }
   
   /**
@@ -362,22 +344,13 @@ public class Generator extends Schema {
   @Override
   public String toString() {
     String ret = name + "\n";
-    ret = schemas.stream().map((genItem) -> genItem.toString() + "\n").reduce(ret, String::concat);
+    ret = schemas.stream().map((schema) -> schema.toString() + "\n").reduce(ret, String::concat);
     return ret;
   }
   
   
   public String getName() {
     return name;
-  }
-
-  public ArrayList<GenItem> getDiscards() {
-    return discards;
-  }
-
-
-  public ArrayList<Expression> getListvars() {
-    return listvars;
   }
 
 

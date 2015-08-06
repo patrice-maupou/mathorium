@@ -123,10 +123,11 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       exprList.setCellRenderer(new ExprListCellRenderer(syntaxWrite));
       listModel = (ExprListModel) exprList.getModel();
       exprNodes = listModel.getExprList();
-      generators = mdo.setGenerators(syntax);
+      generators = mdo.setGenerators(syntax.getSubtypes());
       ArrayList<String> names = new ArrayList<>();
       generators.stream().forEach((gen) -> {
         names.add(gen.getName());
+        gen.setSchema(gen, syntax);
       });
       generatorBox.setModel(new DefaultComboBoxModel<>(names.toArray()));
       if (!generators.isEmpty()) {
@@ -396,6 +397,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         listModel.add(en);
         exprList.ensureIndexIsVisible(n);
         mdo.insert(exprNodes.subList(n, n + 1), n, generator);
+        exprList.repaint();
       } catch (Exception ex) {
         displayMessage("insertion failed : " + ex.getMessage(), "Expression error");
       }
@@ -491,7 +493,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                   }
                 } // fin boucle child                       
                 if (Thread.interrupted()) {
-                  exprList.repaint();
                   return;
                 } 
                 schema = (Schema) schema.getParent();

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <expressions syntax="C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples/number_syntax.syx">
   <generator name="develop">
-      <variable list="t u v w z" name="realvar" type="real"/>
+      <variable list="t u v w z" type="real"/>
       <genrule name="init"/>
       <genrule name="distribute">
         <match name="real" options="recursive=yes">
@@ -41,9 +41,7 @@
     <expr id="2">
       <text>(MUL,a:real,(ADD,b:real,c:real):real):real</text>
     </expr>
-    
-    
-  <expr id="3">
+    <expr id="3">
       <text>(ADD,(MUL,2:natural,1:natural):real,(MUL,2:natural,x:real):real):real</text>
       <parents>2</parents>
     </expr>

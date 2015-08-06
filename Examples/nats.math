@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <expressions syntax="C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples/naturals.syx">
 <generator name="addition_and_equality">
-    <variable type="digit" name="cv" list="u v w"/> 
-    <variable type="natural" name="nv" list="a b c d e"/> 
+    <variable type="digit" list="u v w"/> 
+    <variable type="natural" list="a b c d e"/> 
     <genrule name="unit=0-8">
       <match name="equality">
         <pattern>(EQU,(ADD,u:digit,1:digit):natural,v:digit):equality</pattern>

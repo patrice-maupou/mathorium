@@ -251,35 +251,8 @@ public class GeneratorTest {
     fail("The test case is a prototype.");
   }
 
-  /**
-   * Test of getName method, of class Generator.
-   */
-  @Test
-  @Ignore
-  public void testGetName() {
-    System.out.println("getName");
-    Generator instance = null;
-    String expResult = "";
-    String result = instance.getName();
-    assertEquals(expResult, result);
-    // TODO review the generated test code and remove the default call to fail.
-    fail("The test case is a prototype.");
-  }
-
-  /**
-   * Test of getDiscards method, of class Generator.
-   */
-  @Test
-  @Ignore
-  public void testGetDiscards() {
-    System.out.println("getDiscards");
-    Generator instance = null;
-    ArrayList<GenItem> expResult = null;
-    ArrayList<GenItem> result = instance.getDiscards();
-    assertEquals(expResult, result);
-    // TODO review the generated test code and remove the default call to fail.
-    fail("The test case is a prototype.");
-  }
+  
+  
 
   
   
