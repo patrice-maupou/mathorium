@@ -2,8 +2,8 @@
 <expressions syntax="C:/Users/Patrice/Documents/NetBeansProjects/Mathorium/Examples/number_syntax.syx">
   <generator name="develop">
       <variable list="t u v w z" type="real"/>
-      <genrule name="init"/>
-      <genrule name="distribute">
+      <generator name="init"/>
+      <generator name="distribute">
         <match name="real" options="recursive=yes">
           <pattern name="real">(MUL,u:real,(ADD,v:real,w:real):real):real</pattern>
           <result>(ADD,(MUL,u:real,v:real):real,(MUL,u:real,w:real):real):real</result>  
@@ -24,14 +24,14 @@
           <result>(SUB,(MUL,v:real,u:real):real,(MUL,w:real,u:real):real):real</result> 
         </match>  
         <result>(SUB,(MUL,v:real,u:real):real,(MUL,w:real,u:real):real):real</result>    
-      </genrule>
-      <genrule name="associative">
+      </generator>
+      <generator name="associative">
         <match name="real" options="recursive=yes">          
           <pattern name="real">(ADD,u:real,(ADD,v:real,w:real):real):real</pattern>
           <result>(ADD,(ADD,u:real,v:real):real,w:real):real</result>
         </match>
         <result>(ADD,(ADD,u:real,v:real):real,w:real):real</result>
-      </genrule>
+      </generator>
     <expr id="0">
       <text>(ADD,(ADD,1:natural,2:natural):real,3:natural):real</text>
     </expr>

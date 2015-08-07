@@ -19,25 +19,17 @@
 package org.maupou.sampledataobject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.Action;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListModel;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
-import javax.swing.ListModel;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import org.maupou.expressions.ExprNode;
 import org.maupou.expressions.Expression;
-import org.maupou.expressions.GenItem;
 import org.maupou.expressions.Generator;
 import org.maupou.expressions.MatchExpr;
 import org.maupou.expressions.Result;
@@ -56,7 +48,6 @@ import org.openide.NotifyDescriptor;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.UndoRedo;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.RequestProcessor;
@@ -448,10 +439,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           int oldsize, inf = 0;
           do {
             oldsize = exprNodes.size();
-            for (Schema genSchema : getGenerator().getSchemas()) {
-              GenItem genItem = (GenItem) genSchema;
-              if(!genItem.isReady()) continue;
-              Schema schema = genItem, child;
+            for (Schema genSchema : generator.getSchemas()) {
+              Generator gen = (Generator) genSchema; // il peut y avoir des MatchExpr
+              if(!gen.isReady()) continue;
+              Schema schema = gen, child;
               loop:
               do { // examen des childs
                 int cnt = schema.getChildCount() - 1;              
@@ -468,7 +459,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                     if(generator.newExpr(en, (Result)child, exprNodes)) {
                       addExprNode(en);
                     }
-                    schema.setReady(m != cnt); // pour genItem
+                    schema.setReady(m != cnt); // pour gen
                     /*System.out.println(schema.log()+ " -> "+ child.log() + " :" + 
                             exprNodes.get(exprNodes.size()-1));  */// première sortie
                   } 
@@ -520,12 +511,11 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       NotifyDescriptor d = new NotifyDescriptor.Confirmation("Really delete?", "Delete expression",
               NotifyDescriptor.OK_CANCEL_OPTION);
       if (DialogDisplayer.getDefault().notify(d) == NotifyDescriptor.OK_OPTION) {
-        int index = exprList.getSelectedIndex();
-        try {
+        int[] selectedIndices = exprList.getSelectedIndices();
+        for (int i = 0; i < selectedIndices.length; i++) {
+          int index = selectedIndices[i];
           listModel.remove(index);
           mdo.delete(index, generator);
-        } catch (Exception ex) {
-          displayMessage(ex.getMessage(), "Error Message");
         }
       }
     }//GEN-LAST:event_deleteButtonActionPerformed
@@ -535,7 +525,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     if (node != null && (node instanceof Schema)) {
       Schema schema = (Schema) node;
       Schema pre = (Schema) schema.getParent();
-      if ((pre instanceof GenItem) || (resultReady && pre.equals(curSchema))) {
+      if ((pre instanceof Generator) || (resultReady && pre.equals(curSchema))) {
         curSchema = schema;
         resultReady = false;
         if (curSchema instanceof MatchExpr) {

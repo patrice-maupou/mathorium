@@ -211,8 +211,6 @@ public class Schema implements MutableTreeNode {
     this.ready = ready;
   }
   
-  void setGenItemParent(GenItem genItem) {
-  } 
   
   public String log() {
     String ret = getClass().getSimpleName().substring(0, 1);

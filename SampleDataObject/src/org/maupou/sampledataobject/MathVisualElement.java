@@ -25,13 +25,11 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.JToolBar;
-import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
 import org.maupou.expressions.ExprNode;
-import org.maupou.expressions.GenItem;
 import org.maupou.expressions.Generator;
 import org.maupou.expressions.Schema;
 import org.maupou.expressions.SyntaxWrite;
@@ -149,18 +147,20 @@ public class MathVisualElement extends JPanel implements MultiViewElement {
     gen.getSchemas().stream().forEach((item) -> {
       output.append(append(item));
     });
-    for (ExprNode exprNode : exprNodes) {
+    exprNodes.stream().map((exprNode) -> {
       if (!exprNode.getComment().isEmpty()) {
         output.append("<div>").append(exprNode.getComment()).append("</div>");
       }
+      return exprNode;
+    }).forEach((exprNode) -> {
       output.append("<var>").append(syntaxWrite.toString(exprNode.getE())).append("</var><br>");
-    }
+    });
     textPane.setText(output.toString());
   }
   
   private String append(Schema schema) {
-    String tag = (schema instanceof GenItem)? "<OL>" : "<UL>";
-    String end = (schema instanceof GenItem)? "</OL>" : "</UL>";
+    String tag = (schema instanceof Generator)? "<OL>" : "<UL>";
+    String end = (schema instanceof Generator)? "</OL>" : "</UL>";
     String ret = tag + "<LI type='disc'>" + schema.getDescr();
     ret = schema.getSchemas().stream().map((child) -> append(child)).reduce(ret, String::concat);
     ret += end;

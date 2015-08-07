@@ -23,7 +23,7 @@
 <text>(IMPLIES,(IMPLIES,(IMPLIES,A:prop,B:prop):prop,C:prop):prop,
   (IMPLIES,B:prop,C:prop):prop):thm</text>
 </expr>
-<expr id="3" type="thm">
+<expr id="3" type="thm"><![CDATA[(~A->~B)->(B->A)]]>
   <text>(IMPLIES,(IMPLIES,(NOT,A:prop):prop,(NOT,B:prop):prop):prop,
   (IMPLIES,B:prop,A:prop):prop):thm</text>
 </expr>

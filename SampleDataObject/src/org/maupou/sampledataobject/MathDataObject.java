@@ -179,7 +179,7 @@ public class MathDataObject extends MultiDataObject {
     NodeList list = mathdoc.getElementsByTagName("generator");
     for (int i = 0; i < list.getLength(); i++) {
       Element genElement = (Element) list.item(i);
-      Generator gen = new Generator(genElement.getAttribute("name"), genElement, subtypes);
+      Generator gen = new Generator(genElement, subtypes);
       generators.add(gen);
     }
     return generators;

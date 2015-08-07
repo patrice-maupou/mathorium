@@ -3,7 +3,7 @@
 <generator name="addition_and_equality">
     <variable type="digit" list="u v w"/> 
     <variable type="natural" list="a b c d e"/> 
-    <genrule name="unit=0-8">
+    <generator name="unit=0-8">
       <match name="equality">
         <pattern>(EQU,(ADD,u:digit,1:digit):natural,v:digit):equality</pattern>
         <match name="equality">
@@ -12,8 +12,8 @@
             (CONCAT,b:natural,v:digit):natural):equality</result> 
         </match>
       </match>
-    </genrule>
-    <genrule name="unit=9">
+    </generator>
+    <generator name="unit=9">
       <match name="equality">
         <pattern>(EQU,(ADD,a:natural,1:digit):natural,(CONCAT,b:natural,9:digit):natural):equality</pattern>
           <match name="equality">
@@ -22,8 +22,8 @@
                 (CONCAT,c:natural,0:digit):natural):equality</result>
           </match>
       </match>
-    </genrule>
-    <genrule name="add all">
+    </generator>
+    <generator name="add all">
       <match name="equality">
         <pattern>(EQU,(ADD,c:natural,1:digit):natural,e:natural):equality</pattern>   <!--c+1=e -->
           <match name="equality">
@@ -34,7 +34,7 @@
               </match>
           </match>
       </match>
-    </genrule>
+    </generator>
 <expr id="0" type="equality"><![CDATA[0+0=0]]>
 <text>(EQU,(ADD,0:digit,0:digit):natural,0:digit):equality</text>
 </expr>

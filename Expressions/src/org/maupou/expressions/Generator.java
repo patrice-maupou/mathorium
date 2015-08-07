@@ -40,15 +40,15 @@ public class Generator extends Schema {
   private final HashMap<String, Set<String>> subtypes;
   private final ArrayList<Expression> listvars; // liste des variables
 
-  public Generator(String name, Element elem, HashMap<String, Set<String>> subtypes) throws Exception {
+  public Generator(Element elem, HashMap<String, Set<String>> subtypes) throws Exception {
     allowsChildren = true;
-    this.name = name;
+    name = elem.getAttribute("name");
     setUserObject(name);
     this.subtypes = subtypes;
-    NodeList nodesVariables = elem.getElementsByTagName("variable");
+    NodeList nodes = elem.getElementsByTagName("variable");
     listvars = new ArrayList<>(); // liste des variables
-    for (int i = 0; i < nodesVariables.getLength(); i++) {
-      Element lv = (Element) nodesVariables.item(i);
+    for (int i = 0; i < nodes.getLength(); i++) {
+      Element lv = (Element) nodes.item(i);
       String type = lv.getAttribute("type"); // type de la variable
       String list = lv.getAttribute("list");
       if (!list.isEmpty()) {
@@ -58,11 +58,19 @@ public class Generator extends Schema {
         }
       }
     }
-    nodesVariables = elem.getElementsByTagName("genrule");
-    for (int i = 0; i < nodesVariables.getLength(); i++) {
-      Element genRuleElement = (Element) nodesVariables.item(i);
-      GenItem genItem = new GenItem(genRuleElement);
-      add(genItem);
+    nodes = elem.getElementsByTagName("generator");
+    for (int i = 0; i < nodes.getLength(); i++) {
+        Element genElem = (Element) nodes.item(i);
+      if (elem.isEqualNode(genElem.getParentNode())) {
+        add(new Generator(genElem, subtypes));
+      }
+    }
+    nodes = elem.getElementsByTagName("match");
+    for (int i = 0; i < nodes.getLength(); i++) {
+      Element matchElem = (Element) nodes.item(i);
+      if (elem.isEqualNode(matchElem.getParentNode())) {
+        add(new MatchExpr(matchElem, 1));
+      }
     }
   }
 
@@ -352,6 +360,10 @@ public class Generator extends Schema {
   public String getName() {
     return name;
   }
-
+  
+  @Override
+  public String log() {
+    return name;    
+  }
 
 }
