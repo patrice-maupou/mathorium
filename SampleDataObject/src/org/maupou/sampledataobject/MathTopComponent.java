@@ -370,6 +370,18 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   }// </editor-fold>//GEN-END:initComponents
 
     private void resultTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resultTextFieldActionPerformed
+      if(toAdd == null) {
+        Object node = genTree.getLastSelectedPathComponent();
+        if(node instanceof Generator) {
+          Generator gen = (Generator) node;
+          if(gen.getSchemas().isEmpty()) {
+            String etxt = resultTextField.getText();
+            if(syntax != null) {
+              toAdd = new ExprNode(syntax.parse(etxt), null, null);
+            }
+          }
+        }
+      }
       addExprNode(toAdd);
       for (int i = 0; i < varsTable.getRowCount(); i++) {
         varsTable.setValueAt("", i, 0);
@@ -512,7 +524,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
               NotifyDescriptor.OK_CANCEL_OPTION);
       if (DialogDisplayer.getDefault().notify(d) == NotifyDescriptor.OK_OPTION) {
         int[] selectedIndices = exprList.getSelectedIndices();
-        for (int i = 0; i < selectedIndices.length; i++) {
+        for (int i = selectedIndices.length - 1; i > -1 ; i--) {
           int index = selectedIndices[i];
           listModel.remove(index);
           mdo.delete(index, generator);
