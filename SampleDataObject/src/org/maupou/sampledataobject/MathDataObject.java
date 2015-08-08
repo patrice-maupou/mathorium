@@ -262,7 +262,6 @@ public class MathDataObject extends MultiDataObject {
           Expression e = expr.getE();
           Element elem = (Element) gen.insertBefore(mathdoc.createElement("expr"), next);
           elem.setAttribute("id", "" + expr.getRange());
-          //elem.setAttribute("type", e.getType());
           org.w3c.dom.Node ntxt = elem.appendChild(mathdoc.createElement("text"));
           ntxt.setTextContent(e.toText());
           String txt = "";

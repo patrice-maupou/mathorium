@@ -12,18 +12,18 @@
     </match>
     </match>    
   </generator>
-<expr id="0" type="thm"><![CDATA[A->(B->A)]]>
+<expr id="1" type="thm"><![CDATA[A->(B->A)]]>
 <text>(IMPLIES,A:prop,(IMPLIES,B:prop,A:prop):prop):thm</text>
 </expr>
-<expr id="1" type="thm"><![CDATA[(A->(B->C))->((A->B)->(A->C))]]>
+<expr id="2" type="thm"><![CDATA[(A->(B->C))->((A->B)->(A->C))]]>
 <text>(IMPLIES,(IMPLIES,A:prop,(IMPLIES,B:prop,C:prop):prop):prop,
   (IMPLIES,(IMPLIES,A:prop,B:prop):prop,(IMPLIES,A:prop,C:prop):prop):prop):thm</text>
 </expr>
-<expr id="2" type="thm"><![CDATA[((A->B)->C)->(B->C)]]>
+<expr id="3" type="thm"><![CDATA[((A->B)->C)->(B->C)]]>
 <text>(IMPLIES,(IMPLIES,(IMPLIES,A:prop,B:prop):prop,C:prop):prop,
   (IMPLIES,B:prop,C:prop):prop):thm</text>
 </expr>
-<expr id="3" type="thm"><![CDATA[(~A->~B)->(B->A)]]>
+<expr id="4" type="thm"><![CDATA[(~A->~B)->(B->A)]]>
   <text>(IMPLIES,(IMPLIES,(NOT,A:prop):prop,(NOT,B:prop):prop):prop,
   (IMPLIES,B:prop,A:prop):prop):thm</text>
 </expr>
