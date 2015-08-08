@@ -396,7 +396,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
     if (en != null) {
       try {
         int n = exprNodes.size();
-        en.setRange(n);
+        en.setRange(n + 1);
         listModel.add(en);
         exprList.ensureIndexIsVisible(n);
         mdo.insert(exprNodes.subList(n, n + 1), n, generator);
@@ -526,8 +526,27 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         int[] selectedIndices = exprList.getSelectedIndices();
         for (int i = selectedIndices.length - 1; i > -1 ; i--) {
           int index = selectedIndices[i];
-          listModel.remove(index);
+          ExprNode removed = (ExprNode) listModel.remove(index);
           mdo.delete(index, generator);
+          //* TODO : rectifier les exprNodes suivants en décalant les indices
+          int n = removed.getRange();
+          for (int j = index; j < exprNodes.size(); j++) {
+            ExprNode next = exprNodes.get(j);
+            ArrayList<int[]> parentList = next.getParentList();
+            parentList.stream().forEach((p) -> {
+              boolean remove = false;
+              for (int k = 0; k < p.length; k++) {                
+                remove |= n == p[k];
+                if(p[k] >= n) {
+                  p[k]--;
+                }
+              }
+              if (remove) {
+                parentList.remove(p);
+              }
+            });
+          }
+          //*/
         }
       }
     }//GEN-LAST:event_deleteButtonActionPerformed

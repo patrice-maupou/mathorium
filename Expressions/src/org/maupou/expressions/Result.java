@@ -18,9 +18,7 @@
  */
 package org.maupou.expressions;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import org.w3c.dom.Element;
 
 /**
