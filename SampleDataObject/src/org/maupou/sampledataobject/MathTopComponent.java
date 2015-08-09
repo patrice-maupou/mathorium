@@ -398,10 +398,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private void addExprNode(ExprNode en) {
     if (en != null) {
       try {
+        int n = exprNodes.size();
         sup++;
         en.setRange(sup);
         listModel.add(en);
-        int n = exprNodes.size();
         exprList.ensureIndexIsVisible(n);
         mdo.insert(exprNodes.subList(n, n + 1), n, generator);
         exprList.repaint();
