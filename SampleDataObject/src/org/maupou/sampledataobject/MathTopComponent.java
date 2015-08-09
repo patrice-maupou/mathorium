@@ -91,7 +91,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private ArrayList<Generator> generators;
   private Generator generator;
   private boolean resultReady;
-  private int level;
+  private int level, sup;
   private MultiViewElementCallback callback;
   private final JToolBar toolbar = new JToolBar();
   private static RequestProcessor RP;
@@ -100,6 +100,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
 
   public MathTopComponent() {
     exprNodes = new ArrayList<>();
+    sup = 0;
     initComponents();
     setName(Bundle.CTL_MathTopComponent());
     setToolTipText(Bundle.HINT_MathTopComponent());
@@ -145,7 +146,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
       itemStrings[i] = genItems.get(i).toString();
     }
     try {
-      mdo.readExprNodes(generator, listModel);
+      sup = mdo.readExprNodes(generator, listModel);
     } catch (Exception ex) {
       displayMessage("Erreur de lecture des expressions " + ex.getMessage(), "Error message");
     }
@@ -397,9 +398,10 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
   private void addExprNode(ExprNode en) {
     if (en != null) {
       try {
-        int n = exprNodes.size();
-        en.setRange(n + 1);
+        sup++;
+        en.setRange(sup);
         listModel.add(en);
+        int n = exprNodes.size();
         exprList.ensureIndexIsVisible(n);
         mdo.insert(exprNodes.subList(n, n + 1), n, generator);
         exprList.repaint();

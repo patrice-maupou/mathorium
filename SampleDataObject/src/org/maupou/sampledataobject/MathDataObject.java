@@ -189,9 +189,11 @@ public class MathDataObject extends MultiDataObject {
    * remplit la liste des expressions correspondant à ce Generator à partir de model
    * @param gen
    * @param model
+   * @return le maximum des ids
    * @throws Exception 
    */
-  public void readExprNodes(Generator gen, ExprListModel model) throws Exception {
+  public int readExprNodes(Generator gen, ExprListModel model) throws Exception {
+    int sup = 0;
     NodeList egens = mathdoc.getElementsByTagName("generator");
     for (int i = 0; i < egens.getLength(); i++) {
       Element egen = (Element) egens.item(i);
@@ -231,12 +233,15 @@ public class MathDataObject extends MultiDataObject {
           }
           ExprNode en = new ExprNode(e, childs, parents);
           String id = exprItem.getAttribute("id");
-          en.setRange(Integer.parseInt(id));
+          int range = Integer.parseInt(id);
+          sup = (range > sup)? range : sup;
+          en.setRange(range);
           model.add(en);
         }
       }
       break;
     }
+    return sup;
   }
   
   /**
