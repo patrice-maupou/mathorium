@@ -82,7 +82,8 @@ public class ExprListModel<ExprNode> extends AbstractListModel<ExprNode> {
       fireIntervalRemoved(this, 0, s - 1);
     }
   }
-
+  
+ 
   public ArrayList<ExprNode> getExprList() {
     return exprList;
   }

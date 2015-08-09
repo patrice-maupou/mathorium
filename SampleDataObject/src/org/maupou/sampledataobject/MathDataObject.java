@@ -186,7 +186,7 @@ public class MathDataObject extends MultiDataObject {
   }
 
   /**
-   * remplit la liste des expressions correspondant à ce Generator
+   * remplit la liste des expressions correspondant à ce Generator à partir de model
    * @param gen
    * @param model
    * @throws Exception 
@@ -284,7 +284,7 @@ public class MathDataObject extends MultiDataObject {
   }
   
   /**
-   * 
+   * supprime l'entrée de rang index du document
    * @param index rang de l'expression à supprimer
    * @param generator 
    */
@@ -296,6 +296,40 @@ public class MathDataObject extends MultiDataObject {
         list = gen.getElementsByTagName("expr");
         if (list.getLength() > index) {
           gen.removeChild(list.item(index));
+        }
+      }
+    }
+    setModified(true);
+    getCookieSet().add(saver);
+  }
+  
+  /**
+   *
+   * @param en
+   * @param index
+   * @param generator
+   */
+  public void updateParents(ExprNode en, int index, Generator generator) {
+    NodeList list = mathdoc.getElementsByTagName("generator");
+    for (int i = 0; i < list.getLength(); i++) {
+      Element gen = (Element) list.item(i);
+      if (generator.getName().equals(gen.getAttribute("name"))) {
+        list = gen.getElementsByTagName("expr");
+        Element elem = (Element) list.item(index);
+        NodeList parents = elem.getElementsByTagName("parents");
+        if (parents.getLength() == 1) {
+          Element parent = (Element) parents.item(0);
+          String txt = "";
+          txt = en.getParentList().stream().map((p) -> {
+            return Arrays.toString(p).replaceAll("[\\[\\],]", "").replace(" ", "-") + " ";
+          }).reduce(txt, String::concat).trim();
+          if (!txt.isEmpty()) {
+            parent.setTextContent(txt);
+            elem.replaceChild(parent, parents.item(0));
+          } else {
+            elem.removeChild(parents.item(0));
+          }
+          gen.replaceChild(elem, list.item(index));
         }
       }
     }
@@ -341,5 +375,7 @@ public class MathDataObject extends MultiDataObject {
         Exceptions.printStackTrace(ex);
       }
     }
+    
+    
   }
 }

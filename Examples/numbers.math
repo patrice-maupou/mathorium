@@ -32,14 +32,20 @@
         </match>
         <result>(ADD,(ADD,u:real,v:real):real,w:real):real</result>
       </generator>
-    <expr id="1">
-      <text>(ADD,(ADD,1:natural,2:natural):real,3:natural):real</text>
-    </expr>
-    <expr id="2">
+    
+  <expr id="1">
       <text>(MUL,2:natural,(ADD,1:natural,x:real):real):real</text>
     </expr>
-    <expr id="3">
+  <expr id="2">
       <text>(MUL,a:real,(ADD,b:real,c:real):real):real</text>
-    </expr>   
+    </expr>
+  <expr id="3">
+      <text>(ADD,(MUL,2:natural,1:natural):real,(MUL,2:natural,x:real):real):real</text>
+      <parents>1</parents>
+    </expr>
+    <expr id="4">
+      <text>(ADD,(MUL,a:real,b:real):real,(MUL,a:real,c:real):real):real</text>
+      <parents>2</parents>
+    </expr>
   </generator>
 </expressions>

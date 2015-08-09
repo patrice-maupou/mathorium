@@ -19,6 +19,8 @@
 package org.maupou.sampledataobject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.swing.Action;
@@ -427,7 +429,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
             varsTable.setValueAt(type, row, 2);
             row++;
           }
-          curSchema.updateRgs(index);
+          curSchema.updateRgs(en.getRange());
           TreePath path = genTree.getSelectionModel().getLeadSelectionPath();
           genTree.expandPath(path);
         } else {
@@ -466,7 +468,13 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                   if (child instanceof Result && child.isReady()) {
                     ExprNode en = new ExprNode(null, null, new ArrayList<>());
                     if (schema.getRgs().length > 0) {
-                      en.getParentList().add(schema.getRgs());
+                      //* TODO : il faut les ids !
+                      for (int i = 0; i < child.getRgs().length; i++) {
+                        child.getRgs()[i] = exprNodes.get(child.getRgs()[i]-1).getRange();
+                      }
+                      en.getParentList().add(child.getRgs());
+                      //*/
+                      //en.getParentList().add(schema.getRgs());
                     }
                     if(generator.newExpr(en, (Result)child, exprNodes)) {
                       addExprNode(en);
@@ -524,34 +532,50 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
               NotifyDescriptor.OK_CANCEL_OPTION);
       if (DialogDisplayer.getDefault().notify(d) == NotifyDescriptor.OK_OPTION) {
         int[] selectedIndices = exprList.getSelectedIndices();
-        for (int i = selectedIndices.length - 1; i > -1 ; i--) {
-          int index = selectedIndices[i];
-          ExprNode removed = (ExprNode) listModel.remove(index);
-          int n = removed.getRange();
-          mdo.delete(index, generator);
-          /* TODO : rectifier les exprNodes suivants en décalant les indices
-          for (int j = index; j < exprNodes.size(); j++) {
-            ExprNode next = exprNodes.get(j);
-            ArrayList<int[]> parentList = next.getParentList();
-            parentList.stream().forEach((p) -> {
-              boolean remove = false;
-              for (int k = 0; k < p.length; k++) {                
-                remove |= n == p[k];
-                if(p[k] >= n) {
-                  p[k]--;
-                }
-              }
-              if (remove) {
-                parentList.remove(p);
-              }
-            });
+        if (selectedIndices.length > 0) {
+          ArrayList<Integer> holes = new ArrayList<>();
+          int start = selectedIndices[0];
+          for (int i = selectedIndices.length - 1; i > -1; i--) {
+            int index = selectedIndices[i];
+            Integer range = exprNodes.get(index).getRange();
+            holes.add(range);
+            listModel.remove(index);
+            mdo.delete(index, generator);
           }
-          
-          //*/
+          deleteParentRemoved(start, holes);
+          System.out.println("test");
         }
       }
     }//GEN-LAST:event_deleteButtonActionPerformed
 
+    /**
+     * enlève les parents éliminés de la liste
+     * TODO : modifier le document avant de l'enregistrer
+     * @param start le début n'est pas modifié
+     * @param holes ids éliminés de la liste
+     */
+   private void deleteParentRemoved(int start, ArrayList<Integer> holes) {
+    for (int i = start; i < exprNodes.size(); i++) {
+      ExprNode en = exprNodes.get(i);
+      ArrayList<int[]> parentList = new ArrayList<>();
+      boolean changed = false;
+      nextParents :
+      for (int j = 0; j < en.getParentList().size(); j++) {
+        int[] p = en.getParentList().get(j);
+        for (int k = 0; k < p.length; k++) {
+          if(changed = holes.contains(p[k])) {
+            continue nextParents;
+          }
+        }
+        parentList.add(p);
+      }
+      if (changed) {
+        en.setParentList(parentList);
+        mdo.updateParents(en, i, generator);
+      }      
+    }
+  }
+    
   private void genTreeValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_genTreeValueChanged
     Object node = genTree.getLastSelectedPathComponent();
     if (node != null && (node instanceof Schema)) {
