@@ -450,7 +450,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
           int oldsize;
           do {
             oldsize = exprNodes.size();
-            //* modif
             Schema schema = generator;
             boolean down = true;
             loop:
@@ -476,6 +475,8 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                   addExprNode(en);
                 }
                 down = false;
+                //System.out.println(schema.log()+ " -> "+ child.log() + " :" + 
+                //exprNodes.get(exprNodes.size()-1));  // première sortie
               } else if (schema instanceof MatchExpr) {
                 int last = schema.getRgs().length - 1;
                 if (!schema.isReady()) {
@@ -487,10 +488,12 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                   schema.getVarMap().putAll(((Schema)schema.getParent()).getVarMap());
                   Expression e = exprNodes.get(i).getE();
                   if (down = generator.nextmatch(e, (MatchExpr) schema)) {
+                    //System.out.println(previous.log()+ " -> "+ schema.log() + " e"+i+":"+ e);
                     continue loop;
                   }
                 }
                 schema.getRgs()[last] = 0;
+                //System.out.println(schema.log()+ " -> "+ child.log()+ " ...");
               }
               else if (schema instanceof Generator) {
                 down = !schema.isLeaf() && !schema.equals(previous.getParent());
@@ -499,62 +502,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                 return;
               }
             } while (!generator.equals(schema)); // remonte au parent
-            //*/
-            /* avant
-             for (Schema genSchema : generator.getSchemas()) { // il peut y avoir des MatchExpr
-              Generator gen = (Generator) genSchema;
-              if (!gen.isReady()) {
-                continue;
-              }
-              Schema schema = gen, child;
-              loop:
-              do { // examen des childs
-                int cnt = schema.getChildCount() - 1;
-                for (int m = 0; m <= cnt; m++) { // liste child
-                  child = (Schema) schema.getChildAt(m);
-                  System.arraycopy(schema.getRgs(), 0, child.getRgs(), 0, schema.getRgs().length);
-                  child.setReady(schema.isReady()); // transmission descendante
-                  int last = child.getRgs().length - 1;
-                  if (child instanceof Result && child.isReady()) {
-                    ExprNode en = new ExprNode(null, null, new ArrayList<>());
-                    if (schema.getRgs().length > 0) {
-                      for (int i = 0; i < child.getRgs().length; i++) {
-                        child.getRgs()[i] = exprNodes.get(child.getRgs()[i] - 1).getRange();
-                      }
-                      en.getParentList().add(child.getRgs());
-                    }
-                    if (generator.newExpr(en, (Result) child, exprNodes)) {
-                      addExprNode(en);
-                    }
-                    schema.setReady(m != cnt); // pour gen
-                    //System.out.println(schema.log()+ " -> "+ child.log() + " :" + 
-                    //exprNodes.get(exprNodes.size()-1));  // première sortie
-                  } else if (child instanceof MatchExpr) {
-                    MatchExpr matchExpr = (MatchExpr) child;
-                    if (!child.isReady()) {
-                      child.setReady(child.getRgs()[last] > inf);
-                    }
-                    for (int i = child.getRgs()[last]; i < oldsize; i++) { // parcours de la liste
-                      child.getRgs()[last] = i + 1;
-                      child.getVarMap().clear();
-                      child.getVarMap().putAll(schema.getVarMap());
-                      Expression e = exprNodes.get(i).getE();
-                      if (generator.nextmatch(e, matchExpr)) { // e conforme au modèle
-                        //System.out.println(schema.log()+ " -> "+ child.log() + " e"+i+":"+ e);
-                        schema = child;
-                        continue loop; // 2è sortie (mais l'indice m est perdu)
-                      }
-                    } // plus d'expressions, 3è sortie
-                    child.getRgs()[last] = 0; // seul le dernier est pris en compte
-                    //System.out.println(schema.log()+ " -> "+ child.log()+ " ...");
-                  }
-                } // fin boucle child                       
-                if (Thread.interrupted()) {
-                  return;
-                }
-                schema = (Schema) schema.getParent();
-              } while (!generator.equals(schema)); // remonte au parent
-            } //*/ // boucle generator
             inf = exprNodes.size();
           } while (oldsize < exprNodes.size());
         }
