@@ -452,15 +452,16 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
             oldsize = exprNodes.size();
             //* modif
             Schema schema = generator;
-            boolean dive = true;
+            boolean down = true;
             loop:
             do {
               Schema previous = schema;
-              if (!dive) {
+              if (!down) {
                 schema = schema.getNext(); // noeud suivant ou parent
               } else { // descente
                 int[] rgs = schema.getRgs();
                 schema = schema.getSchemas().get(0);
+                schema.setReady(previous.isReady());
                 System.arraycopy(rgs, 0, schema.getRgs(), 0, rgs.length);
               }
               if (schema instanceof Result && schema.isReady()) {
@@ -474,7 +475,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                 if (generator.newExpr(en, (Result) schema, exprNodes)) {
                   addExprNode(en);
                 }
-                dive = false;
+                down = false;
               } else if (schema instanceof MatchExpr) {
                 int last = schema.getRgs().length - 1;
                 if (!schema.isReady()) {
@@ -485,14 +486,14 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                   schema.getVarMap().clear();
                   schema.getVarMap().putAll(((Schema)schema.getParent()).getVarMap());
                   Expression e = exprNodes.get(i).getE();
-                  if (dive = generator.nextmatch(e, (MatchExpr) schema)) {
+                  if (down = generator.nextmatch(e, (MatchExpr) schema)) {
                     continue loop;
                   }
                 }
                 schema.getRgs()[last] = 0;
               }
               else if (schema instanceof Generator) {
-                dive = !schema.isLeaf() && !schema.equals(previous.getParent());
+                down = !schema.isLeaf() && !schema.equals(previous.getParent());
               }
               if (Thread.interrupted()) {
                 return;
