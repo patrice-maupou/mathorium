@@ -37,6 +37,7 @@ public class Schema implements MutableTreeNode {
   private Expression pattern;
   private Object descr;
   protected Schema parent;
+  private Schema next;
   protected boolean allowsChildren;
   protected final ArrayList<Schema> schemas; // liste des descendants directs
   private final ArrayList<Expression> vars; // liste des variables
@@ -120,6 +121,14 @@ public class Schema implements MutableTreeNode {
   @Override
   public TreeNode getParent() {
     return parent;
+  }
+
+  public Schema getNext() {
+    return next;
+  }
+
+  public void setNext(Schema next) {
+    this.next = next;
   }
 
 

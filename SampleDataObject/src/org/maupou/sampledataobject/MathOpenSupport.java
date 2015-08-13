@@ -96,10 +96,4 @@ public class MathOpenSupport extends OpenSupport implements OpenCookie, CloseCoo
         };
     }
 
-    /*
-    @Override
-    public boolean close() {
-        return tc.close();
-    }
-    //*/
 }

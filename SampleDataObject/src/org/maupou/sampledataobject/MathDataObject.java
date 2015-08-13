@@ -38,11 +38,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.maupou.expressions.ExprNode;
 import org.maupou.expressions.Expression;
 import org.maupou.expressions.Generator;
-import org.maupou.expressions.MatchExpr;
-import org.maupou.expressions.Result;
-import org.maupou.expressions.Schema;
 import org.maupou.expressions.Syntax;
-import org.maupou.expressions.SyntaxWrite;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -175,12 +171,15 @@ public class MathDataObject extends MultiDataObject {
    * @throws Exception 
    */
   public ArrayList<Generator> setGenerators(HashMap<String, Set<String>> subtypes) throws Exception {
+    Element root = mathdoc.getDocumentElement();
     ArrayList<Generator> generators = new ArrayList<>();
-    NodeList list = mathdoc.getElementsByTagName("generator");
-    for (int i = 0; i < list.getLength(); i++) {
+    NodeList list = root.getElementsByTagName("generator");
+    for (int i = 0; i < list.getLength(); i++) { 
       Element genElement = (Element) list.item(i);
-      Generator gen = new Generator(genElement, subtypes);
-      generators.add(gen);
+      if (root.equals(genElement.getParentNode())) {
+        Generator gen = new Generator(genElement, subtypes);
+        generators.add(gen);
+      }
     }
     return generators;
   }

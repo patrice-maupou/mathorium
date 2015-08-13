@@ -5,21 +5,21 @@
     <variable type="natural" list="a b c d e"/> 
     <generator name="unit=0-8">
       <match name="equality">
-        <pattern>(EQU,(ADD,u:digit,1:digit):natural,v:digit):equality</pattern>
-        <match name="equality">
+        <pattern>(EQU,(ADD,u:digit,1:digit):natural,v:digit):equality</pattern> <!--u+1=v -->
+        <match name="equality">   <!--a+1=bu -->
           <pattern>(EQU,(ADD,a:natural,1:digit):natural,(CONCAT,b:natural,u:digit):natural):equality</pattern>
           <result>(EQU,(ADD,(CONCAT,b:natural,u:digit):natural,1:digit):natural,
-            (CONCAT,b:natural,v:digit):natural):equality</result> 
+            (CONCAT,b:natural,v:digit):natural):equality</result> <!--bu+1=bv -->
         </match>
       </match>
     </generator>
     <generator name="unit=9">
-      <match name="equality">
+      <match name="equality"> <!--a+1=b9 -->
         <pattern>(EQU,(ADD,a:natural,1:digit):natural,(CONCAT,b:natural,9:digit):natural):equality</pattern>
           <match name="equality">
-            <pattern>(EQU,(ADD,b:natural,1:digit):natural,c:natural):equality</pattern>
+            <pattern>(EQU,(ADD,b:natural,1:digit):natural,c:natural):equality</pattern> <!--b+1=c -->
               <result>(EQU,(ADD,(CONCAT,b:natural,9:digit):natural,1:digit):natural,
-                (CONCAT,c:natural,0:digit):natural):equality</result>
+                (CONCAT,c:natural,0:digit):natural):equality</result>  <!--b9+1=c0 -->
           </match>
       </match>
     </generator>

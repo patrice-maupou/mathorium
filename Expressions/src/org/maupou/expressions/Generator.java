@@ -19,11 +19,13 @@
 package org.maupou.expressions;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
@@ -57,7 +59,7 @@ public class Generator extends Schema {
           listvars.add(new Expression(var, type, null, true));
         }
       }
-    }
+    }    
     nodes = elem.getElementsByTagName("generator");
     for (int i = 0; i < nodes.getLength(); i++) {
         Element genElem = (Element) nodes.item(i);
@@ -336,7 +338,11 @@ public class Generator extends Schema {
    * @param syntax 
    */
   public void setSchema(Schema schema, Syntax syntax) {
+    Schema pre = null;
     for (Schema child : schema.getSchemas()) {
+      if(pre != null) {
+        pre.setNext(child);
+      }
       String p = (syntax == null)? child.getPattern().toString() : 
               syntax.getSyntaxWrite().toString(child.getPattern());
       if(child instanceof MatchExpr) {
@@ -346,6 +352,10 @@ public class Generator extends Schema {
         child.setUserObject("résultat : " + p);
       }
       setSchema(child, syntax);
+      pre = child;
+    }
+    if (pre != null) {
+      pre.setNext(pre.parent);
     }
   }
     

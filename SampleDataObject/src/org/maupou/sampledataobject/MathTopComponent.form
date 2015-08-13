@@ -223,9 +223,6 @@
           <SpinnerModel initial="1" numberType="java.lang.Integer" stepSize="1" type="number"/>
         </Property>
       </Properties>
-      <Events>
-        <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="levelSpinnerStateChanged"/>
-      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="autoButton">
       <Properties>
@@ -287,6 +284,9 @@
               <Connection component="resultTextField" name="maximumSize" type="property"/>
             </Property>
           </Properties>
+          <AuxValues>
+            <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;ExprNode&gt;"/>
+          </AuxValues>
         </Component>
       </SubComponents>
     </Container>
@@ -303,6 +303,9 @@
           <Events>
             <EventHandler event="valueChanged" listener="javax.swing.event.TreeSelectionListener" parameters="javax.swing.event.TreeSelectionEvent" handler="genTreeValueChanged"/>
           </Events>
+          <AuxValues>
+            <AuxValue name="JavaCodeGenerator_SerializeTo" type="java.lang.String" value="MathTopComponent_genTree"/>
+          </AuxValues>
         </Component>
       </SubComponents>
     </Container>
