@@ -42,13 +42,14 @@ public class Generator extends Schema {
   private final HashMap<String, Set<String>> subtypes;
   private final ArrayList<Expression> listvars; // liste des variables
 
-  public Generator(Element elem, HashMap<String, Set<String>> subtypes) throws Exception {
+  public Generator(Element elem, HashMap<String, Set<String>> subtypes, ArrayList<Expression> listvars) 
+          throws Exception {
     allowsChildren = true;
     name = elem.getAttribute("name");
     setUserObject(name);
     this.subtypes = subtypes;
     NodeList nodes = elem.getElementsByTagName("variable");
-    listvars = new ArrayList<>(); // liste des variables
+    this.listvars = listvars; // liste des variables
     for (int i = 0; i < nodes.getLength(); i++) {
       Element lv = (Element) nodes.item(i);
       String type = lv.getAttribute("type"); // type de la variable
@@ -64,7 +65,7 @@ public class Generator extends Schema {
     for (int i = 0; i < nodes.getLength(); i++) {
         Element genElem = (Element) nodes.item(i);
       if (elem.isEqualNode(genElem.getParentNode())) {
-        add(new Generator(genElem, subtypes));
+        add(new Generator(genElem, subtypes, listvars));
       }
     }
     nodes = elem.getElementsByTagName("match");

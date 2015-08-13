@@ -177,7 +177,7 @@ public class MathDataObject extends MultiDataObject {
     for (int i = 0; i < list.getLength(); i++) { 
       Element genElement = (Element) list.item(i);
       if (root.equals(genElement.getParentNode())) {
-        Generator gen = new Generator(genElement, subtypes);
+        Generator gen = new Generator(genElement, subtypes, new ArrayList<>());
         generators.add(gen);
       }
     }
