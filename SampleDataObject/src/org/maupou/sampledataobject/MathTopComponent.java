@@ -86,6 +86,7 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
 
   private MathDataObject mdo;
   private ExprNode toAdd;
+  private Expression sub;
   private ArrayList<ExprNode> exprNodes;
   private Syntax syntax;
   private SyntaxWrite syntaxWrite;
@@ -414,7 +415,18 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
         int index = exprList.getSelectedIndex();
         ExprNode en = (ExprNode) listModel.getElementAt(index);
         Expression e = en.getE().copy();
-        if (generator.nextmatch(e, matchExpr)) {
+        if (matchExpr.isRecursive() && !matchExpr.isLeaf()) {
+          Expression r = matchExpr.getSchemas().get(0).getPattern();
+          Expression expr = generator.matchSubExpr(e, matchExpr.getPattern(), r);
+          if (expr != null) {
+            toAdd = new ExprNode(expr, null, new ArrayList<>());
+            resultReady = true;
+          }
+        } else {
+          resultReady = generator.nextmatch(e, matchExpr);
+          toAdd = new ExprNode(null, null, new ArrayList<>());
+        }
+        if (resultReady) {
           resultReady = true;
           valueTextField.setText(syntaxWrite.toString(e));
           int row = 0;
@@ -487,6 +499,20 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                   schema.getVarMap().clear();
                   schema.getVarMap().putAll(((Schema)schema.getParent()).getVarMap());
                   Expression e = exprNodes.get(i).getE();
+                  //* TODO : à corriger
+                  if(((MatchExpr)schema).isRecursive() && !schema.isLeaf()) {
+                    down = false;
+                    Expression r = schema.getSchemas().get(0).getPattern();
+                    Expression expr = generator.matchSubExpr(e, schema.getPattern(),r);
+                    if(expr != null) {                      
+                      ExprNode en = new ExprNode(expr, null, new ArrayList<>());
+                      en.getParentList().add(schema.getRgs());
+                      if (generator.newExpr(en, null, exprNodes)) {
+                        addExprNode(en);
+                      }
+                      continue loop;
+                    }
+                  } else //*/
                   if (down = generator.nextmatch(e, (MatchExpr) schema)) {
                     //System.out.println(previous.log()+ " -> "+ schema.log() + " e"+i+":"+ e);
                     continue loop;
@@ -586,11 +612,15 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
                   + "au modèle et cliquer sur valeur");
         } else if (curSchema instanceof Result) { // fabrique une expression, vérifie la liste
           Result result = (Result) curSchema;
-          toAdd = new ExprNode(null, null, new ArrayList<>());
           if (result.getRgs().length > 0) {
             toAdd.getParentList().add(curSchema.getRgs());
           }
-          result.setReady(generator.newExpr(toAdd, result, exprNodes));
+          if (toAdd.getE() == null) {
+            result.setReady(generator.newExpr(toAdd, result, exprNodes));
+          }
+          else {
+            result.setReady(true);
+          }
           resultTextField.setText(syntaxWrite.toString(toAdd.getE()));
           resultTextField.requestFocus();
           if (!result.isReady()) {

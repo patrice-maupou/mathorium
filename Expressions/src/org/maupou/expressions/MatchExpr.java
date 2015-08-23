@@ -18,12 +18,8 @@
  */
 package org.maupou.expressions;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
@@ -32,7 +28,8 @@ import org.w3c.dom.NodeList;
  */
 public class MatchExpr extends Schema {
 
-  private final boolean bidir;
+  private final boolean bidir, recursive;
+  // TODO : Enum unidir, bidir, recursive (avec l'attribut type="unidir,bidir,recursive")
 
   public MatchExpr(Element match, int depth) throws Exception {
     allowsChildren = true;
@@ -70,6 +67,7 @@ public class MatchExpr extends Schema {
       }
     }
     bidir = "yes".equals(options.get("bidirectional"));
+    recursive = "yes".equals(options.get("recursive"));
   }
 
 
@@ -85,6 +83,10 @@ public class MatchExpr extends Schema {
 
   public boolean isBidir() {
     return bidir;
+  }
+
+  public boolean isRecursive() {
+    return recursive;
   }
 
 }

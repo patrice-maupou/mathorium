@@ -208,28 +208,34 @@ public class Generator extends Schema {
     }
     return fit;    
   }
+  
   /**
    * 
    * @param e l'expression à transformer
-   * @param replaceMap table des transformations à effectuer (définitions)
-   * @return une copie de l'expression éventuellement transformée
+   * @param m une sous-expression de e doit être conforme à ce modèle
+   * @param r fournit la transformée
+   * @return 
    */
-  public Expression matchSubExpr(Expression e, HashMap<Expression, Expression> replaceMap) {
+  public Expression matchSubExpr(Expression e, Expression m, Expression r) {    
     Expression expr = e.copy();
     HashMap<Expression, Expression> vars = new HashMap<>();
-    for (Expression key : replaceMap.keySet()) {
-      if(match(expr, key, vars)) {
-        expr = replaceMap.get(key).replace(vars);
-      } 
+    if(match(expr, m, vars)) {
+      return r.replace(vars);
     }
     if(expr.getChildren() != null) {
       for (int i = 0; i < expr.getChildren().size(); i++) {
         Expression child = expr.getChildren().get(i);
-        expr.getChildren().set(i, matchSubExpr(child, replaceMap));
+        Expression nchild = matchSubExpr(child, m, r);
+        if (nchild != null) {
+          expr.getChildren().set(i, nchild);
+          return expr;
+        }
       }
     }
-    return expr;
+    return null;
   }
+  
+  
   /**
    * teste si une ExprNode est nouvelle
    *
@@ -239,8 +245,10 @@ public class Generator extends Schema {
    * @return l'exprNode ou null si ne convient pa si elle est déjà dans la liste 
    */
   public boolean newExpr(ExprNode en, Result result, ArrayList<ExprNode> exprNodes)  {
-    Expression e = result.getPattern().copy().replace(result.getVarMap());
-    en.setE(e);
+    if (result != null) {
+      en.setE(result.getPattern().copy().replace(result.getVarMap()));
+    }
+    Expression e = en.getE();    
     for (ExprNode exprNode : exprNodes) {
       Expression expr = exprNode.getE();
       HashMap<Expression, Expression> nvars = new HashMap<>();

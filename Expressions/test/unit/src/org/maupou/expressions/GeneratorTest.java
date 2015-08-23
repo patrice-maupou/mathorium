@@ -195,7 +195,6 @@ public class GeneratorTest {
     }
     ArrayList<Expression> listvars = new ArrayList<>();
     HashMap<Expression, Expression> vars = new HashMap<>();
-    HashMap<Expression, Expression> replaceMap = new HashMap<>();
     String[] ms = matchsubExpr.split("\",\\s+\"");
     String separator = ms[0];
     String[] ls = ms[1].split("\\s");
@@ -206,22 +205,22 @@ public class GeneratorTest {
     Generator gen = new Generator(listvars, subtypes);
     for (int i = 2; i < ms.length - 1; i += 5) {
       Expression e = new Expression(ms[i], syntax);
-      replaceMap.clear();
       String[] replace = ms[i + 1].split(separator);
-      for (int j = 0; j < replace.length; j += 2) {
-        Expression key = new Expression(replace[j], syntax);
-        Expression value = new Expression(replace[j + 1], syntax);
-        replaceMap.put(key, value);
-      }      
+      Expression m = new Expression(replace[0], syntax);
+      Expression r = new Expression(replace[1], syntax);
       Expression expected = new Expression(ms[i + 4], syntax);
+      if (e.equals(expected)) {
+        expected = null;
+      }
       vars.clear();
-      Expression result = gen.matchSubExpr(e, replaceMap);
+      Expression result = gen.matchSubExpr(e, m, r);
       System.out.println(syntaxWrite.toString(e) + "  ->  " + syntaxWrite.toString(result));
       assertEquals(expected, result);
     }
     System.out.println("");
   }
-
+ 
+   
   /**
    * Test of markUsedVars method, of class Generator.
    */
@@ -246,6 +245,136 @@ public class GeneratorTest {
     Generator instance = null;
     String expResult = "";
     String result = instance.toString();
+    assertEquals(expResult, result);
+    // TODO review the generated test code and remove the default call to fail.
+    fail("The test case is a prototype.");
+  }
+
+  /**
+   * Test of nextmatch method, of class Generator.
+   */
+  @Ignore
+  @Test
+  public void testNextmatch() {
+    System.out.println("nextmatch");
+    Expression expr = null;
+    MatchExpr matchExpr = null;
+    Generator instance = null;
+    boolean expResult = false;
+    boolean result = instance.nextmatch(expr, matchExpr);
+    assertEquals(expResult, result);
+    // TODO review the generated test code and remove the default call to fail.
+    fail("The test case is a prototype.");
+  }
+
+  
+
+  /**
+   * Test of newExpr method, of class Generator.
+   */
+  @Ignore
+  @Test
+  public void testNewExpr() {
+    System.out.println("newExpr");
+    ExprNode en = null;
+    Result result_2 = null;
+    ArrayList<ExprNode> exprNodes = null;
+    Generator instance = null;
+    boolean expResult = false;
+    boolean result = instance.newExpr(en, result_2, exprNodes);
+    assertEquals(expResult, result);
+    // TODO review the generated test code and remove the default call to fail.
+    fail("The test case is a prototype.");
+  }
+
+  /**
+   * Test of matchRecursively method, of class Generator.
+   */
+  @Ignore
+  @Test
+  public void testMatchRecursively() {
+    System.out.println("matchRecursively");
+    Expression e = null;
+    Expression s = null;
+    HashMap<Expression, Expression> vars = null;
+    Generator instance = null;
+    boolean expResult = false;
+    boolean result = instance.matchRecursively(e, s, vars);
+    assertEquals(expResult, result);
+    // TODO review the generated test code and remove the default call to fail.
+    fail("The test case is a prototype.");
+  }
+
+  /**
+   * Test of varsInExpression method, of class Generator.
+   */
+  @Ignore
+  @Test
+  public void testVarsInExpression() {
+    System.out.println("varsInExpression");
+    Expression e = null;
+    ArrayList<Expression> vars = null;
+    Generator instance = null;
+    instance.varsInExpression(e, vars);
+    // TODO review the generated test code and remove the default call to fail.
+    fail("The test case is a prototype.");
+  }
+
+  /**
+   * Test of extendMap method, of class Generator.
+   */
+  @Ignore
+  @Test
+  public void testExtendMap() {
+    System.out.println("extendMap");
+    Expression e = null;
+    HashMap<Expression, Expression> vars = null;
+    Generator instance = null;
+    instance.extendMap(e, vars);
+    // TODO review the generated test code and remove the default call to fail.
+    fail("The test case is a prototype.");
+  }
+
+  /**
+   * Test of setSchema method, of class Generator.
+   */
+  @Ignore
+  @Test
+  public void testSetSchema() {
+    System.out.println("setSchema");
+    Schema schema = null;
+    Syntax syntax = null;
+    Generator instance = null;
+    instance.setSchema(schema, syntax);
+    // TODO review the generated test code and remove the default call to fail.
+    fail("The test case is a prototype.");
+  }
+
+  /**
+   * Test of getName method, of class Generator.
+   */
+  @Ignore
+  @Test
+  public void testGetName() {
+    System.out.println("getName");
+    Generator instance = null;
+    String expResult = "";
+    String result = instance.getName();
+    assertEquals(expResult, result);
+    // TODO review the generated test code and remove the default call to fail.
+    fail("The test case is a prototype.");
+  }
+
+  /**
+   * Test of log method, of class Generator.
+   */
+  @Ignore
+  @Test
+  public void testLog() {
+    System.out.println("log");
+    Generator instance = null;
+    String expResult = "";
+    String result = instance.log();
     assertEquals(expResult, result);
     // TODO review the generated test code and remove the default call to fail.
     fail("The test case is a prototype.");

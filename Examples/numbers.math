@@ -36,10 +36,11 @@
   <expr id="5">
       <text>(MUL,a:real,(ADD,b:real,c:real):real):real</text>
     </expr>
-    
-  
   <expr id="8">
       <text>(MUL,(SUB,1:natural,x:real):real,2:natural):real</text>
+    </expr>
+  <expr id="11">
+      <text>(MUL,(ADD,a:real,b:real):real,(SUB,a:real,b:real):real):real</text>
     </expr>
   </generator>
 </expressions>

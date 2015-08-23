@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  */
 public class Expression {
 
-  private final String name;
+  private String name;
   private String type;
   private ArrayList<Expression> children;
   private boolean symbol;
@@ -268,11 +268,17 @@ public class Expression {
   public String getName() {
     return name;
   }
+  public void setName(String name) {
+    this.name = name;
+  }
 
   public ArrayList<Expression> getChildren() {
     return children;
   }
-
+  public void setChildren(ArrayList<Expression> children) {
+    this.children = children;
+  }
+  
   public boolean isSymbol() {
     return symbol;
   }
@@ -280,6 +286,5 @@ public class Expression {
   public void setSymbol(boolean symbol) {
     this.symbol = symbol;
   }
-
 
 }
