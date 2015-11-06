@@ -12,10 +12,10 @@
     "a==b", "A==B", 
     "c:A", "A:U", 
     "A->B", "A->B->C->D", "(A->B)->(C->D)",
-    "g(y)", "g(a)->B", "A->g(b)", "g(h(a))",
+    "g(y)", "g(a)->B", "A->g(b)", "g(h(a))", "f(x)(y)",
     "]]>
   </texts>
-  <!-- Ecriture cmprenant les types correspondant à la méthode toText()  -->
+  <!-- Ecriture comprenant les types correspondant à la méthode toText()  -->
   <texts name="complete"><![CDATA[",
     "(ID,a:term,b:term):judgment", "(ID,A:type,B:type):judgment",
     "(ISTYPE,c:term,A:type):judgment", "(ISTYPE,A:type,U:universe):judgment",
@@ -32,7 +32,7 @@
     "(ID,a,b)", "(ID,A,B)", "(ISTYPE,c,A)", "(ISTYPE,A,U)",
     "(FUNC,A,B)", "(FUNC,A,(FUNC,B,(FUNC,C,D)))",
     "(FUNC,(FUNC,A,B),(FUNC,C,D))",
-    "(IMG,g,y)", "(FUNC,(IMG,g,a),B)", "(FUNC,A,(IMG,g,b))", "(IMG,g,(IMG,h,a))",
+    "(g,y)", "(FUNC,(g,a),B)", "(FUNC,A,(g,b))", "(g,(h,a))", "((f,x),y)",
     "]]>
   </texts>  
   <!-- sortie des expressions par la méthode toString(syntaxWrite) -->

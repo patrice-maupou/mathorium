@@ -1,5 +1,24 @@
 
+pour obtenir f(a)(b+c) sous la forme ((f,a),(ADD,b,c)) il faut changer Expression qui devient une interface
+avec deux classes, simple (string) et composée (liste d'espressions).
+ou une seule classe,
+exemple:  name="12" list=null,  name=null list=[ADD,1,2] -> name="ADD", name="1", name="2"
 
+variables généralisées : f(a)(b)(c) ou (f,(a,b,c)) elles représentent des images.
+Exemple: f(a)(b) modèle de a+b définit une fonction f=ADD, f(x) modèle de x définit l'identité.
+         x,y:A,p:x=y, C(x,y,p) variable généralisée
+
+
+une séquence est représentée par une liste de ses éléments : a,b ou [a,b]
+<rule name="SEQUENCE" child="s,a">
+  <pattern><![CDATA[s,a]]>
+    <type name="seq" value="term,term"</type>
+    <type name="seq" value="seq,term"</type>
+  </pattern>
+</rule>
+
+Exemple : (f(x),y,z) : [y,z] puis [f(x),y,z]
+          (x,y,g(z)) : [x,y] puis [x,y,g(z)]
 
 -------------------------------------------------------------------------------
 matchBoth :         match :
@@ -17,6 +36,7 @@ comparaison entre A=A->(B->A) et A=(A->B)->C donne nvars={A=A->B} nsvars={C=B->A
 nvars corrige vars={A=(A->B)->(B->(A->B))} et nsvars corrige svars={B=B->(B->A)}
 
 but : ((A->B)->(B->(A->B))) -> (B->(B->A))
+(fait)
 -------------------------------------------------------------------------------
 
 19/07/2015
@@ -41,6 +61,7 @@ auto button :   fait
                          g1 (terminé)
                          g1 ->  m0 -> e0 ,e1 ,e2 ! ready = (3>inf): false
                                 m0 -> m00 -> e0 ,e1 !      m00.rgs=[3,1]->[3,2]
+(fait)
 ------------------------------------------------------------------------------------
 
 

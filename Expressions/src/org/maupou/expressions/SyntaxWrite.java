@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -34,14 +35,16 @@ public class SyntaxWrite {
 
   private final HashMap<String, NodeWrite> nameToNode;
   private final ArrayList<NodeWrite> nodeWrites;
-  private final String unused;
+  private final ArrayList<RuleWrite> ruleWrites;
+  private final HashMap<String, Set<String>> subtypes;
   private final String name;
 
-  public SyntaxWrite(Element write, String unused) throws Exception {
+  public SyntaxWrite(Element write, HashMap<String, Set<String>> subtypes, String version) throws Exception {
     nameToNode = new HashMap<>();
     nodeWrites = new ArrayList<>();
-    this.unused = unused;
-    this.name = write.getAttribute("name");
+    ruleWrites = new ArrayList<>();
+    this.subtypes = subtypes;
+    this.name = write.getAttribute("name"); // nom de cette syntaxe
     NodeList rulesList = write.getElementsByTagName("wrule");
     for (int i = 0; i < rulesList.getLength(); i++) {
       Element rule = (Element) rulesList.item(i);
@@ -54,25 +57,36 @@ public class SyntaxWrite {
         String[] replacement = new String[]{s[1], item.getAttribute("rules")};
         childmap.put(s[0], replacement);
       }
-      NodeList nodes = rule.getElementsByTagName("node");
-      for (int j = 0; j < nodes.getLength(); j++) {
-        Element node = (Element) nodes.item(j);
-        String node_name = node.getAttribute("name");
-        nameToNode.put(node_name, new NodeWrite(node, childs, childmap, unused));
-        nodeWrites.add(new NodeWrite(node, childs, childmap, unused));
+      if ("0".equals(version)) {
+        NodeList nodes = rule.getElementsByTagName("node"); // nom du noeud
+        for (int j = 0; j < nodes.getLength(); j++) {
+          Element elem = (Element) nodes.item(j);
+          String node_name = elem.getAttribute("name");
+          nameToNode.put(node_name, new NodeWrite(elem, childs, childmap));
+          nodeWrites.add(new NodeWrite(elem, childs, childmap));
+        }
+      } else {
+        String[] nodetext = rule.getAttribute("node").split(":");
+        SExpr node = null;
+        if (nodetext.length == 2) {
+          node = new SExpr(nodetext[0], nodetext[1], false);
+        }
+        String text = rule.getTextContent().trim();
+        ruleWrites.add(new RuleWrite(text, node, childs, childmap));
       }
     }
   }
-  
+
   /**
    * Ecriture de l'expression e par la syntaxe
-   * @param e
-   * @return 
+   *
+   * @param e l'expression
+   * @return la chaîne représentant e
    */
   public String toString(Expression e) {
-    String ret = null; 
+    String ret = null;
     if (e != null) {
-      if (e.getChildren() == null) {
+      if (e.getChildren() == null) { // expression simple
         ret = e.toString();
       } else {
         for (NodeWrite node : nodeWrites) {
@@ -84,12 +98,12 @@ public class SyntaxWrite {
               ChildReplace childReplace = entry.getValue();
               String childname = childReplace.getName();
               String replace = childReplace.getReplacement();
-              List<String> conditions = childReplace.getConditions();
+              List<String> nodeNames = childReplace.getNodeNames();
               Expression child = e.getChildren().get(j);
               String ewr = toString(child);
-              replace = (conditions.contains(child.getName())) ? replace.replace(childname, ewr) : ewr;
-              int pos = ret.indexOf(unused);
-              ret = ret.substring(0, pos) + replace + ret.substring(pos + unused.length());
+              replace = (nodeNames.contains(child.getName())) ? replace.replace(childname, ewr) : ewr;
+              int pos = ret.indexOf("\u0000");
+              ret = ret.substring(0, pos) + replace + ret.substring(pos + 1);
             }
             break;
           }
@@ -99,6 +113,50 @@ public class SyntaxWrite {
     return ret;
   }
 
+  /**
+   * Ecriture de l'Expr e par la syntaxe
+   *
+   * @param e l'expression
+   * @return l'écriture de e
+   */
+  public String toString(Expr e) {
+    String ret = null;
+    if (e != null) {
+      if(e instanceof SExpr) {
+        ret = e.toString();
+      } else {
+        CExpr expr = (CExpr) e;
+        for (RuleWrite rule : ruleWrites) {
+          SExpr node = rule.getNode(); // exemples : ADD:func , :func avec f variable
+          boolean match = (node.getName().isEmpty())?
+                  subtypes.get(node.getType()).contains(e.getType()) : node.equals(expr.getNode());
+          if(match) {
+            ret = rule.getValue();
+            List<Expr> list = new ArrayList<>();
+            list.add(expr.getNode());
+            list.addAll(expr.getList());
+            int n = rule.getChilds().length;
+            for (int i = 0; i < n ; i++) {
+              String var = rule.getChilds()[n-1-i];
+              String replace = rule.getvReplace()[n-1-i];
+              List<Expr> nodes = rule.getvNodes()[n-1-i];
+              Expr child = list.get(list.size()-1-i);   
+              String ch = toString(child);
+              if(nodes.contains(child.getNode())) {
+                replace = replace.replace(var, ch);
+              } else {
+                replace = ch;
+              }
+              ret = ret.replace(var, replace);
+            }
+            break;
+          }
+        }
+      }
+    }
+    return ret;
+  }
+  
   @Override
   public String toString() {
     String ret = "";
@@ -121,11 +179,7 @@ public class SyntaxWrite {
     return nodeWrites;
   }
 
-  public String getUnused() {
-    return unused;
+  public String getName() {
+    return name;
   }
-
-    public String getName() {
-        return name;
-    }
 }

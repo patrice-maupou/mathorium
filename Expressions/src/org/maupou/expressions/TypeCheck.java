@@ -20,6 +20,7 @@ package org.maupou.expressions;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.w3c.dom.Element;
@@ -46,6 +47,25 @@ public class TypeCheck {
       String childtype = (i < n) ? typeValues[i] : typeValues[n - 1];
       childtypes.put(childNames[i], childtype);
     }
+  }
+  
+  /**
+   * 
+   * @param childs les noms des variables
+   * @param list la liste des expr remplaçant les variables
+   * @param nodeCorr passe le node
+   * @param subtypes table des types
+   * @return vrai si la liste correspond aux types des variables
+   */
+  public boolean check(String[] childs, List<Expr> list, int nodeCorr, HashMap<String, Set<String>> subtypes) {
+    for (int i = 0; i < childs.length; i++) {
+      String childType = childtypes.get(childs[i]);
+      Expr child = list.get(i + nodeCorr);
+      if(childType != null && !subtypes.get(childType).contains(child.getType())) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE root [
+<!ELEMENT root (syntax)*>
+<!ELEMENT syntax (exprs,toString,results,toText)>
+<!ATTLIST syntax file ID #REQUIRED>
+<!ELEMENT exprs (#PCDATA)>
+<!ELEMENT toString (#PCDATA)>
+<!ELEMENT results (#PCDATA)>
+<!ELEMENT toText (#PCDATA)>
+]>
+
+<root>
+  <syntax file="number_syntax_1.syx">
+    <!-- Expressions à analyser et tester -->
+  <exprs><![CDATA[",
+      "5", "17+b", "n*2", "2n", "3*(17+b)",
+      "a+3*(17+b)", "32", "3-7",
+      "m+5",
+      "1+2+3",
+      "3*2", "3*i", "3*x",
+      "3*x+2", "2+3*x",
+      "x^4",
+      "3*x^4",
+      "3*x^4+2*x",
+      "3-7", "a+8-41", "3/4", "5*a", "3^2",
+      "SQR(2)", "SQR(2)+1", "3+(1+2)",
+      "(1+2)*b", "3*a-7", "(1+2)*(b+a)",
+      "6-3+7", "6-3*9+7",
+      "a+3*(17+b)", "3*x^4-2*x+7",
+      "2+|x-3|", "|a+5|-|3+2*x|",
+      "3*(1+2*(x-b)^2)-(a+4)",
+      "PGCD(6,4)", "PGCD((2+3),4)", "2,8,7",
+      "]]>
+  </exprs>
+  <toString><![CDATA[",
+      "5", "17+b", "n×2", "2×n", "3×(17+b)",
+      "a+3×(17+b)", "32", "3-7",
+      "m+5",
+      "1+2+3",
+      "3×2", "3×i", "3×x",
+      "3×x+2", "2+3×x",
+      "x^4",
+      "3×x^4",
+      "3×x^4+2×x",
+      "3-7", "a+8-41", "3/4", "5×a", "3^2",
+      "SQR(2)", "SQR(2)+1", "3+(1+2)",
+      "(1+2)×b", "3×a-7", "(1+2)×(b+a)",
+      "6-3+7", "6-3×9+7",
+      "a+3×(17+b)", "3×x^4-2×x+7",
+      "2+|x-3|", "|a+5|-|3+2×x|",
+      "3×(1+2×(x-b)^2)-(a+4)",
+      "PGCD(6,4)", "PGCD((2+3),4)", "2,8,7",
+      "]]>
+  </toString>
+  <!-- Ecriture correspondant à la méthode toString()  -->
+  <results><![CDATA[",
+      "5", "(ADD,17,b)", "(MUL,n,2)", "(MUL,2,n)",
+      "(MUL,3,(ADD,17,b))",
+      "(ADD,a,(MUL,3,(ADD,17,b)))", "32", "(SUB,3,7)",
+      "(ADD,m,5)",
+      "(ADD,(ADD,1,2),3)",
+      "(MUL,3,2)", "(MUL,3,i)", "(MUL,3,x)",
+      "(ADD,(MUL,3,x),2)", "(ADD,2,(MUL,3,x))",
+      "(POW,x,4)",
+      "(MUL,3,(POW,x,4))",
+      "(ADD,(MUL,3,(POW,x,4)),(MUL,2,x))",
+      "(SUB,3,7)", "(SUB,(ADD,a,8),41)", "(DIV,3,4)", "(MUL,5,a)", "(POW,3,2)",
+      "(SQR,2)", "(ADD,(SQR,2),1)", "(ADD,3,(ADD,1,2))",
+      "(MUL,(ADD,1,2),b)", "(SUB,(MUL,3,a),7)", "(MUL,(ADD,1,2),(ADD,b,a))",
+      "(ADD,(SUB,6,3),7)", "(ADD,(SUB,6,(MUL,3,9)),7)",
+      "(ADD,a,(MUL,3,(ADD,17,b)))", "(ADD,(SUB,(MUL,3,(POW,x,4)),(MUL,2,x)),7)",
+      "(ADD,2,(ABS,(SUB,x,3)))", "(SUB,(ABS,(ADD,a,5)),(ABS,(ADD,3,(MUL,2,x))))",
+      "(SUB,(MUL,3,(ADD,1,(MUL,2,(POW,(SUB,x,b),2)))),(ADD,a,4))",
+      "(PGCD,6,4)", "(PGCD,(ADD,2,3),4)", "(SEQ,2,8,7)",
+ "]]>
+  </results>
+  <!-- Ecriture cmprenant les types correspondant à la méthode toText()  -->
+  <toText><![CDATA[",
+      "5:natural",
+      "(ADD:func,17:natural,b:real):real", "(MUL:func,n:natural,2:natural):natural", 
+      "(MUL:func,2:natural,n:natural):natural",
+      "(MUL:func,3:natural,(ADD:func,17:natural,b:real):real):real",
+      "(ADD:func,a:real,(MUL:func,3:natural,(ADD:func,17:natural,b:real):real):real):real", 
+      "32:natural",
+      "(SUB:func,3:natural,7:natural):integer",
+      "(ADD:func,m:natural,5:natural):natural",
+      "(ADD:func,(ADD:func,1:natural,2:natural):natural,3:natural):natural",
+      "(MUL:func,3:natural,2:natural):natural", "(MUL:func,3:natural,i:integer):integer", 
+      "(MUL:func,3:natural,x:real):real",
+      "(ADD:func,(MUL:func,3:natural,x:real):real,2:natural):real", 
+      "(ADD:func,2:natural,(MUL:func,3:natural,x:real):real):real",
+      "(POW:func,x:real,4:natural):real",
+      "(MUL:func,3:natural,(POW:func,x:real,4:natural):real):real",
+      "(ADD:func,(MUL:func,3:natural,(POW:func,x:real,4:natural):real):real,(MUL:func,2:natural,x:real):real):real", "(SUB:func,3:natural,7:natural):integer",
+      "(SUB:func,(ADD:func,a:real,8:natural):real,41:natural):real",
+"]]>      
+  </toText>
+  </syntax>
+  <syntax file="types_1.syx">
+    <exprs><![CDATA[",
+    "a==b", "A==B", 
+    "c:A", "A:U", 
+    "A->B", "A->B->C->D", "(A->B)->(C->D)",
+    "g(y)", "g(a)->B", "A->g(b)", "g(h(a))", "f(x)(y)",
+    "]]>      
+    </exprs>
+    <toString><![CDATA[",
+    "a==b", "A==B", 
+    "c:A", "A:U", 
+    "A->B", "A->(B->(C->D))", "(A->B)->(C->D)",
+    "g(y)", "g(a)->B", "A->g(b)", "g(h(a))", "f(x)(y)",
+    "]]>
+    </toString>
+    <results><![CDATA[",
+    "(ID,a,b)", "(ID,A,B)", "(ISTYPE,c,A)", "(ISTYPE,A,U)",
+    "(FUNC,A,B)", "(FUNC,A,(FUNC,B,(FUNC,C,D)))",
+    "(FUNC,(FUNC,A,B),(FUNC,C,D))",
+    "(g,y)", "(FUNC,(g,a),B)", "(FUNC,A,(g,b))", "(g,(h,a))", "((f,x),y)",
+    "]]>      
+    </results>
+    <toText><![CDATA[",
+    "(ID:func,a:term,b:term):judgment", "(ID:func,A:type,B:type):judgment",
+    "(ISTYPE:func,c:term,A:type):judgment", "(ISTYPE:func,A:type,U:universe):judgment",
+    "(FUNC:func,A:type,B:type):type", 
+    "(FUNC:func,A:type,(FUNC:func,B:type,(FUNC:func,C:type,D:type):type):type):type",
+    "(FUNC:func,(FUNC:func,A:type,B:type):type,(FUNC:func,C:type,D:type):type):type",
+    "(g:term,y:term):image", 
+    "(FUNC:func,(g:term,a:term):image,B:type):type",
+    "(FUNC:func,A:type,(g:term,b:term):image):type",
+    "(g:term,(h:term,a:term):image):image",
+    "((f:term,x:term):image,y:term):image",
+    "]]>
+    </toText>
+  </syntax>
+</root>

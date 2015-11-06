@@ -44,10 +44,9 @@ public class NodeWrite {
    * @param node élément définissant
    * @param childs liste des noms des variables enfant
    * @param childmap associe le remplacement éventuel et les conditions de remplacement
-   * @param unused
    * @throws Exception
    */
-  public NodeWrite(Element node, String[] childs, HashMap<String, String[]> childmap, String unused)
+  public NodeWrite(Element node, String[] childs, HashMap<String, String[]> childmap)
           throws Exception {
     name = node.getAttribute("name");
     initvalue = node.getTextContent().trim();
@@ -58,7 +57,7 @@ public class NodeWrite {
     Set<String> vars = childmap.keySet();
     for (int i = 0; i < childs.length; i++) {
       String child = childs[i];
-      value = value.replace(child, unused); // ex: a+b -> <unused>+<unused>
+      value = value.replace(child, "\u0000"); // ex: a+b -> <unused>+<unused>
       if(vars.contains(child)) {
         String[] s = childmap.get(child);
         String replacement = s[0];

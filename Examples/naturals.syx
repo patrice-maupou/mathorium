@@ -2,11 +2,9 @@
 
 <!--DOCTYPE syntax SYSTEM "syntax.dtd"-->
 
-<!-- the one character string unused is mandatory and must not be used in any expression
--->
 <syntax xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="syntaxSchema.xsd"
-        name="number_syntax" unused="®">
+        name="number_syntax" version="0">
    <!-- reading format -->
   <read>
   <!-- Rule identified by the key "SIMPLES" is mandatory to get the basic blocks of the expression.  -->
@@ -17,9 +15,6 @@
     <pattern><![CDATA[[a-e]]]>
       <type name="natural"></type>
     </pattern>
-    <!--pattern><![CDATA[[u-w]]]>
-      <type name="cv"></type>
-    </pattern-->
   </rule>
   <rule child="a,b">
     <pattern node="CONCAT"><![CDATA[ab]]>

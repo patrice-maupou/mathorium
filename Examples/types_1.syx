@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--DOCTYPE syntax SYSTEM "syntax.dtd"-->
+
+<syntax xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="syntaxSchema.xsd"
+        name="type_syntax" version="1">
+    
+    <read>
+        <rule key="SIMPLES">
+            <pattern><![CDATA[[a-zA-Z]\d*'*]]>
+            <type name="term" subtypes="type,universe,image"></type>
+            </pattern>
+        </rule>
+        <rule key="IMAGE" child="f,x">
+            <pattern><![CDATA[f\(x\)]]>
+                <type name="term" value="term"></type>
+            </pattern>
+        </rule>
+        <rule key="GROUP" child="a">
+          <pattern><![CDATA[\(a\)]]>
+            <type name="inherit"  value="term|judgment"></type>
+          </pattern>
+        </rule>
+        <!-- Les deux jugements    -->
+        <rule key="ISTYPE" child="a,A">
+            <pattern node="ISTYPE:func"><![CDATA[a:A]]>
+                <type name="judgment" value="term"></type>
+            </pattern>
+        </rule>
+        <rule key="IDENTITY" child="a,b">
+            <pattern node="ID:func"><![CDATA[a==b]]>
+                <type name="judgment" value="term"></type>
+                <type name="judgment" value="type"></type>
+            </pattern>
+        </rule>
+         
+        <!-- La formation des fonctions  --> 
+        <rule key="FUNCTIONS" child="A,B">
+            <pattern node="FUNC:func"><![CDATA[A->B(?!->)]]>
+                <type name="term" value="term"></type>
+            </pattern>
+        </rule>
+    </read>
+    
+    <generator name="none"></generator>
+    
+    <!-- Règle d'écriture d'une expression, compatible avec les règles de lecture citées plus haut
+    -->
+    <write>
+        <wrule node="FUNC:func" child="A,B"><![CDATA[A->B]]>
+            <child replace="A->(A)" rules="FUNC:func"></child>
+            <child replace="B->(B)" rules="FUNC:func"></child>
+        </wrule>
+        <wrule node="ISTYPE:func" child="a,A"><![CDATA[a:A]]>
+        </wrule>
+        <wrule node="ID:func" child="a,b"><![CDATA[a==b]]>
+        </wrule>
+        <wrule node=":term" child="f,x"><![CDATA[f(x)]]>
+        </wrule>
+    </write>
+        
+</syntax>

@@ -4,15 +4,15 @@
 
 <syntax xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="syntaxSchema.xsd"
-        name="number_syntax" version="0">
+        name="number_syntax_1" version="1">
 
   <!-- simple elements
     The rule identified by the key "SIMPLES" is mandatory to get the basic blocks of the expression.
   -->
   <read>
     <rule key="SIMPLES">
-      <pattern><![CDATA[SQR|PGCD]]>
-        <type name="cst"></type>
+      <pattern><![CDATA[PGCD|SQR]]>
+        <type name="func"></type>
       </pattern>
       <pattern><![CDATA[\d+\.\d+]]>
         <type name="positive" subtypes="natural,var"></type>
@@ -26,50 +26,56 @@
       <pattern><![CDATA[[ijkl]'*]]>
         <type name="integer" subtypes="natural"></type>
       </pattern>
-      <pattern><![CDATA[(?!SQR)\b[A-Z]]]>
+      <pattern><![CDATA[[A-Z]]]>
         <type name="var"></type>
       </pattern>
     </rule>    
     <!-- composites elements by decreasing priority -->    
-    <rule key="PGCD" child="PGCD,a,b">
-      <pattern node="PGCD"><![CDATA[PGCD\(a,b\)]]>
-        <type name="natural" value="cst,natural,natural"></type>
+    <rule key="PGCD" child="f,a,b">
+      <pattern><![CDATA[f\(a,b\)]]>
+        <type name="natural" value="func,natural"></type>
       </pattern>
     </rule>
-    <rule key="SQR" child="SQR,x">
-      <pattern node="SQR"><![CDATA[SQR\(x\)]]>
-        <type name="positive" value="cst,positive"></type>
+    <rule key="SQR" child="f,x">
+      <pattern><![CDATA[f\(x\)]]>
+        <type name="positive" value="func,positive"></type>
+      </pattern>
+    </rule>
+    <rule key="SEQ" child="s,n">
+      <pattern node="SEQ:list"  flatten="SEQ:list"><![CDATA[s,n]]>
+        <type name="list" value="real"></type>
+        <type name="list" value="list,real"></type>
       </pattern>
     </rule>
     <rule key="GROUP" child="a">
-      <pattern node="ABS"><![CDATA[\|a\|]]>
+      <pattern node="ABS:func"><![CDATA[\|a\|]]>
         <type name="natural" value="integer"></type>
         <type name="positive" value="real"></type>
       </pattern>
-      <pattern node="a"><![CDATA[\(a\)]]>
+      <pattern><![CDATA[\(a\)]]>
         <type name="inherit"  value="natural|integer|positive|real"></type>
       </pattern>
     </rule>
     <rule key="POW" child="a,n"><![CDATA[(?!\()]]>
-      <pattern node="POW"><![CDATA[a\^n]]>
+      <pattern node="POW:func"><![CDATA[a\^n]]>
         <type name="natural" value="natural"></type>
         <type name="integer" value="integer,natural"></type>
         <type name="real" value="real"></type>
       </pattern>
     </rule>
     <rule key="PROD_FAMILY" child="a,b"><![CDATA[(?!(\(|\^))]]>
-      <pattern node="MUL"><![CDATA[a[\*×]b|ab]]>
+      <pattern node="MUL:func"><![CDATA[a[\*×]b|ab]]>
         <type name="inherit"  value="natural|integer|positive|real"></type>
       </pattern>
-      <pattern node="DIV"><![CDATA[a/b]]>
+      <pattern node="DIV:func"><![CDATA[a/b]]>
         <type name="real" value="real"></type>
       </pattern>
     </rule>
     <rule key="ADD_FAMILY" child="a,b"><![CDATA[(?!(\(|\*|×|\^))]]>
-      <pattern node="ADD"><![CDATA[a\+b]]>
+      <pattern node="ADD:func"><![CDATA[a\+b]]>
         <type name="inherit"  value="natural|integer|positive|real"></type>
       </pattern>
-      <pattern node="SUB"><![CDATA[a-b]]> 
+      <pattern node="SUB:func"><![CDATA[a-b]]> 
         <type name="inherit"  value="integer|real"></type>
       </pattern>
     </rule>
@@ -78,30 +84,27 @@
   
   <!-- sortie standard -->
   <write>
-  <wrule child="a">
-    <node name="ABS"><![CDATA[|a|]]></node>
+  <wrule node="ABS:func" child="a"><![CDATA[|a|]]>
   </wrule>
-  <wrule child="a,n">
-    <node name="POW"><![CDATA[a^n]]></node>
-    <child replace="a->(a)" rules="MUL,DIV,ADD,SUB"></child>
-    <child replace="n->(n)" rules="POW,MUL,DIV,ADD,SUB"></child>
+  <wrule  node="POW:func" child="a,n"><![CDATA[a^n]]>
+    <child replace="a->(a)" rules="MUL:func,DIV:func,ADD:func,SUB:func"></child>
+    <child replace="n->(n)" rules="POW:func,MUL:func,DIV:func,ADD:func,SUB:func"></child>
   </wrule>
-  <wrule child="a,b">
-    <node name="MUL"><![CDATA[a×b]]></node>
-    <node name="DIV"><![CDATA[a/b]]></node>
-    <child replace="a->(a)" rules="ADD,SUB"></child>
-    <child replace="b->(b)" rules="ADD,SUB,MUL,DIV"></child>
+  <wrule node="MUL:func" child="a,b"><![CDATA[a×b]]>
+    <child replace="a->(a)" rules="ADD:func,SUB:func"></child>
+    <child replace="b->(b)" rules="ADD:func,SUB:func,MUL:func,DIV:func"></child>
   </wrule>
-  <wrule child="a,b">
-    <node name="ADD"><![CDATA[a+b]]></node>
-    <node name="SUB"><![CDATA[a-b]]></node>
-    <child replace="b->(b)" rules="ADD,SUB"></child>
+  <wrule node="DIV:func" child="a,b"><![CDATA[a/b]]>
+    <child replace="a->(a)" rules="ADD:func,SUB:func"></child>
+    <child replace="b->(b)" rules="ADD:func,SUB:func,MUL:func,DIV:func"></child>
   </wrule>
-  <wrule child="a,b">
-    <node name="PGCD"><![CDATA[PGCD(a,b)]]></node>
+  <wrule node="ADD:func" child="a,b"><![CDATA[a+b]]>
+    <child replace="b->(b)" rules="ADD:func,SUB:func"></child>
   </wrule>
-  <wrule child="x">
-    <node name="SQR"><![CDATA[SQR(x)]]></node>
+  <wrule node="SUB:func" child="a,b"><![CDATA[a-b]]>
+    <child replace="b->(b)" rules="ADD:func,SUB:func"></child>
   </wrule>
+  <wrule node="PGCD:func" child="a,b"><![CDATA[PGCD(a,b)]]></wrule>
+  <wrule node="SQR:func" child="x"><![CDATA[SQR(x)]]></wrule>
 </write>
 </syntax>

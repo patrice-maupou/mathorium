@@ -21,7 +21,6 @@ package org.maupou.expressions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
-import java.util.regex.Pattern;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -33,6 +32,7 @@ public class SyntaxPattern {
 
   private final ArrayList<TypeCheck> typeChecks;
   private final String name;
+  private final Expr node, flatten;
   private final String patternText;
 
   /**
@@ -40,18 +40,38 @@ public class SyntaxPattern {
    * @param patternItem élément du document
    * @param childs les variables utilisées
    * @param subtypes map qui associe à un type ses sous-types
-   * @param unused
    */
-  public SyntaxPattern(Element patternItem, String[] childs, 
-          HashMap<String, Set<String>> subtypes,
-          String unused) {
+  public SyntaxPattern(Element patternItem, String[] childs, HashMap<String, Set<String>> subtypes) {
     name = patternItem.getAttribute("node");
+    String[] s = name.split(":");
+    switch (s.length) {
+      case 1 :
+        node = (name.isEmpty())? null : new SExpr(s[0], null, false);
+        break;
+      case 2:
+        node = new SExpr(s[0], s[1], false);
+        break;
+      default:
+        node = null; 
+    }
+    String f = patternItem.getAttribute("flatten");
+    s = f.split(":");
+    switch (s.length) {
+      case 1:
+        flatten = (f.isEmpty())? null :  new SExpr(s[0], null, false);
+        break;
+      case 2:
+        flatten = new SExpr(s[0], s[1], false);
+        break;
+      default:
+        flatten = null;        
+    }
     // types admissibles pour ce modèle
     typeChecks = new ArrayList<>();
     patternText = patternItem.getTextContent().trim();
     String txt = patternText;
     for (String child : childs) {
-      txt = txt.replace(child, "(" + unused + "_*)");
+      txt = txt.replace(child, "(\u0000_*)");
     }
     NodeList typeList = patternItem.getElementsByTagName("type");
     for (int i = 0; i < typeList.getLength(); i++) {
@@ -84,6 +104,14 @@ public class SyntaxPattern {
     return name;
   }
 
+  public Expr getNode() {
+    return node;
+  }
+
+  public Expr getFlatten() {
+    return flatten;
+  }
+
 
   @Override
   public String toString() {
@@ -91,4 +119,5 @@ public class SyntaxPattern {
     ret = typeChecks.stream().map((typeCheck) -> "\n\t" + typeCheck).reduce(ret, String::concat);
     return ret;
   }
+
 }

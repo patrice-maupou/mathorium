@@ -44,12 +44,11 @@ public class SyntaxRule {
    * 
    * @param e
    * @param subtypes
-   * @param unused
    */
-  public SyntaxRule(Element e, HashMap<String, Set<String>> subtypes, String unused) {
+  public SyntaxRule(Element e, HashMap<String, Set<String>> subtypes) {
     id = e.getAttribute("key");
     String childText = e.getAttribute("child");
-    String group = "(" + unused + "_*)"; 
+    String group = "(\u0000_*)"; 
     childs = (childText.isEmpty()) ? new String[0] : childText.split(",");
     syntaxPatternGroups = new TreeMap<>();
     String patternRuleTxt = "";
@@ -67,7 +66,7 @@ public class SyntaxRule {
       if(i > 0) patternRuleTxt += "|";
       Element patternItem = (Element) patternList.item(i);
       String patternText = patternItem.getTextContent().trim();
-      SyntaxPattern syntaxPattern = new SyntaxPattern(patternItem, childs, subtypes, unused);
+      SyntaxPattern syntaxPattern = new SyntaxPattern(patternItem, childs, subtypes);
       syntaxPatternGroups.put(grcnt, syntaxPattern);
       for (String child : childs) {
         patternText = patternText.replace(child, group);        

@@ -18,6 +18,7 @@
  */
 package org.maupou.expressions;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,21 +27,21 @@ import java.util.List;
  */
 public class ChildReplace {
 
-  private String name;
-  private String replacement; // remplacement éventuel
-  private List<String> conditions; // noms possibles du noeud pour le remplacement
+  private final String name; // ex : a
+  private final String replacement; // remplacement éventuel ex : (a)
+  private final List<String> nodeNames; // noms possibles du noeud pour le remplacement ex : ADD,SUB
 
   public ChildReplace(String name, String replacement, List<String> conditions) {
     this.name = name;
     this.replacement = replacement;
-    this.conditions = conditions;
+    this.nodeNames = conditions; // exemple : ADD,SUB
   }
 
 
 
   @Override
   public String toString() {
-    String ret = name + "->" + replacement + " if in " + getConditions();
+    String ret = name + "->" + replacement + " if in " + getNodeNames();
     return ret;
   }
 
@@ -52,9 +53,10 @@ public class ChildReplace {
     return replacement;
   }
 
-  public List<String> getConditions() {
-    return conditions;
+  public List<String> getNodeNames() {
+    return nodeNames;
   }
+
 
 
 }

@@ -86,7 +86,6 @@ public final class MathTopComponent extends JPanel implements MultiViewElement {
 
   private MathDataObject mdo;
   private ExprNode toAdd;
-  private Expression sub;
   private ArrayList<ExprNode> exprNodes;
   private Syntax syntax;
   private SyntaxWrite syntaxWrite;

@@ -156,10 +156,16 @@ public class MathDataObject extends MultiDataObject {
     String path = mathdoc.getDocumentElement().getAttribute("syntax");
     DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-    if (!path.isEmpty()) {
+    if(path.isEmpty()) {
+      throw new Exception("syntax file not found");
+    } else {
       File syntaxFile = new File(path);
       Document syxdoc = documentBuilder.parse(syntaxFile);
-      syntax = new Syntax(syxdoc);
+      if(syxdoc == null) {
+        throw new Exception("syntax document null");
+      } else {
+        syntax = new Syntax(syxdoc);        
+      }
     }
     return syntax;
   }
