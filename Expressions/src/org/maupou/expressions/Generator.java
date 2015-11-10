@@ -296,13 +296,13 @@ public class Generator extends Schema {
       e.getChildren().stream().forEach(this::markUsedVars);
     }
   }
+  
   /**
    * ajoute à la liste vars les variables de listvars qui composent l'expression e
    *
    * @param e
    * @param vars
-   */
-  
+   */  
   public void varsInExpression(Expression e, ArrayList<Expression> vars) {
     if (listvars.indexOf(e) == -1) {
       if (e.getChildren() != null) {

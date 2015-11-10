@@ -26,11 +26,10 @@ import java.util.Objects;
 
 public class CExpr extends Expr {
   
-  private final List<Expr> list;
-
+  
   public CExpr(Expr node, List<Expr> list, String type) {
     setNode(node);
-    this.list = list;
+    setList(list);
     setType(type);
   }
 
@@ -39,7 +38,7 @@ public class CExpr extends Expr {
     boolean ret = obj instanceof CExpr;
     if(ret) {
       CExpr e = (CExpr) obj;
-      ret = getNode().equals(e.getNode()) && list.equals(e.getList());      
+      ret = getNode().equals(e.getNode()) && getList().equals(e.getList());      
     }
     return ret; //To change body of generated methods, choose Tools | Templates.
   }
@@ -48,7 +47,7 @@ public class CExpr extends Expr {
   public int hashCode() {
     int hash = 3;
     hash = 23 * hash + Objects.hashCode(this.getNode());
-    hash = 23 * hash + Objects.hashCode(this.list);
+    hash = 23 * hash + Objects.hashCode(this.getList());
     return hash;
   }
   
@@ -58,7 +57,7 @@ public class CExpr extends Expr {
   public Expr copy() {
     Expr nnode = (getNode() == null)? null : getNode().copy();
     List<Expr> nlist = new ArrayList<>();
-    for (Expr e : list) {
+    for (Expr e : getList()) {
       nlist.add(e.copy());
     }
     return new CExpr(nnode, nlist, getType());
@@ -68,18 +67,19 @@ public class CExpr extends Expr {
   public Expr replace(HashMap<Expr, Expr> map) {
     Expr nnode = getNode().replace(map);
     List<Expr> nlist = new ArrayList<>();
-    for (Expr e : list) {
+    getList().stream().forEach((e) -> {
       nlist.add(e.replace(map));
-    }
+    });
     return new CExpr(nnode, nlist, getType());
   }
 
+    
   @Override
   public String toText() {
     String ret = "(" + getNode().toText() + ",";
-    for (int i = 0; i < list.size(); i++) {
-      ret += list.get(i).toText();
-      ret += (i +1  == list.size())? ")" : ",";
+    for (int i = 0; i < getList().size(); i++) {
+      ret += getList().get(i).toText();
+      ret += (i +1  == getList().size())? ")" : ",";
     }
     return ret;
   }
@@ -87,16 +87,13 @@ public class CExpr extends Expr {
   @Override
   public String toString() {
     String ret = "(" + getNode().toString() + ",";
-    for (int i = 0; i < list.size(); i++) {
-      ret += list.get(i).toString();
-      ret += (i +1  == list.size())? ")" : ",";
+    for (int i = 0; i < getList().size(); i++) {
+      ret += getList().get(i).toString();
+      ret += (i +1  == getList().size())? ")" : ",";
     }
     return ret;
   }
-
   
-  public List<Expr> getList() {
-    return list;
-  }
+  
   
 }

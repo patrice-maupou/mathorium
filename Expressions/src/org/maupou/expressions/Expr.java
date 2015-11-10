@@ -21,7 +21,6 @@ package org.maupou.expressions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,6 +32,7 @@ public abstract class Expr {
 
   private String type;
   private Expr node;
+  private List<Expr> list;
 
   /**
    * construit une expression à partir d'une liste d'expressions
@@ -101,7 +101,7 @@ public abstract class Expr {
   public abstract Expr copy();
 
   public abstract Expr replace(HashMap<Expr, Expr> map);
-
+  
   public abstract String toText();
 
   public Expr getNode() {
@@ -111,7 +111,15 @@ public abstract class Expr {
   public void setNode(Expr node) {
     this.node = node;
   }
-  
+
+  public List<Expr> getList() {
+    return list;
+  }
+
+  public void setList(List<Expr> list) {
+    this.list = list;
+  }
+
   public String getType() {
     return type;
   }

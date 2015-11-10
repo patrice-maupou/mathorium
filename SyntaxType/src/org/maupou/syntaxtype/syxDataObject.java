@@ -31,16 +31,9 @@ import org.openide.loaders.DataObject;
 import org.openide.loaders.DataObjectExistsException;
 import org.openide.loaders.MultiDataObject;
 import org.openide.loaders.MultiFileLoader;
-import org.openide.loaders.XMLDataObject;
 import org.openide.nodes.CookieSet;
-import org.openide.nodes.Node;
-import org.openide.text.DataEditorSupport;
-import org.openide.util.Exceptions;
 import org.openide.util.NbBundle.Messages;
-import org.openide.xml.XMLUtil;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
 
 /**
  *

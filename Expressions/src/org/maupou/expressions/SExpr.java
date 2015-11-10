@@ -18,6 +18,7 @@
  */
 package org.maupou.expressions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -28,7 +29,7 @@ import java.util.Objects;
 public class SExpr extends Expr {
   
   private final String name;
-  private final boolean symbol;
+  private boolean symbol;
 
   /**
    *
@@ -77,6 +78,7 @@ public class SExpr extends Expr {
     Expr e = map.get(this);
     return (e == null)? copy() : e;
   }
+  
 
   @Override
   public String toText() {
@@ -91,6 +93,10 @@ public class SExpr extends Expr {
   public boolean isSymbol() {
     return symbol;
   }
+
+  public void setSymbol(boolean symbol) {
+    this.symbol = symbol;
+  }
   public String getName() {
     return name;
   }
@@ -99,6 +105,7 @@ public class SExpr extends Expr {
   public Expr getNode() {
     return this;
   }
+
   
   
 }
