@@ -18,7 +18,6 @@
  */
 package org.maupou.expressions;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -55,16 +54,18 @@ public class SExpr extends Expr {
       SExpr e = (SExpr) obj;
       ret = name.equals(e.getName()) && getType().equals(e.getType());
     }
-    return ret; //To change body of generated methods, choose Tools | Templates.
+    return ret;
   }
 
   @Override
   public int hashCode() {
     int hash = 7;
-    hash = 97 * hash + Objects.hashCode(this.name);
-    hash = 97 * hash + (this.symbol ? 1 : 0);
+    hash = 29 * hash + Objects.hashCode(this.name);
+    hash = 29 * hash + Objects.hashCode(getType());
     return hash;
   }
+
+ 
  
   
 

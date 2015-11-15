@@ -40,7 +40,7 @@ public class CExpr extends Expr {
       CExpr e = (CExpr) obj;
       ret = getNode().equals(e.getNode()) && getList().equals(e.getList());      
     }
-    return ret; //To change body of generated methods, choose Tools | Templates.
+    return ret;
   }
 
   @Override
@@ -57,9 +57,9 @@ public class CExpr extends Expr {
   public Expr copy() {
     Expr nnode = (getNode() == null)? null : getNode().copy();
     List<Expr> nlist = new ArrayList<>();
-    for (Expr e : getList()) {
+    getList().stream().forEach((e) -> {
       nlist.add(e.copy());
-    }
+    });
     return new CExpr(nnode, nlist, getType());
   }
 

@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE root [
 <!ELEMENT root (syntax)*>
-<!ELEMENT syntax (exprs,toString,results,toText)>
+<!ELEMENT syntax (exprs,toString,results,toText,match,matchboth,matchsubExpr)>
 <!ATTLIST syntax file ID #REQUIRED>
 <!ELEMENT exprs (#PCDATA)>
 <!ELEMENT toString (#PCDATA)>
 <!ELEMENT results (#PCDATA)>
 <!ELEMENT toText (#PCDATA)>
+<!ELEMENT match (#PCDATA)>
+<!ELEMENT matchboth (#PCDATA)>
+<!ELEMENT matchsubExpr (#PCDATA)>
 ]>
 
 <root>
@@ -95,6 +98,43 @@
       "(SUB:func,(ADD:func,a:real,8:natural):real,41:natural):real",
 "]]>      
   </toText>
+  <match><![CDATA[",
+    "x:real,n:real", "2^4", "(POW:func,x:real,n:real):real", "x:real,2", "n:real,4",
+    "x:real,y:real", "a+3×(17+b)", "(ADD:func,x:real,y:real):real", "x:real,a", "y:real,3×(17+b)",
+    "x:integer,y:integer", "2*(i+j)", "(MUL:func,x:integer,y:integer):integer", 
+    "x:integer,2", "y:integer,i+j",
+    "x:real,y:real,z:real", "3×(4^2-4)", 
+    "(MUL:func,x:real,(SUB:func,(POW:func,y:real,z:real):real,y:real):real):real",
+    "x:real,3", "y:real,4", "z:real,2",
+    "x:real,y:real,z:real", "3×((m+4)^2-(m+4))", 
+    "(MUL:func,x:real,(SUB:func,(POW:func,y:real,z:real):real,y:real):real):real",
+    "x:real,3", "y:real,m+4", "z:real,2",
+    "]]>
+  </match>
+  <matchBoth><![CDATA[",
+    "x:real,y:real", 
+    "(ADD":func,x:real,(MUL:func,3:natural,(ADD:func,17:natural,b:real):real):real):real",
+    "(ADD:func,(SUB:func,c:real,d:real):real,y:real):real",
+    "x:real,(SUB:func,c:real,d:real):real", "y:real,(ADD:func,17:natural,b:real):real",
+    "x:integer,y:integer", 
+    "(MUL:func,2:natural,(ADD:func,i:integer,j:integer):integer):integer", 
+    "(MUL:func,x:integer,y:integer):integer", 
+    "x:integer,2,y:integer,i+j", "",
+    "x:integer,y:integer",
+    "(MUL:func,x:integer,(ADD:func,y:integer,z:integer):integer):integer",
+    "(MUL:func,(ADD:func,x:integer,z:integer):integer,y:integer):integer",
+    "x:integer,(ADD:func,x:integer,z:integer", "y:integer,(ADD:func,x:integer,z:integer):integer",
+    "]]>
+  </matchBoth>
+  <matchsubExpr><![CDATA[",
+    "x y z D E F",
+    "a-3×(17+b)", "z×(x+y):z×x+z×y", "var", "real", "a-(3×17+3×b)",
+    "2*(i+j)", "z×(x+y):z×x+z×y", "var", "integer", "2*i+2*j",
+    "3×((m+4)^2-(m+4))", "x-(y+z):x-y-z", "var", "real", "3×((m+4)^2-m-4)",
+    "a(x+2)-b(y+b)", "z×(x+y):z×x+z×y", "var", "real", "a*x+a*2-b(y+b)",
+    "a-3+x", "z×(x+y):z×x+z×y", "var", "real", "a-3+x",
+    "]]>
+    </matchsubExpr>
   </syntax>
   <syntax file="types_1.syx">
     <exprs><![CDATA[",

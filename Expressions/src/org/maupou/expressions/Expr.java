@@ -33,6 +33,7 @@ public abstract class Expr {
   private String type;
   private Expr node;
   private List<Expr> list;
+  
 
   /**
    * construit une expression à partir d'une liste d'expressions
