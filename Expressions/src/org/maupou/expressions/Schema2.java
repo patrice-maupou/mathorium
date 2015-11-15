@@ -35,7 +35,7 @@ import org.w3c.dom.Element;
 public class Schema2 implements MutableTreeNode {
   
   private Expr pattern;
-  private Object descr;
+  Object descr;
   protected Schema2 parent;
   private Schema2 next;
   protected boolean allowsChildren;

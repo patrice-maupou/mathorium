@@ -38,7 +38,7 @@ public class SExpr extends Expr {
    */
   public SExpr(String name, String type, boolean symbol) {
     this.name = name;
-    setType(type);
+    this.type = type;
     this.symbol = symbol;
   }
 

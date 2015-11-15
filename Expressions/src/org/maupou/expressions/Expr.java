@@ -30,9 +30,9 @@ import java.util.regex.Pattern;
  */
 public abstract class Expr {
 
-  private String type;
-  private Expr node;
-  private List<Expr> list;
+  String type;
+  Expr node;
+  List<Expr> list;
   
 
   /**

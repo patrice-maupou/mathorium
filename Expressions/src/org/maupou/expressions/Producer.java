@@ -44,7 +44,8 @@ public class Producer extends Schema2 {
           throws Exception {
     allowsChildren = true;
     name = elem.getAttribute("name");
-    setUserObject(name);
+    descr = name;
+    //setUserObject(name);
     this.subtypes = subtypes;
     NodeList nodes = elem.getElementsByTagName("variable");
     this.listvars = listvars; // liste des variables

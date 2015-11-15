@@ -28,9 +28,9 @@ public class CExpr extends Expr {
   
   
   public CExpr(Expr node, List<Expr> list, String type) {
-    setNode(node);
-    setList(list);
-    setType(type);
+    this.node = node;
+    this.list = list;
+    this.type = type;
   }
 
   @Override

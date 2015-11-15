@@ -113,17 +113,18 @@
   </match>
   <matchBoth><![CDATA[",
     "x:real,y:real", 
-    "(ADD":func,x:real,(MUL:func,3:natural,(ADD:func,17:natural,b:real):real):real):real",
+    "(ADD:func,x:real,(MUL:func,3:natural,(ADD:func,17:natural,b:real):real):real):real",
     "(ADD:func,(SUB:func,c:real,d:real):real,y:real):real",
-    "x:real,(SUB:func,c:real,d:real):real", "y:real,(ADD:func,17:natural,b:real):real",
+    "x:real;(SUB:func,c:real,d:real):real", 
+    "y:real;(MUL:func,3:natural,(ADD:func,17:natural,b:real):real):real",
     "x:integer,y:integer", 
     "(MUL:func,2:natural,(ADD:func,i:integer,j:integer):integer):integer", 
     "(MUL:func,x:integer,y:integer):integer", 
-    "x:integer,2,y:integer,i+j", "",
+    "", "x:integer;2:natural;y:integer;(ADD:func,i:integer,j:integer):integer",
     "x:integer,y:integer",
     "(MUL:func,x:integer,(ADD:func,y:integer,z:integer):integer):integer",
     "(MUL:func,(ADD:func,x:integer,z:integer):integer,y:integer):integer",
-    "x:integer,(ADD:func,x:integer,z:integer", "y:integer,(ADD:func,x:integer,z:integer):integer",
+    "x:integer;(ADD:func,x:integer,z:integer):integer", "y:integer;(ADD:func,y:integer,z:integer):integer",
     "]]>
   </matchBoth>
   <matchsubExpr><![CDATA[",
