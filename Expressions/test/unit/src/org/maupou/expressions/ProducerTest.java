@@ -102,7 +102,7 @@ public class ProducerTest {
         fail = true;
       } else {
         matches = getTexts(syx, "match");
-        results = getTexts(syx, "results");
+        matchBoth = getTexts(syx, "matchBoth");
       }
     } catch (Exception ex) {
       fail = true;
@@ -126,14 +126,16 @@ public class ProducerTest {
   @Test
   public void testMatch() {
     System.out.println("match");
-    if(matches == null) return;
+    if (matches == null) {
+      return;
+    }
     HashMap<Expr, Expr> result = new HashMap<>(), expResult = new HashMap<>();
     ArrayList<SExpr> listvars = new ArrayList<>();
     int k = 1, range = 0;
-    while (k < matches.length-1) {   
+    while (k < matches.length - 1) {
       range++;
       result.clear();
-      expResult.clear();   
+      expResult.clear();
       listvars.clear();
       String[] ls = matches[k].split(","); // liste des variables
       int n = ls.length;
@@ -148,11 +150,11 @@ public class ProducerTest {
       for (int i = 0; i < n; i++) { // 
         ls = matches[i + k + 3].split(",");
         String[] ks = ls[0].split(":");
-        SExpr key = new SExpr(ks[0], ks[1], false);        
-        Expr value = syntax.parseExpr(ls[1]);          
+        SExpr key = new SExpr(ks[0], ks[1], false);
+        Expr value = syntax.parseExpr(ls[1]);
         expResult.put(key, value);
       }
-      System.out.println(range +": " + e + "  " + s + "\t-> " + match);
+      System.out.println(range + ": " + e + "  " + s + "\t-> " + match);
       assertEquals(expResult, result);
       k = n + k + 3;
     }
@@ -161,20 +163,55 @@ public class ProducerTest {
   /**
    * Test of matchBoth method, of class Producer.
    */
-  @Ignore
+  //@Ignore
   @Test
   public void testMatchBoth() {
     System.out.println("matchBoth");
-    Expr e = null;
-    Expr s = null;
-    HashMap<Expr, Expr> evars = null;
-    HashMap<Expr, Expr> svars = null;
-    Producer instance = null;
-    boolean expResult = false;
-    boolean result = instance.matchBoth(e, s, evars, svars);
-    assertEquals(expResult, result);
-    // TODO review the generated test code and remove the default call to fail.
-    fail("The test case is a prototype.");
+    if (matchBoth == null) {
+      return;
+    }
+    HashMap<Expr, Expr> evars = new HashMap<>(), svars = new HashMap<>();
+    HashMap<Expr, Expr> expEvars = new HashMap<>(), expSvars = new HashMap<>();
+    ArrayList<SExpr> listvars = new ArrayList<>();
+    int k = 1, range = 0;
+    while (k < matchBoth.length - 1) {
+      range++;
+      evars.clear();
+      svars.clear();
+      expEvars.clear();
+      expSvars.clear();
+      listvars.clear();
+      String[] ls = matchBoth[k].split(","); // liste des variables
+      int n = ls.length;
+      for (String l : ls) {
+        String[] v = l.split(":");
+        listvars.add(new SExpr(v[0], v[1], true));
+      }
+      Producer prod = new Producer(listvars, syntax.getSubtypes());
+      Expr e = Expr.scanExpr(matchBoth[k + 1]);
+      Expr s = Expr.scanExpr(matchBoth[k + 2]);
+      boolean match = prod.matchBoth(e, s, evars, svars);
+      System.out.println(range + ": " + e + "  " + s + "\t-> " + match);
+      System.out.println("\t" + evars + " " + svars);
+      fillmap(matchBoth[k + 3], expEvars);
+      fillmap(matchBoth[k + 4], expSvars);
+      //System.out.println("\t" + expEvars + " " + expSvars);
+      assertEquals(expEvars, evars);
+      assertEquals(expSvars, svars);
+      k += 5;
+    }
+  }
+
+  private void fillmap(String txt, HashMap<Expr, Expr> map) {
+    if (!txt.isEmpty()) {
+      String[] ls = txt.split(";");
+      for (int i = 0; i < ls.length; i += 2) {
+        String[] ks = ls[i].split(":");
+        SExpr key = new SExpr(ks[0], ks[1], false);
+        Expr value = Expr.scanExpr(ls[i + 1]);
+        map.put(key, value);
+      }
+    }
   }
 
   /**
