@@ -52,8 +52,7 @@ public class ProducerTest {
   private static File tstDir;
   private final String syxfile;
   private Syntax syntax;
-  private String[] matches, matchBoth, matchSubExpr, results;
-  private boolean fail = false;
+  private String[] matches, matchBoth, matchSubExpr;
 
   /**
    * nom des fichiers à tester {syntaxe, exemples}
@@ -98,15 +97,11 @@ public class ProducerTest {
       File tstFile = new File(tstDir, "syxwTests.xml");
       document = documentBuilder.parse(tstFile);
       Element syx = document.getElementById(syxfile);
-      if (syx == null) {
-        fail = true;
-      } else {
-        matches = getTexts(syx, "match");
-        matchBoth = getTexts(syx, "matchBoth");
-        matchSubExpr = getTexts(syx, "matchSubExpr");
-      }
+      matches = getTexts(syx, "match");
+      matchBoth = getTexts(syx, "matchBoth");
+      matchSubExpr = getTexts(syx, "matchSubExpr");
     } catch (Exception ex) {
-      fail = true;
+      fail("Nothing to test : " + ex.getMessage());
     }
   }
 
@@ -115,10 +110,14 @@ public class ProducerTest {
   }
 
   private String[] getTexts(Element syx, String id) {
+    String[] ret = null;
     NodeList list = syx.getElementsByTagName(id);
-    Element elem = (Element) list.item(0);
-    String text = elem.getTextContent();
-    return text.split("\",\\s+\"");
+    if (list.getLength() == 1) {
+      Element elem = (Element) list.item(0);
+      String text = elem.getTextContent();
+      ret = text.split("\",\\s+\"");
+    }
+    return ret;
   }
 
   /**
@@ -127,95 +126,66 @@ public class ProducerTest {
   @Test
   public void testMatch() {
     System.out.println("match");
-    if (matches == null) {
-      return;
+    if (matches != null) {
+      HashMap<Expr, Expr> result = new HashMap<>();
+      int k = 1, range = 0;
+      while (k < matches.length - 1) {
+        range++;
+        result.clear();
+        ArrayList<SExpr> listvars = getVars(matches[k++]);
+        Producer prod = new Producer(listvars, syntax.getSubtypes());
+        Expr e = syntax.parseExpr(matches[k++]);
+        Expr s = Expr.scanExpr(matches[k++]);
+        boolean match = prod.match(e, s, result);
+        HashMap<Expr, Expr> expResult = getMap(matches[k++], true);
+        System.out.println(range + ": " + e + "  " + s + "\t-> " + match);
+        assertEquals(expResult, result);
+      }
+      System.out.println("");
     }
-    HashMap<Expr, Expr> result = new HashMap<>(), expResult = new HashMap<>();
-    ArrayList<SExpr> listvars = new ArrayList<>();
-    int k = 1, range = 0;
-    while (k < matches.length - 1) {
-      range++;
-      result.clear();
-      expResult.clear();
-      listvars.clear();
-      String[] ls = matches[k].split(","); // liste des variables
-      int n = ls.length;
-      for (String l : ls) {
-        String[] v = l.split(":");
-        listvars.add(new SExpr(v[0], v[1], true));
-      }
-      Producer prod = new Producer(listvars, syntax.getSubtypes());
-      Expr e = syntax.parseExpr(matches[k + 1]);
-      Expr s = Expr.scanExpr(matches[k + 2]);
-      boolean match = prod.match(e, s, result);
-      for (int i = 0; i < n; i++) { // 
-        ls = matches[i + k + 3].split(",");
-        String[] ks = ls[0].split(":");
-        SExpr key = new SExpr(ks[0], ks[1], false);
-        Expr value = syntax.parseExpr(ls[1]);
-        expResult.put(key, value);
-      }
-      System.out.println(range + ": " + e + "  " + s + "\t-> " + match);
-      assertEquals(expResult, result);
-      k = n + k + 3;
-    }    
-    System.out.println("");
   }
 
   /**
    * Test of matchBoth method, of class Producer.
    */
-  //@Ignore
   @Test
   public void testMatchBoth() {
     System.out.println("matchBoth");
-    if (matchBoth == null) {
-      return;
-    }
-    HashMap<Expr, Expr> evars = new HashMap<>(), svars = new HashMap<>();
-    HashMap<Expr, Expr> expEvars = new HashMap<>(), expSvars = new HashMap<>();
-    ArrayList<SExpr> listvars = new ArrayList<>();
-    int k = 1, range = 0;
-    while (k < matchBoth.length - 1) {
-      range++;
-      evars.clear();
-      svars.clear();
-      expEvars.clear();
-      expSvars.clear();
-      listvars.clear();
-      String[] ls = matchBoth[k].split(","); // liste des variables
-      int n = ls.length;
-      for (String l : ls) {
-        String[] v = l.split(":");
-        listvars.add(new SExpr(v[0], v[1], true));
+    if (matchBoth != null) {
+      HashMap<Expr, Expr> evars = new HashMap<>(), svars = new HashMap<>();
+      int k = 1, range = 0;
+      while (k < matchBoth.length - 1) {
+        range++;
+        evars.clear();
+        svars.clear();
+        ArrayList<SExpr> listvars = getVars(matchBoth[k++]);
+        Producer prod = new Producer(listvars, syntax.getSubtypes());
+        Expr e = Expr.scanExpr(matchBoth[k++]);
+        Expr s = Expr.scanExpr(matchBoth[k++]);
+        boolean match = prod.matchBoth(e, s, evars, svars);
+        System.out.println(range + ": " + e + "  " + s + "\t-> " + match);
+        System.out.println("\t" + evars + " " + svars);
+        HashMap<Expr, Expr> expEvars = getMap(matchBoth[k++], false);
+        HashMap<Expr, Expr> expSvars = getMap(matchBoth[k++], false);
+        //System.out.println("\t" + expEvars + " " + expSvars);
+        assertEquals(expEvars, evars);
+        assertEquals(expSvars, svars);
       }
-      Producer prod = new Producer(listvars, syntax.getSubtypes());
-      Expr e = Expr.scanExpr(matchBoth[k + 1]);
-      Expr s = Expr.scanExpr(matchBoth[k + 2]);
-      boolean match = prod.matchBoth(e, s, evars, svars);
-      System.out.println(range + ": " + e + "  " + s + "\t-> " + match);
-      System.out.println("\t" + evars + " " + svars);
-      fillmap(matchBoth[k + 3], expEvars);
-      fillmap(matchBoth[k + 4], expSvars);
-      //System.out.println("\t" + expEvars + " " + expSvars);
-      assertEquals(expEvars, evars);
-      assertEquals(expSvars, svars);
-      k += 5;
-    }    
-    System.out.println("");
+      System.out.println("");
+    }
   }
 
-  private void fillmap(String txt, HashMap<Expr, Expr> map) {
-    if (!txt.isEmpty()) {
-      String[] ls = txt.split(";");
-      for (int i = 0; i < ls.length; i += 2) {
-        String[] ks = ls[i].split(":");
-        SExpr key = new SExpr(ks[0], ks[1], false);
-        Expr value = Expr.scanExpr(ls[i + 1]);
-        map.put(key, value);
-      }
+  
+
+  private void listOfVars(String txt, ArrayList<SExpr> listvars) {
+    String[] ls = txt.split(","); // liste des variables
+    listvars.clear();
+    for (String l : ls) {
+      String[] v = l.split(":");
+      listvars.add(new SExpr(v[0], v[1], true));
     }
   }
+  
 
   /**
    * Test of matchSubExpr method, of class Producer.
@@ -224,30 +194,54 @@ public class ProducerTest {
   @Test
   public void testMatchSubExpr() {
     System.out.println("matchSubExpr");
-    if (matchSubExpr == null) {
-      return;
+    if (matchSubExpr != null) {
+      HashMap<Expr, Expr> vars = new HashMap<>();
+      int k = 1, range = 0;
+      ArrayList<SExpr> listvars = getVars(matchSubExpr[k++]);
+      while (k < matchSubExpr.length - 1) {
+        range++;
+        vars.clear();
+        Expr m0 = syntax.parseExpr(matchSubExpr[k++]);
+        Expr m1 = syntax.parseExpr(matchSubExpr[k++]);
+        Expr e = syntax.parseExpr(matchSubExpr[k++]);
+        Expr expResult = syntax.parseExpr(matchSubExpr[k++]);
+        Producer prod = new Producer(listvars, syntax.getSubtypes());
+        Expr result = prod.matchSubExpr(e, m0, m1);
+        System.out.println(range + ": " + e + " " + result);
+        assertEquals(range + ": ", expResult, result);
+      }
+      System.out.println("");
     }
-    HashMap<Expr, Expr> vars = new HashMap<>();
+  }
+  
+  private ArrayList<SExpr> getVars(String txt) {
     ArrayList<SExpr> listvars = new ArrayList<>();
-    int k = 1, range = 0;
-    String[] ls = matchSubExpr[k++].split(","); // liste des variables
+    String[] ls = txt.split(","); // liste des variables
+    listvars.clear();
     for (String l : ls) {
       String[] v = l.split(":");
       listvars.add(new SExpr(v[0], v[1], true));
     }
-    while (k < matchSubExpr.length - 1) {
-      range++;
-      vars.clear();
-      Expr m0 = syntax.parseExpr(matchSubExpr[k++]);
-      Expr m1 = syntax.parseExpr(matchSubExpr[k++]);
-      Expr e = syntax.parseExpr(matchSubExpr[k++]);
-      Expr expResult = syntax.parseExpr(matchSubExpr[k++]);
-      Producer prod = new Producer(listvars, syntax.getSubtypes());
-      Expr result = prod.matchSubExpr(e, m0, m1);
-      System.out.println(range + ": " + e + " " + result);
-      assertEquals(range + ": ", expResult, result);
+    return listvars;
+  }
+  
+  private HashMap<Expr, Expr> getMap(String txt, boolean withSyntax) {
+    HashMap<Expr, Expr> map = new HashMap<>();
+    if (!txt.isEmpty()) {
+      String[] ls = txt.split(";");
+      for (int i = 0; i < ls.length; i += 2) {
+        String[] ks = ls[i].split(":");
+        SExpr key = new SExpr(ks[0], ks[1], false);
+        Expr value;
+        if (withSyntax) {
+          value = syntax.parseExpr(ls[i + 1]);
+        } else {
+          value = Expr.scanExpr(ls[i + 1]);
+        }
+        map.put(key, value);
+      }
     }
-    System.out.println("");
+    return map;
   }
 
   /**
