@@ -132,10 +132,10 @@ public class SyntaxTest {
       for (int i = 1; i < m - 1; i++) {
         String text = entries[i];
         String message = i + " : " + text;
-        System.out.println(message);
         Expr e = syntax.parseExpr(text);
         String result = e.toString();
         String expResult = results[i];
+        System.out.println(message + "  " + result);
         assertEquals(message, expResult, result);
       }
     }

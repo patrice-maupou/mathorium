@@ -33,7 +33,7 @@
     <!-- composites elements by decreasing priority -->    
     <rule key="PGCD" child="f,a,b">
       <pattern><![CDATA[f\(a,b\)]]>
-        <type name="natural" value="func,natural"></type>
+        <type name="natural" value="func,natural,natural"></type>
       </pattern>
     </rule>
     <rule key="SQR" child="f,x">

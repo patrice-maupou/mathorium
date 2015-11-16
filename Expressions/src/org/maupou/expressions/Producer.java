@@ -45,7 +45,6 @@ public class Producer extends Schema2 {
     allowsChildren = true;
     name = elem.getAttribute("name");
     descr = name;
-    //setUserObject(name);
     this.subtypes = subtypes;
     NodeList nodes = elem.getElementsByTagName("variable");
     this.listvars = listvars; // liste des variables
@@ -152,11 +151,11 @@ public class Producer extends Schema2 {
   }
 
   /**
-   *
+   * Change au plus une sous-expression de  e
    * @param e l'expression à transformer
    * @param m une sous-expression de e doit être conforme à ce modèle
-   * @param r fournit la transformée
-   * @return
+   * @param r modèle de la transformée
+   * @return l'expression transformée
    */
   public Expr matchSubExpr(Expr e, Expr m, Expr r) {
     Expr expr = e.copy();
@@ -168,13 +167,13 @@ public class Producer extends Schema2 {
       for (int i = 0; i < expr.getList().size(); i++) {
         Expr child = expr.getList().get(i);
         Expr nchild = matchSubExpr(child, m, r);
-        if (nchild != null) {
+        if (!child.equals(nchild)) {
           expr.getList().set(i, nchild);
           return expr;
         }
       }
     }
-    return null;
+    return expr;
   }
 
   /**

@@ -77,7 +77,7 @@ public class Syntax {
   }
 
   /**
-   * 
+   *
    * @param text la chaîne à analyser
    * @return l'expression
    */
@@ -99,7 +99,7 @@ public class Syntax {
         Matcher m = rule.getPatternRule().matcher(text);
         loop_find:
         while (m.find()) {
-          ArrayList<Expr> list = new ArrayList<>(), nlist = new ArrayList<>(); 
+          ArrayList<Expr> list = new ArrayList<>(), nlist = new ArrayList<>();
           TypeCheck typeCheck = null;
           int i, idx;
           for (Integer key : rule.getSyntaxPatternGroups().keySet()) {
@@ -107,24 +107,24 @@ public class Syntax {
               idx = key; // c'est le premier groupe
               SyntaxPattern syntaxPattern = rule.getSyntaxPatternGroups().get(key);
               if (childs.length == 0) { // pattern simple 
-                String type = (syntaxPattern.getTypeChecks().isEmpty())? null : 
-                        syntaxPattern.getTypeChecks().get(0).getType();
-                  list.add(new SExpr(m.group(), type, false));
+                String type = (syntaxPattern.getTypeChecks().isEmpty()) ? null
+                        : syntaxPattern.getTypeChecks().get(0).getType();
+                list.add(new SExpr(m.group(), type, false));
               } else { // pattern composite, liste des enfants
                 Expr e = syntaxPattern.getNode();
                 int cor = 0;
-                if(e != null) {
+                if (e != null) {
                   list.add(e);
                   cor = 1;
                 }
                 for (int j = idx + 1; j <= m.groupCount(); j++) {
-                  if (m.group(j) != null && list.size()< childs.length + cor) {
+                  if (m.group(j) != null && list.size() < childs.length + cor) {
                     list.add(pos.get(m.start(j)));
                   }
                 }
                 // vérification des types des enfants
                 for (TypeCheck typChck : syntaxPattern.getTypeChecks()) {
-                  if(typChck.check(childs, list, cor, subtypes)) {
+                  if (typChck.check(childs, list, cor, subtypes)) {
                     typeCheck = typChck;
                     for (i = 0; i < childs.length; i++) { // suppression des enfants dans pos
                       pos.remove(m.start(idx + i + 1));
@@ -132,26 +132,28 @@ public class Syntax {
                     break;
                   }
                 }
-              } // fin liste
-              for (Expr ch : list) {
-                if (ch instanceof CExpr && ((CExpr) ch).getNode().equals(syntaxPattern.getFlatten())) {
-                  nlist.addAll(((CExpr) ch).getList());
-                } else {
-                  nlist.add(ch);
+              } // fin liste 
+              if (typeCheck != null || childs.length == 0) {
+                for (Expr ch : list) {
+                  if (ch instanceof CExpr && ((CExpr) ch).getNode().equals(syntaxPattern.getFlatten())) {
+                    nlist.addAll(((CExpr) ch).getList());
+                  } else {
+                    nlist.add(ch);
+                  }
                 }
+                // changement de text et expression dans pos
+                String type = (typeCheck == null) ? null : typeCheck.getType();
+                Expr e = Expr.listToExpr(nlist, type);
+                pos.put(m.start(), e);
+                text = text.substring(0, m.start()) + tokenvar.substring(0, m.end() - m.start())
+                        + text.substring(m.end());
+                m.reset(text);
+                if (text.matches(tkvar)) {
+                  return e;
+                }
+                haschanged = true;
+                break loop_rules;
               }
-              // changement de text et expression dans pos
-              String type = (typeCheck == null)? null : typeCheck.getType();
-              Expr e = Expr.listToExpr(nlist, type);
-              pos.put(m.start(), e);
-              text = text.substring(0, m.start()) + tokenvar.substring(0, m.end() - m.start())
-                      + text.substring(m.end());
-              m.reset(text);
-              if (text.matches(tkvar)) {
-                return e;
-              }
-              haschanged = true;
-              break loop_rules;
             } // fin du pattern qui convient
           } // loop_pattern
         } // loop_find     // loop_find    

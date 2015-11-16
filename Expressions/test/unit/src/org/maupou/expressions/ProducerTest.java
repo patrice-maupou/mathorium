@@ -52,7 +52,7 @@ public class ProducerTest {
   private static File tstDir;
   private final String syxfile;
   private Syntax syntax;
-  private String[] matches, matchBoth, matchsubExpr, results;
+  private String[] matches, matchBoth, matchSubExpr, results;
   private boolean fail = false;
 
   /**
@@ -103,6 +103,7 @@ public class ProducerTest {
       } else {
         matches = getTexts(syx, "match");
         matchBoth = getTexts(syx, "matchBoth");
+        matchSubExpr = getTexts(syx, "matchSubExpr");
       }
     } catch (Exception ex) {
       fail = true;
@@ -157,7 +158,8 @@ public class ProducerTest {
       System.out.println(range + ": " + e + "  " + s + "\t-> " + match);
       assertEquals(expResult, result);
       k = n + k + 3;
-    }
+    }    
+    System.out.println("");
   }
 
   /**
@@ -199,7 +201,8 @@ public class ProducerTest {
       assertEquals(expEvars, evars);
       assertEquals(expSvars, svars);
       k += 5;
-    }
+    }    
+    System.out.println("");
   }
 
   private void fillmap(String txt, HashMap<Expr, Expr> map) {
@@ -217,19 +220,34 @@ public class ProducerTest {
   /**
    * Test of matchSubExpr method, of class Producer.
    */
-  @Ignore
+  //@Ignore
   @Test
   public void testMatchSubExpr() {
     System.out.println("matchSubExpr");
-    Expr e = null;
-    Expr m = null;
-    Expr r = null;
-    Producer instance = null;
-    Expr expResult = null;
-    Expr result = instance.matchSubExpr(e, m, r);
-    assertEquals(expResult, result);
-    // TODO review the generated test code and remove the default call to fail.
-    fail("The test case is a prototype.");
+    if (matchSubExpr == null) {
+      return;
+    }
+    HashMap<Expr, Expr> vars = new HashMap<>();
+    ArrayList<SExpr> listvars = new ArrayList<>();
+    int k = 1, range = 0;
+    String[] ls = matchSubExpr[k++].split(","); // liste des variables
+    for (String l : ls) {
+      String[] v = l.split(":");
+      listvars.add(new SExpr(v[0], v[1], true));
+    }
+    while (k < matchSubExpr.length - 1) {
+      range++;
+      vars.clear();
+      Expr m0 = syntax.parseExpr(matchSubExpr[k++]);
+      Expr m1 = syntax.parseExpr(matchSubExpr[k++]);
+      Expr e = syntax.parseExpr(matchSubExpr[k++]);
+      Expr expResult = syntax.parseExpr(matchSubExpr[k++]);
+      Producer prod = new Producer(listvars, syntax.getSubtypes());
+      Expr result = prod.matchSubExpr(e, m0, m1);
+      System.out.println(range + ": " + e + " " + result);
+      assertEquals(range + ": ", expResult, result);
+    }
+    System.out.println("");
   }
 
   /**

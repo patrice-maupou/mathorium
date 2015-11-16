@@ -14,9 +14,9 @@
 
 <root>
   <syntax file="number_syntax_1.syx">
-    <!-- Expressions à analyser et tester -->
+    <!-- Expressions à analyser et tester (TODO : bug sur 3(17+b) )-->
   <exprs><![CDATA[",
-      "5", "17+b", "n*2", "2n", "3*(17+b)",
+      "5", "17+b", "n*2", "2n", "3(17+b)",
       "a+3*(17+b)", "32", "3-7",
       "m+5",
       "1+2+3",
@@ -127,15 +127,15 @@
     "x:integer;(ADD:func,x:integer,z:integer):integer", "y:integer;(ADD:func,y:integer,z:integer):integer",
     "]]>
   </matchBoth>
-  <matchsubExpr><![CDATA[",
-    "x y z D E F",
-    "a-3×(17+b)", "z×(x+y):z×x+z×y", "var", "real", "a-(3×17+3×b)",
-    "2*(i+j)", "z×(x+y):z×x+z×y", "var", "integer", "2*i+2*j",
-    "3×((m+4)^2-(m+4))", "x-(y+z):x-y-z", "var", "real", "3×((m+4)^2-m-4)",
-    "a(x+2)-b(y+b)", "z×(x+y):z×x+z×y", "var", "real", "a*x+a*2-b(y+b)",
-    "a-3+x", "z×(x+y):z×x+z×y", "var", "real", "a-3+x",
+  <matchSubExpr><![CDATA[",
+    "x:real,y:real,z:real",
+    "z×(x+y)", "z×x+z×y", "a-3×(17+b)", "a-(3×17+3×b)",
+    "z×(x+y)", "z×x+z×y", "2*(i+j)", "2*i+2*j",
+    "x-(y+z)", "x-y-z", "3×((m+4)^2-(m+4))", "3×((m+4)^2-m-4)",
+    "z×(x+y)", "z×x+z×y", "a*(x+2)-b*(y+b)", "a*x+a*2-b*(y+b)",
+    "z×(x+y)", "z×x+z×y", "a-3+x", "a-3+x",
     "]]>
-    </matchsubExpr>
+    </matchSubExpr>
   </syntax>
   <syntax file="types_1.syx">
     <exprs><![CDATA[",
