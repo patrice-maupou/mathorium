@@ -173,5 +173,10 @@
     "((f:term,x:term):image,y:term):image",
     "]]>
     </toText>
+  <match><![CDATA[",
+    "f:term,x:term,y:term,z:term", "h(a)(b)(p)", "(((f:term,x:term):term,y:term):term,z:term):term", 
+    "f:term;h;x:term;a;y:term;b;z:term;p",
+    "]]>
+  </match>
   </syntax>
 </root>

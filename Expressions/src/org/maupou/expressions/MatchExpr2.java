@@ -51,7 +51,7 @@ public class MatchExpr2 extends Schema2 {
     for (int i = 0; i < nodelist.getLength(); i++) {
       if (match.isEqualNode(nodelist.item(i).getParentNode())) { // niveau immédiatement inférieur
         Element echild = (Element) nodelist.item(i);
-        MatchExpr matchChild = new MatchExpr(echild, depth + 1);
+        MatchExpr2 matchChild = new MatchExpr2(echild, depth + 1);
         add(matchChild);
       }
     }    

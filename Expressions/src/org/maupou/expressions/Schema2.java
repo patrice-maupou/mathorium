@@ -55,7 +55,7 @@ public class Schema2 implements MutableTreeNode {
   }
  
   
-  public void setPattern(Element elem) throws Exception {
+  public final void setPattern(Element elem) throws Exception {
     String txt = elem.getTextContent();
     Expr p = null;
     try {
@@ -153,7 +153,7 @@ public class Schema2 implements MutableTreeNode {
     return new TreeEnum2(schemas);
   }
   
-  public  void add(MutableTreeNode child) {
+  public final void add(MutableTreeNode child) {
     if(child != null && (child instanceof Schema2) && allowsChildren && !isAncestor(child)) {
       schemas.add((Schema2)child);
       child.setParent(this);
