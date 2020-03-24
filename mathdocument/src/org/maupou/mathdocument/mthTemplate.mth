@@ -1,0 +1,35 @@
+Le mot clé if joue le rôle du contexte
+construct{regex="[A-Z]+[a-z]+'*\d+" type="vmaj"}
+construct{regex="[a-z]+'*\d+" type="vmin"}
+[
+  def[Type]{"X:Type" vars="X:vmaj"}
+  def[Term]{if="X:Type" then="x:X",  vars="x:vmin"}
+  def[Equality]{if="x,y:term" then="x=y:prop", if="A:prop" then="(y/x)A:prop" and "(x/y)A:prop"}
+  def[Valeur]{if="y:term", vars="x:term" then="x:=y", if="x:=y"  then"x=y"}
+
+  [ X:Type, x:X, z:=x, z=x, x=x]
+  [ X:Type, x:X, y:X, z:=y z=y [x=y, z=x, y=x]
+  [ X:Type, x:X, y:X, z:X [x=y, [y=z x=z]]
+
+  Proposition[Reflexivity]{if"x:X" then="x=x"}
+  Proposition[Symmetry]{if"x,y:X" and "x=y" then "y=x"}
+  Proposition[Transitivity]{if"x,y,z:X" and="x=y" and="y=z" then"x=z"} 
+ 
+  ]  
+ title="Functions"
+  def[Dependent function]{"f:X->Type" vars="f:dfunc", if="x:X", then="f(x):Type"}
+  def[Produit]{"s:Prod(f)", context="f:dfunc", vars="s:sec", if="x:X", then="s(x):f(x)"}
+  def[Function]{"s:X->Y", context="f:dfunc", vars="s:Prod(f)", if="x:X", then="f(x)=Y"}
+  def[Composition]{"g∘f:X->Z", context="f:X->Y",g:Y->Z", if="x:X" then="g∘f(x)=g(f(x))"}
+  def[Identity]("Id:X->Y", context=""X,Y:Type", if="x:X" then="Id(x)=x"}
+
+ [ X,Y,Z,U:Type,
+    f:X->Y , g:Y->Z , h:Z->U,
+    x:X, f(x):Y, g(f(x)):Z, g∘f(x)=g(f(x)), (h∘(g∘f))(x)=h((g∘f)(x)), (h∘(g∘f))(x)=h(g(f(x))),
+    ((h∘g)∘f)(x)=(h∘g)(f(x)), ((h∘g)∘f)(x)=h(g(f(x))), (h∘(g∘f))(x)=((h∘g)∘f)(x),
+    h∘(g∘f)=(h∘g)∘f
+ ]
+  Proposition[Associativity of functions]{if="f:X->Y , g:Y->Z , h:Z->U" then="h∘(g∘f)=(h∘g)∘f"}
+  
+]
+
